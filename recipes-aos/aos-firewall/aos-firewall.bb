@@ -5,9 +5,9 @@ GO_IMPORT = "aos_cni_firewall"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://src/${GO_IMPORT}/LICENSE;md5=3b83ef96387f14655fc854ddc3c6bd57"
 
-BRANCH = "master"
+BRANCH = "main"
 SRCREV = "c6b943c8d2192a66306397552d2a8d1fb0ffb8a0"
-SRC_URI = "git://git@gitpct.epam.com/epmd-aepr/${GO_IMPORT}.git;branch=${BRANCH};protocol=ssh"
+SRC_URI = "git://git@github.com/aoscloud/${GO_IMPORT}.git;branch=${BRANCH};protocol=ssh"
 
 inherit go
 inherit goarch

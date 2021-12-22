@@ -5,9 +5,9 @@ GO_IMPORT = "aos_iamanager"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://src/${GO_IMPORT}/LICENSE;md5=3b83ef96387f14655fc854ddc3c6bd57"
 
-BRANCH = "master"
+BRANCH = "main"
 SRCREV = "d6976ee55ba3222c200f3b4843a1edf67e9c644d"
-SRC_URI = "git://git@gitpct.epam.com/epmd-aepr/${GO_IMPORT}.git;branch=${BRANCH};protocol=ssh"
+SRC_URI = "git://git@github.com/aoscloud/${GO_IMPORT}.git;branch=${BRANCH};protocol=ssh"
 
 inherit go
 
