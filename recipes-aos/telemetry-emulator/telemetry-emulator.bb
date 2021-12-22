@@ -2,9 +2,10 @@ DESCRIPTION = "AOS Telemetry Emulator"
 
 DIR_TELEMETRY_EMULATOR = "${datadir}/telemetry_emulator"
 
+BRANCH = "main"
 SRCREV = "b96983140289e617b3d54f9a92040107bbaaf58b"
 SRC_URI = " \
-    git://git@gitpct.epam.com/epmd-aepr/demo_insurance;protocol=ssh;branch=develop \
+    git://git@github.com/aoscloud/telemetry_emulator;protocol=ssh;branch=${BRANCH} \
     file://telemetry-emulator.service \
 "
 LICENSE = "MIT"
@@ -31,8 +32,8 @@ FILES_${PN} = " \
 
 do_install() {
     install -d ${D}${DIR_TELEMETRY_EMULATOR}
-    install -m 0644 ${S}/backend/project/apps/telemetry_emulator/*.py ${D}${DIR_TELEMETRY_EMULATOR}
-    install -m 0644 ${S}/backend/project/apps/telemetry_emulator/*.json ${D}${DIR_TELEMETRY_EMULATOR}
+    install -m 0644 ${S}/*.py ${D}${DIR_TELEMETRY_EMULATOR}
+    install -m 0644 ${S}/*.json ${D}${DIR_TELEMETRY_EMULATOR}
 }
 
 inherit systemd
