@@ -1,21 +1,22 @@
-AoS meta layer
+Aos meta layer
 ==============
 
-This meta layer contains recipes for AoS components such as:
+This meta layer contains recipes for Aos components such as:
 * telemetry-emulator - telemetry emulator script;
-* aos-vis - AoS vehicle information service;
-* aos-servicemanager - AoS service manager;
-* aos-updatemanager - AoS update manager;
-* aos-iamanager - AoS identity and access manager.
+* aos-vis - Aos vehicle information service;
+* aos-servicemanager - Aos service manager;
+* aos-updatemanager - Aos update manager;
+* aos-iamanager - Aos identity and access manager;
+* aos-communicationmanager - Aos communication manager;
 
 Table of Contents
 =================
 
-  1. Adding the aos layer to your build
+  1. Adding the Aos layer to your build
   2. Misc
 
 
-1. Adding the aos layer to your build
+1. Adding the Aos layer to your build
 =====================================
 
 In order to use this layer, you need to make the build system aware of
@@ -40,5 +41,5 @@ other layers needed. e.g.:
 Set PREFERRED_PROVIDER_virtual/runc = "runc-opencontainers" to build runc from
 opencontainers.
 
-Set AOS_RUNNER to define which runner will be used to run AoS services.
+Set AOS_RUNNER to define which runner will be used to run Aos services.
 Currently supported: runc and crun. Default is runc.
