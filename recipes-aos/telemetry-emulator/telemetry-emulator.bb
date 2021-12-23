@@ -3,7 +3,7 @@ DESCRIPTION = "AOS Telemetry Emulator"
 DIR_TELEMETRY_EMULATOR = "${datadir}/telemetry_emulator"
 
 BRANCH = "main"
-SRCREV = "b96983140289e617b3d54f9a92040107bbaaf58b"
+SRCREV = "b1268692f83285f5d71d4948d14cddc67a91d5ab"
 SRC_URI = " \
     git://git@github.com/aoscloud/telemetry_emulator;protocol=ssh;branch=${BRANCH} \
     file://telemetry-emulator.service \
