@@ -6,7 +6,7 @@ LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://src/${GO_IMPORT}/LICENSE;md5=3b83ef96387f14655fc854ddc3c6bd57"
 
 BRANCH = "main"
-SRCREV = "ebb5c1301557853c62f090cfa26710672d57a728"
+SRCREV = "6795f5e02b50e83ffeaf6336a0bc7c0edb52ce9b"
 
 SRC_URI = "git://git@github.com/aoscloud/${GO_IMPORT}.git;branch=${BRANCH};protocol=ssh"
 

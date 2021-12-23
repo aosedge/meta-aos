@@ -6,7 +6,7 @@ LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://src/${GO_IMPORT}/LICENSE;md5=3b83ef96387f14655fc854ddc3c6bd57"
 
 BRANCH = "main"
-SRCREV = "f6c0c7cf7efe54cad284c7321e2ccad517abe0f2"
+SRCREV = "13a9083743caca3607c2436eb81c7816b597a580"
 SRC_URI = "git://git@github.com/aoscloud/${GO_IMPORT}.git;branch=${BRANCH};protocol=ssh"
 
 inherit go
