@@ -30,7 +30,7 @@ do_prepare_adapters() {
     echo 'import (' >> ${file}
 
     for plugin in ${AOS_VIS_PLUGINS}; do
-        echo "\t_ \"aos_vis/${plugin}\"" >> ${file}
+        echo "\t_ \"github.com/aoscloud/aos_vis/${plugin}\"" >> ${file}
     done
 
     echo ')' >> ${file}
