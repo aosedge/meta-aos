@@ -34,7 +34,7 @@ do_prepare_cert_modules() {
     echo 'import (' >> ${file}
 
     for module in ${AOS_IAM_CERT_MODULES}; do
-        echo "\t_ \"aos_iamanager/${module}\"" >> ${file}
+        echo "\t_ \"github.com/aoscloud/aos_iamanager/${module}\"" >> ${file}
     done
 
     echo ')' >> ${file}
@@ -51,7 +51,7 @@ do_prepare_ident_modules() {
     echo 'import (' >> ${file}
 
     for module in ${AOS_IAM_IDENT_MODULES}; do
-        echo "\t_ \"aos_iamanager/${module}\"" >> ${file}
+        echo "\t_ \"github.com/aoscloud/aos_iamanager/${module}\"" >> ${file}
     done
 
     echo ')' >> ${file}
