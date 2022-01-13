@@ -1,13 +1,13 @@
 DESCRIPTION = "AOS Identity and Access Manager"
 
-GO_IMPORT = "aos_iamanager"
+GO_IMPORT = "github.com/aoscloud/aos_iamanager"
 
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://src/${GO_IMPORT}/LICENSE;md5=3b83ef96387f14655fc854ddc3c6bd57"
 
 BRANCH = "main"
 SRCREV = "c778da80e2a9bae740a5673ed781ae6f9d4b989e"
-SRC_URI = "git://git@github.com/aoscloud/${GO_IMPORT}.git;branch=${BRANCH};protocol=ssh"
+SRC_URI = "git://git@${GO_IMPORT}.git;branch=${BRANCH};protocol=ssh"
 
 inherit go
 
@@ -34,7 +34,7 @@ do_prepare_cert_modules() {
     echo 'import (' >> ${file}
 
     for module in ${AOS_IAM_CERT_MODULES}; do
-        echo "\t_ \"github.com/aoscloud/aos_iamanager/${module}\"" >> ${file}
+        echo "\t_ \"${GO_IMPORT}/${module}\"" >> ${file}
     done
 
     echo ')' >> ${file}
@@ -51,7 +51,7 @@ do_prepare_ident_modules() {
     echo 'import (' >> ${file}
 
     for module in ${AOS_IAM_IDENT_MODULES}; do
-        echo "\t_ \"github.com/aoscloud/aos_iamanager/${module}\"" >> ${file}
+        echo "\t_ \"${GO_IMPORT}/${module}\"" >> ${file}
     done
 
     echo ')' >> ${file}
