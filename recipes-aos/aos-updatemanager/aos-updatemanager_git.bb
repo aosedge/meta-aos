@@ -33,7 +33,7 @@ do_prepare_modules() {
     echo 'import (' >> ${file}
 
     for module in ${AOS_UM_UPDATE_MODULES}; do
-        echo "\t_ \"aos_updatemanager/${module}\"" >> ${file}
+        echo "\t_ \"github.com/aoscloud/aos_updatemanager/${module}\"" >> ${file}
     done
 
     echo ')' >> ${file}
