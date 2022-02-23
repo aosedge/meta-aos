@@ -1,13 +1,13 @@
 DESCRIPTION = "AOS Update Manager"
 
-GO_IMPORT = "aos_updatemanager"
+GO_IMPORT = "github.com/aoscloud/aos_updatemanager"
 
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://src/${GO_IMPORT}/LICENSE;md5=3b83ef96387f14655fc854ddc3c6bd57"
 
 BRANCH = "main"
 SRCREV = "b93ee541821c34aed7993b76a79e5ac894531f4c"
-SRC_URI = "git://git@github.com/aoscloud/${GO_IMPORT}.git;branch=${BRANCH};protocol=ssh"
+SRC_URI = "git://git@${GO_IMPORT}.git;branch=${BRANCH};protocol=ssh"
 
 inherit go
 
@@ -33,7 +33,7 @@ do_prepare_modules() {
     echo 'import (' >> ${file}
 
     for module in ${AOS_UM_UPDATE_MODULES}; do
-        echo "\t_ \"github.com/aoscloud/aos_updatemanager/${module}\"" >> ${file}
+        echo "\t_ \"${GO_IMPORT}/${module}\"" >> ${file}
     done
 
     echo ')' >> ${file}
