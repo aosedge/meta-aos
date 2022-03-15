@@ -7,7 +7,7 @@ LIC_FILES_CHKSUM = "file://src/${GO_IMPORT}/LICENSE;md5=3b83ef96387f14655fc854dd
 
 BRANCH = "main"
 SRCREV = "3b86d8726a9f75d9cb1a88a91437c3b369e3e07c"
-SRC_URI = "git://git@${GO_IMPORT}.git;branch=${BRANCH};protocol=ssh"
+SRC_URI = "git://${GO_IMPORT}.git;branch=${BRANCH};protocol=https"
 
 inherit go
 inherit goarch

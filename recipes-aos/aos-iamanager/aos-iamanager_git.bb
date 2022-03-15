@@ -9,7 +9,7 @@ BRANCH = "main"
 SRCREV = "e925d4364c1c73b2ea3c3e18ba8636eca7033c59"
 
 
-SRC_URI = "git://git@${GO_IMPORT}.git;branch=${BRANCH};protocol=ssh"
+SRC_URI = "git://${GO_IMPORT}.git;branch=${BRANCH};protocol=https"
 
 inherit go
 
