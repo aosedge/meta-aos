@@ -1,0 +1,14 @@
+[Unit]
+Description=Provisioning firewall service 
+Before=network-pre.target
+After=iptables.service
+Wants=network-pre.target
+ConditionPathExists=!/var/aos/.unprovisioned
+PartOf=aos.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/aos/provfirewall.sh
+
+[Install]
+WantedBy=multi-user.target
