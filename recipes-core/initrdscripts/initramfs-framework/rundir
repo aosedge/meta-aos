@@ -1,0 +1,20 @@
+#!/bin/sh
+
+# This module shares /run dir with local
+
+rundir_finish_hook_handler() {
+    if [ "$1" = "pre" ] && [ "$2" = "finish" ]; then
+        mount --move /run $ROOTFS_DIR/run
+    fi
+}
+
+rundir_enabled() {
+    return 0
+}
+
+rundir_run() {
+    add_module_pre_hook "rundir_finish_hook_handler"
+
+    mount -t tmpfs -o mode=0755,nodev,nosuid,strictatime tmpfs /run
+    mkdir -p /run/lock
+}
