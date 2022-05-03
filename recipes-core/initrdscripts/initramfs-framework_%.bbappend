@@ -4,12 +4,14 @@ SRC_URI += " \
     file://aosupdate \
     file://opendisk \
     file://rundir \
+    file://selinux \
 "
 
 PACKAGES += " \
     initramfs-module-aosupdate \
     initramfs-module-opendisk \
     initramfs-module-rundir \
+    ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'initramfs-module-selinux', '', d)} \
 "
 
 SUMMARY_initramfs-module-aosupdate = "initramfs support for Aos rootfs update"
@@ -24,6 +26,15 @@ SUMMARY_initramfs-module-rundir = "initramfs support for sharing /run dir to loc
 RDEPENDS_initramfs-module-rundir = "${PN}-base"
 FILES_initramfs-module-rundir = "/init.d/00-rundir"
 
+SUMMARY_initramfs-module-selinux = "initramfs support for selinux"
+RDEPENDS_initramfs-module-selinux = " \
+    ${PN}-base \
+    packagegroup-selinux-minimal \
+    policycoreutils-hll \
+    policycoreutils-loadpolicy \
+"
+FILES_initramfs-module-selinux = "/init.d/02-selinux"
+
 do_install_append() {
     # aosupdate
     install -m 0755 ${WORKDIR}/aosupdate ${D}/init.d/95-aosupdate
@@ -33,4 +44,9 @@ do_install_append() {
 
     # rundir
     install -m 0755 ${WORKDIR}/rundir ${D}/init.d/00-rundir
+
+    # selinux
+    if ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'true', 'false', d)}; then
+        install -m 0755 ${WORKDIR}/selinux ${D}/init.d/02-selinux
+    fi
 }
