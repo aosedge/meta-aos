@@ -13,7 +13,7 @@ PACKAGES += " \
 "
 
 SUMMARY_initramfs-module-aosupdate = "initramfs support for Aos rootfs update"
-RDEPENDS_initramfs-module-aosupdate = "${PN}-base"
+RDEPENDS_initramfs-module-aosupdate = "${PN}-base rsync"
 FILES_initramfs-module-aosupdate = "/init.d/95-aosupdate"
 
 SUMMARY_initramfs-module-opendisk = "initramfs support for opening encrypted disk"
