@@ -70,7 +70,7 @@ mount_update_image() {
 	msg "Mount update image: $UPDATE_IMAGE"
 
 	mkdir -p $IMAGE_MOUNT
-	mount $UPDATE_IMAGE $IMAGE_MOUNT
+	mount -t squashfs -o loop $UPDATE_IMAGE $IMAGE_MOUNT
 }
 
 umount_update_image() {
