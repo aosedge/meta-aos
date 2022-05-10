@@ -19,7 +19,11 @@ OSTREE_REPO_TYPE = "archive"
 
 # Dependencies
 
-DEPENDS_append = " ostree-native squashfs-tools-native policycoreutils-native"
+DEPENDS_append = " \
+    ostree-native \
+    squashfs-tools-native \
+    ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'policycoreutils-native', '', d)} \
+"
 
 # Functions
 
@@ -82,7 +86,7 @@ do_create_rootfs_image() {
         init_ostree_repo
     fi
 
-    if ${@bb.utils.contains('DISTRO_FEATURES','selinux','true','false',d)}; then
+    if ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'true', 'false', d)}; then
         ROOTFS_FULL_PATH=$(realpath ${ROOTFS_SOURCE_DIR})
         setfiles -m -r ${ROOTFS_FULL_PATH} ${ROOTFS_FULL_PATH}/etc/selinux/aos/contexts/files/file_contexts ${ROOTFS_FULL_PATH}
     fi
