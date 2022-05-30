@@ -10,15 +10,10 @@ SRCREV = "05873a13ae992187da4aef61e00bd2a77400a4f8"
 SRC_URI = "git://${GO_IMPORT}.git;branch=${BRANCH};protocol=https"
 
 inherit go
-
-# SM crashes if dynamic link selected, disable dynamic link till the problem is solved
-GO_LINKSHARED = ""
+inherit goarch
 
 # embed version
-GO_LDFLAGS += '-ldflags="-X main.GitSummary=`git --git-dir=${S}/src/${GO_IMPORT}/.git describe --tags --always` ${GO_RPATH} ${GO_LINKMODE} -extldflags '${GO_EXTLDFLAGS}'"'
-
-# this flag is requied when GO_LINKSHARED is enabled
-# LDFLAGS += "-lpthread"
+GO_LDFLAGS += '-ldflags="-X main.GitSummary=`git --git-dir=${S}/src/${GO_IMPORT}/.git describe --tags --always`"'
 
 DEPENDS = "systemd"
 
@@ -38,3 +33,10 @@ RDEPENDS_${PN} += " ${@bb.utils.contains("AOS_RUNNER", "runc", " virtual/runc", 
 
 RDEPENDS_${PN}-dev += " bash make"
 RDEPENDS_${PN}-staticdev += " bash make"
+
+INSANE_SKIP_${PN} = "textrel"
+
+do_compile() {
+    cd ${S}/src/${GO_IMPORT}
+    ${GO} build -o ${B}/bin/aos_servicemanager
+}

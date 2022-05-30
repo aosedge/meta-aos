@@ -13,22 +13,22 @@ inherit go
 inherit goarch
 
 # embed version
-GO_LDFLAGS += '-ldflags="-X github.com/containernetworking/plugins/pkg/utils/buildversion.BuildVersion=`git --git-dir=${S}/src/${GO_IMPORT}/.git describe --tags --always` ${GO_RPATH} ${GO_LINKMODE} -extldflags '${GO_EXTLDFLAGS}'"'
+GO_LDFLAGS += '-ldflags="-X github.com/containernetworking/plugins/pkg/utils/buildversion.BuildVersion=`git --git-dir=${S}/src/${GO_IMPORT}/.git describe --tags --always`"'
 
-do_compile() {
-    cd ${S}/src/${GO_IMPORT}/
-    ${GO} build -o ${B}/bin/dnsname ./plugins/meta/dnsname/
-}
-
-do_install() {
-    localbindir="${libexecdir}/cni/"
-
-    install -d ${D}${localbindir}
-    install -m 755 ${B}/bin/dnsname ${D}${localbindir}
-}
-
-FILES_${PN} = "${libexecdir}/cni/*"
+FILES_${PN} = "${libexecdir}/cni"
 
 RDEPENDS_${PN} += "\
     dnsmasq \
 "
+
+do_compile() {
+    cd ${S}/src/${GO_IMPORT}
+    ${GO} build -o ${B}/bin/dnsname ./plugins/meta/dnsname/
+}
+
+do_install() {
+    localbindir="${libexecdir}/cni"
+
+    install -d ${D}${localbindir}
+    install -m 755 ${B}/bin/dnsname ${D}${localbindir}
+}

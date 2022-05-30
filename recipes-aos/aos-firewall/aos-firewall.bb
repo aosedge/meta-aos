@@ -13,18 +13,18 @@ inherit go
 inherit goarch
 
 # embed version
-GO_LDFLAGS += '-ldflags="-X github.com/containernetworking/plugins/pkg/utils/buildversion.BuildVersion=`git --git-dir=${S}/src/${GO_IMPORT}/.git describe --tags --always` ${GO_RPATH} ${GO_LINKMODE} -extldflags '${GO_EXTLDFLAGS}'"'
+GO_LDFLAGS += '-ldflags="-X github.com/containernetworking/plugins/pkg/utils/buildversion.BuildVersion=`git --git-dir=${S}/src/${GO_IMPORT}/.git describe --tags --always`"'
+
+FILES_${PN} = "${libexecdir}/cni"
 
 do_compile() {
-    cd ${S}/src/${GO_IMPORT}/
+    cd ${S}/src/${GO_IMPORT}
     ${GO} build -o ${B}/bin/aos-firewall ./plugins/meta/aos-firewall
 }
 
 do_install() {
-    localbindir="${libexecdir}/cni/"
+    localbindir="${libexecdir}/cni"
 
     install -d ${D}${localbindir}
     install -m 755 ${B}/bin/aos-firewall ${D}${localbindir}
 }
-
-FILES_${PN} = "${libexecdir}/cni/*"

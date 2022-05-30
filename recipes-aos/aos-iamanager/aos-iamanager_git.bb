@@ -16,14 +16,23 @@ inherit go
 AOS_IAM_CERT_MODULES ??= ""
 AOS_IAM_IDENT_MODULES ??= ""
 
-# SM crashes if dynamic link selected, disable dynamic link till the problem is solved
-GO_LINKSHARED = ""
-
 # embed version
-GO_LDFLAGS += '-ldflags="-X main.GitSummary=`git --git-dir=${S}/src/${GO_IMPORT}/.git describe --tags --always` ${GO_RPATH} ${GO_LINKMODE} -extldflags '${GO_EXTLDFLAGS}'"'
+GO_LDFLAGS += '-ldflags="-X main.GitSummary=`git --git-dir=${S}/src/${GO_IMPORT}/.git describe --tags --always`"'
 
-# this flag is requied when GO_LINKSHARED is enabled
-# LDFLAGS += "-lpthread"
+RDEPENDS_${PN} += "\
+    ca-certificates \
+    openssl \
+"
+
+RDEPENDS_${PN}-dev += " bash make"
+RDEPENDS_${PN}-staticdev += " bash make"
+
+INSANE_SKIP_${PN} = "textrel"
+
+do_compile() {
+    cd ${S}/src/${GO_IMPORT}
+    ${GO} build -o ${B}/bin/aos_iamanager
+}
 
 do_prepare_cert_modules() {
     if [ -z "${AOS_IAM_CERT_MODULES}" ]; then
@@ -58,14 +67,6 @@ do_prepare_ident_modules() {
 
     echo ')' >> ${file}
 }
-
-RDEPENDS_${PN} += "\
-    ca-certificates \
-    openssl \
-"
-
-RDEPENDS_${PN}-dev += " bash make"
-RDEPENDS_${PN}-staticdev += " bash make"
 
 addtask prepare_cert_modules after do_unpack before do_compile
 addtask prepare_ident_modules after do_unpack before do_compile

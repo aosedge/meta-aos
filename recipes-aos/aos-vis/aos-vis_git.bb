@@ -10,14 +10,25 @@ SRCREV = "ca63a713f82950efda66ddf824c193cff3b13fd4"
 SRC_URI = "git://${GO_IMPORT}.git;branch=${BRANCH};protocol=https"
 
 inherit go
+inherit goarch
 
 AOS_VIS_PLUGINS ??= ""
 
-# SM crashes if dynamic link selected, disable dynamic link till the problem is solved
-GO_LINKSHARED = ""
-
 # embed version
-GO_LDFLAGS += '-ldflags="-X main.GitSummary=`git --git-dir=${S}/src/${GO_IMPORT}/.git describe --tags --always` ${GO_RPATH} ${GO_LINKMODE} -extldflags '${GO_EXTLDFLAGS}'"'
+GO_LDFLAGS += '-ldflags="-X main.GitSummary=`git --git-dir=${S}/src/${GO_IMPORT}/.git describe --tags --always`"'
+
+RDEPENDS_${PN} += "\
+    ca-certificates \
+    openssl \
+"
+
+RDEPENDS_${PN}-dev += " bash make"
+RDEPENDS_${PN}-staticdev += " bash make"
+
+do_compile() {
+    cd ${S}/src/${GO_IMPORT}
+    ${GO} build -o ${B}/bin/aos_vis
+}
 
 do_prepare_adapters() {
     if [ -z "${AOS_VIS_PLUGINS}" ]; then
@@ -35,13 +46,5 @@ do_prepare_adapters() {
 
     echo ')' >> ${file}
 }
-
-RDEPENDS_${PN} += "\
-    ca-certificates \
-    openssl \
-"
-
-RDEPENDS_${PN}-dev += " bash make"
-RDEPENDS_${PN}-staticdev += " bash make"
 
 addtask prepare_adapters after do_unpack before do_compile
