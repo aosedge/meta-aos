@@ -59,6 +59,35 @@ do_create_rootfs_archive() {
     mv ${IMAGE_ROOTFS_TAR} ${LAYER_WORK_DIR}/${DIGEST}
 }
 
+python do_create_whiteouts() {
+    import os
+
+    whiteoutPrefix = ".wh."
+    whiteoutOpaqueDir = ".wh..wh..opq"
+
+    whiteouts = d.getVar("LAYER_WHITEOUTS_{}".format(d.getVar("PN")))
+    if whiteouts is None:
+        return
+
+    for whiteout in list(whiteouts.split()):
+        base = os.path.basename(whiteout)
+        if base == "*":
+            base = whiteoutOpaqueDir
+        else:
+            base = whiteoutPrefix + base
+
+        whiteout_dir = d.getVar("IMAGE_ROOTFS") + os.path.dirname(whiteout)
+        if not os.path.exists(whiteout_dir):
+            os.makedirs(whiteout_dir)
+
+        whiteout_file = os.path.join(whiteout_dir, base)
+
+        if not os.path.exists(whiteout_file):
+            open(whiteout_file, mode='x').close()
+            os.chown(whiteout_file, 0, 0)
+
+}
+
 python do_create_metadata() {
     import os
     
@@ -99,6 +128,7 @@ do_pack_layer() {
 }
 
 fakeroot python do_create_layer() {
+    bb.build.exec_func("do_create_whiteouts", d)
     bb.build.exec_func("do_create_rootfs_archive", d)
     bb.build.exec_func("do_create_metadata", d)
     bb.build.exec_func("do_pack_layer", d)
