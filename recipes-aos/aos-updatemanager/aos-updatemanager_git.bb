@@ -6,7 +6,7 @@ LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://src/${GO_IMPORT}/LICENSE;md5=3b83ef96387f14655fc854ddc3c6bd57"
 
 BRANCH = "main"
-SRCREV = "837ad2f00a86ef714f0225ae2912fe5dd2333c83"
+SRCREV = "00a6b97ce9a2b57d0b9a46e54ce851dfa266b2dd"
 SRC_URI = "git://${GO_IMPORT}.git;branch=${BRANCH};protocol=https"
 
 inherit go
