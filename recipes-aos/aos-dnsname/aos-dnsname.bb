@@ -21,9 +21,12 @@ RDEPENDS_${PN} += "\
     dnsmasq \
 "
 
-do_compile() {
-    cd ${S}/src/${GO_IMPORT}
-    ${GO} build -o ${B}/bin/dnsname ./plugins/meta/dnsname/
+# WA to support go install for v 1.18
+
+GO_LINKSHARED = ""
+
+do_compile_prepend() {
+    cd ${GOPATH}/src/${GO_IMPORT}/
 }
 
 do_install() {

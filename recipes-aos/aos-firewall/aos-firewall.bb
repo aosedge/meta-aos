@@ -17,9 +17,12 @@ GO_LDFLAGS += '-ldflags="-X github.com/containernetworking/plugins/pkg/utils/bui
 
 FILES_${PN} = "${libexecdir}/cni"
 
-do_compile() {
-    cd ${S}/src/${GO_IMPORT}
-    ${GO} build -o ${B}/bin/aos-firewall ./plugins/meta/aos-firewall
+# WA to support go install for v 1.18
+
+GO_LINKSHARED = ""
+
+do_compile_prepend() {
+    cd ${GOPATH}/src/${GO_IMPORT}/
 }
 
 do_install() {

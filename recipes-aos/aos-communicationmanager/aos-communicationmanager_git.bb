@@ -28,7 +28,10 @@ RDEPENDS_${PN}-staticdev += " bash make"
 
 INSANE_SKIP_${PN} = "textrel"
 
-do_compile() {
-    cd ${S}/src/${GO_IMPORT}
-    ${GO} build -o ${B}/bin/aos_communicationmanager
+# WA to support go install for v 1.18
+
+GO_LINKSHARED = ""
+
+do_compile_prepend() {
+    cd ${GOPATH}/src/${GO_IMPORT}/
 }
