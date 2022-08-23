@@ -17,6 +17,10 @@ GO_LDFLAGS += '-ldflags="-X github.com/containernetworking/plugins/pkg/utils/bui
 
 FILES_${PN} = "${libexecdir}/cni"
 
+RDEPENDS_${PN} += "\
+    iptables \
+"
+
 # WA to support go install for v 1.18
 
 GO_LINKSHARED = ""
