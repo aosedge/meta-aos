@@ -55,7 +55,11 @@ mount_update_disk() {
 	msg "Mount update disk: $bootparam_aosupdate_disk"
 
 	mkdir -p $UPDATE_MOUNT
-	mount $bootparam_aosupdate_disk $UPDATE_MOUNT
+	 if [ -z "$bootparam_selinux_module" ]; then
+		mount $bootparam_aosupdate_disk $UPDATE_MOUNT
+	 else
+		mount $bootparam_aosupdate_disk $UPDATE_MOUNT -o context="system_u:object_r:aos_var_run_t:s0"
+	 fi
 }
 
 umount_update_disk() {
