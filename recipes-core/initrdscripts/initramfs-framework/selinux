@@ -5,13 +5,13 @@
 
 selinux_finish_hook_handler() {
     if [ "$1" = "pre" ] && [ "$2" = "finish" ]; then
-        semodule -r $boot_param_selinux_module
+        semodule -r $bootparam_selinux_module
         umount /sys/fs/selinux
     fi
 }
 
 selinux_enabled() {
-    if [ -z "$boot_param_selinux_module" ]; then
+    if [ -z "$bootparam_selinux_module" ]; then
         return 1
     fi
 
@@ -19,8 +19,8 @@ selinux_enabled() {
 }
 
 selinux_run() {
-    msg "Loading selinux module: $boot_param_selinux_module"
+    msg "Loading selinux module: $bootparam_selinux_module"
 
     mount -t selinuxfs selinuxfs /sys/fs/selinux
-    semodule -i $boot_param_selinux_module
+    semodule -i $bootparam_selinux_module
 }
