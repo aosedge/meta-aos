@@ -17,6 +17,12 @@ AOS_UM_UPDATE_MODULES ??= ""
 # embed version
 GO_LDFLAGS += '-ldflags="-X main.GitSummary=`git --git-dir=${S}/src/${GO_IMPORT}/.git describe --tags --always`"'
 
+DEPENDS_append = " \
+    pkgconfig-native \
+    util-linux \
+    efivar \
+"
+
 RDEPENDS_${PN}-dev += " bash make"
 RDEPENDS_${PN}-staticdev += " bash make"
 
