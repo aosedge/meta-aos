@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# This module binds /var/machine-id to /etc/machine-id to make it RW for RO rootfs
+
+machineid_enabled() {
+    return 0
+}
+
+machineid_run() {
+    if [ ! -f /var/machine-id ]; then
+        cp -aP $ROOTFS_DIR/etc/machine-id /var/machine-id
+    fi
+
+    mount --bind /var/machine-id $ROOTFS_DIR/etc/machine-id
+}

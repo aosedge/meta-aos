@@ -2,6 +2,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/initramfs-framework:"
 
 SRC_URI += " \
     file://aosupdate \
+    file://machineid \
     file://opendisk \
     file://rundir \
     file://selinux \
@@ -10,6 +11,7 @@ SRC_URI += " \
 
 PACKAGES += " \
     initramfs-module-aosupdate \
+    initramfs-module-machineid \
     initramfs-module-opendisk \
     initramfs-module-rundir \
     ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'initramfs-module-selinux', '', d)} \
@@ -19,6 +21,10 @@ PACKAGES += " \
 SUMMARY_initramfs-module-aosupdate = "initramfs support for Aos rootfs update"
 RDEPENDS_initramfs-module-aosupdate = "${PN}-base rsync"
 FILES_initramfs-module-aosupdate = "/init.d/95-aosupdate"
+
+SUMMARY_initramfs-module-machineid = "bind /etc/machine-id to /var/machine-id"
+RDEPENDS_initramfs-module-machineid = "${PN}-base initramfs-module-vardir"
+FILES_initramfs-module-machineid = "/init.d/96-machineid"
 
 SUMMARY_initramfs-module-opendisk = "initramfs support for opening encrypted disk"
 RDEPENDS_initramfs-module-opendisk = "${PN}-base diskencryption"
@@ -44,6 +50,9 @@ FILES_initramfs-module-vardir = "/init.d/02-vardir"
 do_install_append() {
     # aosupdate
     install -m 0755 ${WORKDIR}/aosupdate ${D}/init.d/95-aosupdate
+
+    # machineid
+    install -m 0755 ${WORKDIR}/machineid ${D}/init.d/96-machineid
 
     # opendisk
     install -m 0755 ${WORKDIR}/opendisk ${D}/init.d/05-opendisk
