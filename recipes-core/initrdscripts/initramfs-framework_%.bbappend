@@ -5,6 +5,7 @@ SRC_URI += " \
     file://opendisk \
     file://rundir \
     file://selinux \
+    file://vardir \
 "
 
 PACKAGES += " \
@@ -12,6 +13,7 @@ PACKAGES += " \
     initramfs-module-opendisk \
     initramfs-module-rundir \
     ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'initramfs-module-selinux', '', d)} \
+    initramfs-module-vardir \
 "
 
 SUMMARY_initramfs-module-aosupdate = "initramfs support for Aos rootfs update"
@@ -35,6 +37,10 @@ RDEPENDS_initramfs-module-selinux = " \
 "
 FILES_initramfs-module-selinux = "/init.d/02-selinux"
 
+SUMMARY_initramfs-module-vardir = "mount RW /var directory"
+RDEPENDS_initramfs-module-vardir = "${PN}-base"
+FILES_initramfs-module-vardir = "/init.d/02-vardir"
+
 do_install_append() {
     # aosupdate
     install -m 0755 ${WORKDIR}/aosupdate ${D}/init.d/95-aosupdate
@@ -49,4 +55,7 @@ do_install_append() {
     if ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'true', 'false', d)}; then
         install -m 0755 ${WORKDIR}/selinux ${D}/init.d/02-selinux
     fi
+
+    # vardir
+    install -m 0755 ${WORKDIR}/vardir ${D}/init.d/02-vardir
 }

@@ -1,0 +1,43 @@
+#!/bin/sh
+
+# This module mounts RW partition to /var dir:
+#     vardir.disk - specifies RW partition to be mounted to /var;
+
+vardir_finish_hook_handler() {
+    if [ "$1" = "pre" ] && [ "$2" = "finish" ]; then
+        debug "Moving /var onto rootfs..."
+
+        mount --move /var $ROOTFS_DIR/var
+    fi
+}
+
+vardir_enabled() {
+    if [ -z $bootparam_vardir_disk ]; then
+        return 1
+    fi
+
+    return 0
+}
+
+vardir_run() {
+    c=0
+    delay=1
+    timeout=5
+
+    while [ ! -b "$bootparam_vardir_disk" ]; do
+        if [ $(($c * $delay)) -gt $timeout ]; then
+            fatal "waiting for ${bootparam_vardir_disk} error"
+        fi
+
+        debug "Sleeping for $delay second(s) to wait $bootparam_vardir_disk to settle..."
+        sleep $delay
+        c=$(($c + 1))
+    done
+
+    add_module_pre_hook "vardir_finish_hook_handler"
+
+    debug "Mount $bootparam_vardir_disk to /var"
+
+    mkdir -p /var
+    mount $bootparam_vardir_disk /var ${bootparam_selinux_module+"-o context=system_u:object_r:aos_var_run_t:s0"}
+}
