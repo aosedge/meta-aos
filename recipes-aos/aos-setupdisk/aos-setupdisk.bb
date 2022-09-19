@@ -19,6 +19,7 @@ RDEPENDS_${PN} = " \
     lvm2 \
     lvm2-udevrules \
     e2fsprogs \
+    quota \
 "
 
 do_install() {
