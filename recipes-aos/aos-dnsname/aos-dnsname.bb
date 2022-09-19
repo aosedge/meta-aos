@@ -33,5 +33,5 @@ do_install() {
     localbindir="${libexecdir}/cni"
 
     install -d ${D}${localbindir}
-    install -m 755 ${B}/bin/dnsname ${D}${localbindir}
+    install -m 755 ${B}/${GO_BUILD_BINDIR}/dnsname ${D}${localbindir}
 }

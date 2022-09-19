@@ -33,5 +33,5 @@ do_install() {
     localbindir="${libexecdir}/cni"
 
     install -d ${D}${localbindir}
-    install -m 755 ${B}/bin/aos-firewall ${D}${localbindir}
+    install -m 755 ${B}/${GO_BUILD_BINDIR}/aos-firewall ${D}${localbindir}
 }
