@@ -15,7 +15,7 @@ UPDATE_MOUNT="/mnt/device"
 IMAGE_MOUNT="/mnt/image"
 
 UPDATE_IMAGE=""
-UPDATE_DIR="$UPDATE_MOUNT/${bootparam_aosupdate_path:-update_rootfs}"
+UPDATE_DIR="${bootparam_aosupdate_disk:+${UPDATE_MOUNT}/}${bootparam_aosupdate_path:-update_rootfs}"
 UPDATE_EXT="*.squashfs"
 
 fail() {
@@ -25,7 +25,7 @@ fail() {
     echo "<3>Aos update failed: $err" >/dev/kmsg
 
     # Put to fail flag file if update mounted
-    if grep -qs "$UPDATE_MOUNT" /proc/mounts; then
+    if [ -z ${bootparam_aosupdate_disk} ] || grep -qs "$UPDATE_MOUNT" /proc/mounts; then
         mkdir -p "$UPDATE_DIR"
         echo "$err" >"$UPDATE_DIR/$FAIL_FLAG"
     fi
@@ -39,11 +39,11 @@ error() {
 }
 
 aosupdate_enabled() {
-    if [ -z ${bootparam_aosupdate_disk} ]; then
+    if [ -z ${bootparam_aosupdate_disk} ] && [ -z ${bootparam_aosupdate_path} ]; then
         return 1
     fi
 
-    if [ ! -e ${bootparam_aosupdate_disk} ]; then
+    if [ -n "${bootparam_aosupdate_disk}" ] && [ ! -e ${bootparam_aosupdate_disk} ]; then
         msg "Aos update disabled: device ${bootparam_aosupdate_disk} not exist."
         return 1
     fi
@@ -200,7 +200,9 @@ aosupdate_run() {
         {
             set -e
 
-            mount_update_disk
+            if [ -n "${bootparam_aosupdate_disk}" ]; then
+                mount_update_disk
+            fi
 
             case "$(get_action)" in
             update)
@@ -228,7 +230,9 @@ aosupdate_run() {
         cleanup
     fi
 
-    umount_update_disk
+    if [ -n "${bootparam_aosupdate_disk}" ]; then
+        umount_update_disk
+    fi
 
     msg "=========================================================================================="
 }
