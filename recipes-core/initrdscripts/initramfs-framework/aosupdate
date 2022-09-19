@@ -19,216 +19,216 @@ UPDATE_DIR="$UPDATE_MOUNT/${bootparam_aosupdate_path:-update_rootfs}"
 UPDATE_EXT="*.squashfs"
 
 fail() {
-	local err="${1:-"unknown error"}"
+    local err="${1:-"unknown error"}"
 
-	# NOTE <3> is KERN_ERR loglevel, which cause alerts to be sent
-	echo "<3>Aos update failed: $err" >/dev/kmsg
+    # NOTE <3> is KERN_ERR loglevel, which cause alerts to be sent
+    echo "<3>Aos update failed: $err" >/dev/kmsg
 
-	# Put to fail flag file if update mounted
-	if grep -qs "$UPDATE_MOUNT" /proc/mounts; then
-		mkdir -p "$UPDATE_DIR"
-		echo "$err" >"$UPDATE_DIR/$FAIL_FLAG"
-	fi
+    # Put to fail flag file if update mounted
+    if grep -qs "$UPDATE_MOUNT" /proc/mounts; then
+        mkdir -p "$UPDATE_DIR"
+        echo "$err" >"$UPDATE_DIR/$FAIL_FLAG"
+    fi
 }
 
 error() {
-	(
-		echo "$@" 1>&2
-		exit 1
-	)
+    (
+        echo "$@" 1>&2
+        exit 1
+    )
 }
 
 aosupdate_enabled() {
-	if [ -z ${bootparam_aosupdate_disk} ]; then
-		return 1
-	fi
+    if [ -z ${bootparam_aosupdate_disk} ]; then
+        return 1
+    fi
 
-	if [ ! -e ${bootparam_aosupdate_disk} ]; then
-		msg "Aos update disabled: device ${bootparam_aosupdate_disk} not exist."
-		return 1
-	fi
+    if [ ! -e ${bootparam_aosupdate_disk} ]; then
+        msg "Aos update disabled: device ${bootparam_aosupdate_disk} not exist."
+        return 1
+    fi
 
-	return 0
+    return 0
 }
 
 mount_update_disk() {
-	msg "Mount update disk: $bootparam_aosupdate_disk"
+    msg "Mount update disk: $bootparam_aosupdate_disk"
 
-	mkdir -p $UPDATE_MOUNT
-	 if [ -z "$bootparam_selinux_module" ]; then
-		mount $bootparam_aosupdate_disk $UPDATE_MOUNT
-	 else
-		mount $bootparam_aosupdate_disk $UPDATE_MOUNT -o context="system_u:object_r:aos_var_run_t:s0"
-	 fi
+    mkdir -p $UPDATE_MOUNT
+    if [ -z "$bootparam_selinux_module" ]; then
+        mount $bootparam_aosupdate_disk $UPDATE_MOUNT
+    else
+        mount $bootparam_aosupdate_disk $UPDATE_MOUNT -o context="system_u:object_r:aos_var_run_t:s0"
+    fi
 }
 
 umount_update_disk() {
-	if grep -qs "$UPDATE_MOUNT" /proc/mounts && [ ! -f "$UPDATE_DIR/$UPDATED_FLAG" ]; then
-		msg "Umount update disk: $bootparam_aosupdate_disk"
+    if grep -qs "$UPDATE_MOUNT" /proc/mounts && [ ! -f "$UPDATE_DIR/$UPDATED_FLAG" ]; then
+        msg "Umount update disk: $bootparam_aosupdate_disk"
 
-		umount $UPDATE_MOUNT
-	fi
+        umount $UPDATE_MOUNT
+    fi
 }
 
 mount_update_image() {
-	msg "Mount update image: $UPDATE_IMAGE"
+    msg "Mount update image: $UPDATE_IMAGE"
 
-	mkdir -p $IMAGE_MOUNT
-	mount -t squashfs -o loop $UPDATE_IMAGE $IMAGE_MOUNT
+    mkdir -p $IMAGE_MOUNT
+    mount -t squashfs -o loop $UPDATE_IMAGE $IMAGE_MOUNT
 }
 
 umount_update_image() {
-	if grep -qs "$IMAGE_MOUNT" /proc/mounts; then
-		msg "Umount update image: $UPDATE_IMAGE"
+    if grep -qs "$IMAGE_MOUNT" /proc/mounts; then
+        msg "Umount update image: $UPDATE_IMAGE"
 
-		umount $IMAGE_MOUNT
-	fi
+        umount $IMAGE_MOUNT
+    fi
 }
 
 # Possible actions are: update, apply, revert
 get_action() {
-	if [ -f "$UPDATE_DIR/$DO_APPLY_FLAG" ]; then
-		echo "apply"
-		return
-	fi
+    if [ -f "$UPDATE_DIR/$DO_APPLY_FLAG" ]; then
+        echo "apply"
+        return
+    fi
 
-	if [ -f "$UPDATE_DIR/$UPDATED_FLAG" ]; then
-		echo "revert"
-		return
-	fi
+    if [ -f "$UPDATE_DIR/$UPDATED_FLAG" ]; then
+        echo "revert"
+        return
+    fi
 
-	if [ -f "$UPDATE_DIR/$DO_UPDATE_FLAG" ]; then
-		echo "update"
-		return
-	fi
+    if [ -f "$UPDATE_DIR/$DO_UPDATE_FLAG" ]; then
+        echo "update"
+        return
+    fi
 }
 
 get_update_type() {
-	local update=$(cat $UPDATE_DIR/$DO_UPDATE_FLAG)
+    local update=$(cat $UPDATE_DIR/$DO_UPDATE_FLAG)
 
-	if [ -z $update ]; then
-		echo "full"
-	else
-		echo $update
-	fi
+    if [ -z $update ]; then
+        echo "full"
+    else
+        echo $update
+    fi
 }
 
 do_update() {
-	UPDATE_IMAGE="$(find "$UPDATE_DIR" -name "${UPDATE_EXT}" | head -n1)"
+    UPDATE_IMAGE="$(find "$UPDATE_DIR" -name "${UPDATE_EXT}" | head -n1)"
 
-	local update_type="$(get_update_type)"
+    local update_type="$(get_update_type)"
 
-	msg "Start $update_type update..."
+    msg "Start $update_type update..."
 
-	if [ -z "$UPDATE_IMAGE" ]; then
-		error "update iamge not found"
-	fi
+    if [ -z "$UPDATE_IMAGE" ]; then
+        error "update iamge not found"
+    fi
 
-	mount_update_image
+    mount_update_image
 
-	case "$update_type" in
-	full)
-		mount --move $IMAGE_MOUNT $ROOTFS_DIR
-		;;
+    case "$update_type" in
+    full)
+        mount --move $IMAGE_MOUNT $ROOTFS_DIR
+        ;;
 
-	incremental)
-		mount -t overlay overlay -o lowerdir=$IMAGE_MOUNT:$ROOTFS_DIR $ROOTFS_DIR
-		;;
+    incremental)
+        mount -t overlay overlay -o lowerdir=$IMAGE_MOUNT:$ROOTFS_DIR $ROOTFS_DIR
+        ;;
 
-	*)
-		error "unknown update type: $update_type"
-		;;
-	esac
+    *)
+        error "unknown update type: $update_type"
+        ;;
+    esac
 
-	touch $UPDATE_DIR/$UPDATED_FLAG
+    touch $UPDATE_DIR/$UPDATED_FLAG
 
-	msg "Successfully updated!"
+    msg "Successfully updated!"
 }
 
 do_revert() {
-	msg "Revert update"
+    msg "Revert update"
 
-	clear_all_flags
+    clear_all_flags
 
-	error "update not confirmed"
+    error "update not confirmed"
 }
 
 cleanup() {
-	mount -o remount,ro $ROOTFS_DIR
-	umount_update_image
+    mount -o remount,ro $ROOTFS_DIR
+    umount_update_image
 }
 
 clear_all_flags() {
-	rm -f "$UPDATE_DIR/$DO_UPDATE_FLAG" "$UPDATE_DIR/$UPDATED_FLAG" "$UPDATE_DIR/$DO_APPLY_FLAG" "$UPDATE_DIR/$FAIL_FLAG"
+    rm -f "$UPDATE_DIR/$DO_UPDATE_FLAG" "$UPDATE_DIR/$UPDATED_FLAG" "$UPDATE_DIR/$DO_APPLY_FLAG" "$UPDATE_DIR/$FAIL_FLAG"
 }
 
 do_apply() {
-	UPDATE_IMAGE="$(find "$UPDATE_DIR" -name "${UPDATE_EXT}" | head -n1)"
+    UPDATE_IMAGE="$(find "$UPDATE_DIR" -name "${UPDATE_EXT}" | head -n1)"
 
-	local update_type="$(get_update_type)"
+    local update_type="$(get_update_type)"
 
-	msg "Start $update_type apply..."
+    msg "Start $update_type apply..."
 
-	mount_update_image
-	mount -o remount,rw $ROOTFS_DIR
+    mount_update_image
+    mount -o remount,rw $ROOTFS_DIR
 
-	case "$update_type" in
-	full)
-		rsync -av -A -X --ignore-times --delete $IMAGE_MOUNT/ $ROOTFS_DIR/
-		;;
+    case "$update_type" in
+    full)
+        rsync -av -A -X --ignore-times --delete $IMAGE_MOUNT/ $ROOTFS_DIR/
+        ;;
 
-	incremental)
-		rsync -av -A -X --ignore-times $IMAGE_MOUNT/ $ROOTFS_DIR/
+    incremental)
+        rsync -av -A -X --ignore-times $IMAGE_MOUNT/ $ROOTFS_DIR/
 
-		find $ROOTFS_DIR/ -type c -exec rm -f {} \;
-		;;
-	*)
-		error "unknown update type: $update_type"
-		;;
-	esac
+        find $ROOTFS_DIR/ -type c -exec rm -f {} \;
+        ;;
+    *)
+        error "unknown update type: $update_type"
+        ;;
+    esac
 
-	cleanup
-	clear_all_flags
+    cleanup
+    clear_all_flags
 
-	msg "Successfully applied!"
+    msg "Successfully applied!"
 }
 
 aosupdate_run() {
-	msg "======================================= Aos update ======================================="
+    msg "======================================= Aos update ======================================="
 
-	err=$(
-		{
-			set -e
+    err=$(
+        {
+            set -e
 
-			mount_update_disk
+            mount_update_disk
 
-			case "$(get_action)" in
-			update)
-				do_update
-				;;
+            case "$(get_action)" in
+            update)
+                do_update
+                ;;
 
-			revert)
-				do_revert
-				;;
+            revert)
+                do_revert
+                ;;
 
-			apply)
-				do_apply
-				;;
+            apply)
+                do_apply
+                ;;
 
-			*)
-				msg "Aos update: no action selected"
-				;;
-			esac
+            *)
+                msg "Aos update: no action selected"
+                ;;
+            esac
 
-		} 2>&1 >/dev/null
-	)
+        } 2>&1 >/dev/null
+    )
 
-	if [ $? -ne 0 ]; then
-		fail "$err"
-		cleanup
-	fi
+    if [ $? -ne 0 ]; then
+        fail "$err"
+        cleanup
+    fi
 
-	umount_update_disk
+    umount_update_disk
 
-	msg "=========================================================================================="
+    msg "=========================================================================================="
 }

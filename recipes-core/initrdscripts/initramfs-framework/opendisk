@@ -12,59 +12,59 @@
 OPTEE_SUPPLICANT="tee-supplicant"
 
 opendisk_enabled() {
-	if [ -z $bootparam_opendisk_target ]; then
-		return 1
-	fi
+    if [ -z $bootparam_opendisk_target ]; then
+        return 1
+    fi
 
-	return 0
+    return 0
 }
 
 get_pkcs11_module() {
-	case "$bootparam_opendisk_pkcs11" in
-	optee)
-		echo "/usr/lib/libckteec.so.0.1"
-		;;
+    case "$bootparam_opendisk_pkcs11" in
+    optee)
+        echo "/usr/lib/libckteec.so.0.1"
+        ;;
 
-	*)
-		echo "/usr/lib/softhsm/libsofthsm2.so"
-		;;
-	esac
+    *)
+        echo "/usr/lib/softhsm/libsofthsm2.so"
+        ;;
+    esac
 }
 
 prepare_pkcs11() {
-	if [ -n $bootparam_opendisk_pkcs11_disk ]; then
-		mount $bootparam_opendisk_pkcs11_disk ${bootparam_opendisk_pkcs11_mount:="/var"}
-	fi
+    if [ -n $bootparam_opendisk_pkcs11_disk ]; then
+        mount $bootparam_opendisk_pkcs11_disk ${bootparam_opendisk_pkcs11_mount:="/var"}
+    fi
 
-	if [ "$bootparam_opendisk_pkcs11" = "optee" ]; then
-		$OPTEE_SUPPLICANT &
-		export CKTEEC_LOGIN_TYPE=user
-	fi
+    if [ "$bootparam_opendisk_pkcs11" = "optee" ]; then
+        $OPTEE_SUPPLICANT &
+        export CKTEEC_LOGIN_TYPE=user
+    fi
 }
 
 release_pkcs11() {
-	if [ "$bootparam_opendisk_pkcs11" = "optee" ]; then
-		killall $(basename $OPTEE_SUPPLICANT)
-	fi
+    if [ "$bootparam_opendisk_pkcs11" = "optee" ]; then
+        killall $(basename $OPTEE_SUPPLICANT)
+    fi
 
-	if [ -n $bootparam_opendisk_pkcs11_disk ]; then
-		umount $bootparam_opendisk_pkcs11_disk
-	fi
+    if [ -n $bootparam_opendisk_pkcs11_disk ]; then
+        umount $bootparam_opendisk_pkcs11_disk
+    fi
 }
 
 opendisk_run() {
-	msg "Open Aos disk: $bootparam_opendisk_target, pkcs11: $(get_pkcs11_module)"
+    msg "Open Aos disk: $bootparam_opendisk_target, pkcs11: $(get_pkcs11_module)"
 
-	prepare_pkcs11
+    prepare_pkcs11
 
-	# get user pin
-	if [ -n "$bootparam_opendisk_pkcs11_userpin" ]; then
-		user_pin="$bootparam_opendisk_pkcs11_userpin"
-	elif [ -n "$bootparam_opendisk_pkcs11_pinfile" ]; then
-		user_pin="$(cat $bootparam_opendisk_pkcs11_pinfile)"
-	fi
+    # get user pin
+    if [ -n "$bootparam_opendisk_pkcs11_userpin" ]; then
+        user_pin="$bootparam_opendisk_pkcs11_userpin"
+    elif [ -n "$bootparam_opendisk_pkcs11_pinfile" ]; then
+        user_pin="$(cat $bootparam_opendisk_pkcs11_pinfile)"
+    fi
 
-	diskencryption.sh open $bootparam_opendisk_target -m $(get_pkcs11_module) ${user_pin:+-p "$user_pin"}
+    diskencryption.sh open $bootparam_opendisk_target -m $(get_pkcs11_module) ${user_pin:+-p "$user_pin"}
 
-	release_pkcs11
+    release_pkcs11
 }
