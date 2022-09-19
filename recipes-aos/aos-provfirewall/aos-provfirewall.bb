@@ -19,6 +19,14 @@ FILES_${PN} = " \
     ${aos_opt_dir} \
 "
 
+RDEPENDS_${PN} += " \
+    iptables \
+"
+
+RRECOMMENDS_${PN} += " \
+    kernel-module-xt-tcpudp \
+"
+
 do_install() {
     install -d ${D}${aos_opt_dir}
     install -m 0755 ${S}/provfirewall.sh ${D}${aos_opt_dir}
