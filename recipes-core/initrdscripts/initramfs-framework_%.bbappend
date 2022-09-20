@@ -41,7 +41,7 @@ RDEPENDS_initramfs-module-selinux = " \
     policycoreutils-hll \
     policycoreutils-loadpolicy \
 "
-FILES_initramfs-module-selinux = "/init.d/02-selinux"
+FILES_initramfs-module-selinux = "/init.d/03-selinux"
 
 SUMMARY_initramfs-module-vardir = "mount RW /var directory"
 RDEPENDS_initramfs-module-vardir = "${PN}-base"
@@ -62,7 +62,7 @@ do_install_append() {
 
     # selinux
     if ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'true', 'false', d)}; then
-        install -m 0755 ${WORKDIR}/selinux ${D}/init.d/02-selinux
+        install -m 0755 ${WORKDIR}/selinux ${D}/init.d/03-selinux
     fi
 
     # vardir
