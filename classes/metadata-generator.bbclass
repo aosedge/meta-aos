@@ -93,7 +93,7 @@ def remove_empty_elements(metadata):
     else:
         return {key: value for key, value in ((key, remove_empty_elements(value)) for key, value in metadata.items()) if not empty(value)}
 
-def write_image_metadata(output_dir, board_model, components):
+def write_image_metadata(output_dir, components):
     import os
     import json
 
@@ -101,13 +101,12 @@ def write_image_metadata(output_dir, board_model, components):
     METADATA_FILE_NAME = "metadata.json"
 
     FIELD_FORMAT_VERSION = "formatVersion"
-    FIELD_BOARD_MODEL = "boardModel"
     FIELD_COMPONENTS = "components"
 
     # check mandatory fields
-    if not board_model or not components:
+    if not components:
         raise RuntimeError(
-            "mandatory field ({} or {}) is missing".format(FIELD_BOARD_MODEL, FIELD_COMPONENTS))
+            "mandatory field ({}) is missing".format(FIELD_COMPONENTS))
 
     if not isinstance(components, list):
         raise RuntimeError(
@@ -118,8 +117,7 @@ def write_image_metadata(output_dir, board_model, components):
             raise RuntimeError(
                 "components item should be dict")
 
-    metadata = {FIELD_FORMAT_VERSION: FORMAT_VERSION,
-                FIELD_BOARD_MODEL: board_model, FIELD_COMPONENTS: components}
+    metadata = {FIELD_FORMAT_VERSION: FORMAT_VERSION, FIELD_COMPONENTS: components}
 
     metadata = remove_empty_elements(metadata)
 
