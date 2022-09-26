@@ -32,7 +32,7 @@ get_pkcs11_module() {
 }
 
 prepare_pkcs11() {
-    if [ -n $bootparam_opendisk_pkcs11_disk ]; then
+    if [ -n "$bootparam_opendisk_pkcs11_disk" ]; then
         mount $bootparam_opendisk_pkcs11_disk ${bootparam_opendisk_pkcs11_mount:="/var"}
     fi
 
@@ -47,7 +47,7 @@ release_pkcs11() {
         killall $(basename $OPTEE_SUPPLICANT)
     fi
 
-    if [ -n $bootparam_opendisk_pkcs11_disk ]; then
+    if [ -n "$bootparam_opendisk_pkcs11_disk" ]; then
         umount $bootparam_opendisk_pkcs11_disk
     fi
 }
