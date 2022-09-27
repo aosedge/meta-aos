@@ -53,4 +53,5 @@ GO_LINKSHARED = ""
 
 do_compile_prepend() {
     cd ${GOPATH}/src/${GO_IMPORT}/
+    rm -rf ${GOPATH}/src/${GO_IMPORT}/integration
 }
