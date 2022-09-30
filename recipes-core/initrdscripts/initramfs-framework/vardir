@@ -39,5 +39,5 @@ vardir_run() {
     debug "Mount $bootparam_vardir_disk to /var"
 
     mkdir -p /var
-    mount $bootparam_vardir_disk /var ${bootparam_selinux_module+"-o context=system_u:object_r:aos_var_run_t:s0"}
+    mount $bootparam_vardir_disk /var
 }
