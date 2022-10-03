@@ -1,0 +1,32 @@
+From d7c532c63a5aa2293f4f4f01ff5714fc808dd7d9 Mon Sep 17 00:00:00 2001
+From: Yevgen Abramov <Yevgen_Abramov@epam.com>
+Date: Tue, 4 Oct 2022 15:28:13 +0300
+Subject: [PATCH] fix filter compile flags
+
+Signed-off-by: Yevgen Abramov <Yevgen_Abramov@epam.com>
+---
+ src/cmd/go/internal/work/exec.go | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/cmd/go/internal/work/exec.go b/src/cmd/go/internal/work/exec.go
+index 63ace6de76..44787a1a2a 100644
+--- a/src/cmd/go/internal/work/exec.go
++++ b/src/cmd/go/internal/work/exec.go
+@@ -2709,11 +2709,11 @@ func envList(key, def string) []string {
+ var filterFlags = os.Getenv("CGO_PEDANTIC") == ""
+ 
+ func filterCompilerFlags(flags []string) []string {
+-	var newflags []string
+-	if !filterFlags {
++	if !filterFlags || len(flags) == 0 {
+ 		return flags
+ 	}
+-	for _, flag := range flags {
++	newflags := flags[:1]
++	for _, flag := range flags[1:] {
+ 		if strings.HasPrefix(flag, "-m") {
+ 			newflags = append(newflags, flag)
+ 		}
+-- 
+2.25.1
+
