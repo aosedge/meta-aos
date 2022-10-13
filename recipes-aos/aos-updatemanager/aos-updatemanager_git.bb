@@ -1,3 +1,5 @@
+FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
+
 DESCRIPTION = "AOS Update Manager"
 
 GO_IMPORT = "github.com/aoscloud/aos_updatemanager"
@@ -9,13 +11,26 @@ BRANCH = "main"
 SRCREV = "cf2d80972e44579d95cc431aedd42f1fb830a784"
 SRC_URI = "git://${GO_IMPORT}.git;branch=${BRANCH};protocol=https"
 
-inherit go
-inherit goarch
+SRC_URI += " \
+    file://aos_updatemanager.cfg \
+    file://aos-updatemanager.service \
+"
 
-AOS_UM_UPDATE_MODULES ??= ""
+inherit go goarch systemd
 
-# embed version
-GO_LDFLAGS += '-ldflags="-X main.GitSummary=`git --git-dir=${S}/src/${GO_IMPORT}/.git describe --tags --always`"'
+SYSTEMD_SERVICE_${PN} = "aos-updatemanager.service"
+
+AOS_UM_UPDATE_MODULES ?= " \
+    updatemodules/testmodule \
+"
+
+MIGRATION_SCRIPTS_PATH = "${base_prefix}/usr/share/aos/um/migration"
+
+FILES_${PN} += " \
+    ${sysconfdir} \
+    ${systemd_system_unitdir} \
+    ${MIGRATION_SCRIPTS_PATH} \
+"
 
 DEPENDS_append = " \
     pkgconfig-native \
@@ -23,10 +38,17 @@ DEPENDS_append = " \
     efivar \
 "
 
+RDEPENDS_${PN} = " \
+    aos-rootca \
+"
+
 RDEPENDS_${PN}-dev += " bash make"
 RDEPENDS_${PN}-staticdev += " bash make"
 
 INSANE_SKIP_${PN} = "textrel"
+
+# embed version
+GO_LDFLAGS += '-ldflags="-X main.GitSummary=`git --git-dir=${S}/src/${GO_IMPORT}/.git describe --tags --always`"'
 
 # WA to support go install for v 1.18
 
@@ -51,6 +73,20 @@ do_prepare_modules() {
     done
 
     echo ')' >> ${file}
+}
+
+do_install_append() {
+    install -d ${D}${sysconfdir}/aos
+    install -m 0644 ${WORKDIR}/aos_updatemanager.cfg ${D}${sysconfdir}/aos
+
+    install -d ${D}${systemd_system_unitdir}
+    install -m 0644 ${WORKDIR}/aos-updatemanager.service ${D}${systemd_system_unitdir}
+
+    install -d ${D}${MIGRATION_SCRIPTS_PATH}
+    source_migration_path="src/${GO_IMPORT}/database/migration"
+    if [ -d ${S}/${source_migration_path} ]; then
+        install -m 0644 ${S}/${source_migration_path}/* ${D}${MIGRATION_SCRIPTS_PATH}
+    fi
 }
 
 addtask prepare_modules after do_unpack before do_compile
