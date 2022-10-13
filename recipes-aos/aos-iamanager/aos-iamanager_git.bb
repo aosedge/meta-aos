@@ -8,26 +8,41 @@ LIC_FILES_CHKSUM = "file://src/${GO_IMPORT}/LICENSE;md5=3b83ef96387f14655fc854dd
 BRANCH = "main"
 SRCREV = "b21c12822b8675efffa330909f559483c427fb63"
 
-
 SRC_URI = "git://${GO_IMPORT}.git;branch=${BRANCH};protocol=https"
 
-inherit go
+SRC_URI += " \
+    file://aos_iamanager.cfg \
+    file://aos-iamanager.service \
+"
 
-AOS_IAM_CERT_MODULES ??= ""
-AOS_IAM_IDENT_MODULES ??= ""
+inherit go goarch systemd
 
-# embed version
-GO_LDFLAGS += '-ldflags="-X main.GitSummary=`git --git-dir=${S}/src/${GO_IMPORT}/.git describe --tags --always`"'
+SYSTEMD_SERVICE_${PN} = "aos-iamanager.service"
 
-RDEPENDS_${PN} += "\
-    ca-certificates \
-    openssl \
+AOS_IAM_CERT_MODULES ??= "certhandler/modules/swmodule"
+AOS_IAM_IDENT_MODULES ??= "identhandler/modules/fileidentifier"
+
+MIGRATION_SCRIPTS_PATH = "${base_prefix}/usr/share/aos/iam/migration"
+
+FILES_${PN} += " \
+    ${sysconfdir} \
+    ${systemd_system_unitdir} \
+    ${MIGRATION_SCRIPTS_PATH} \
+"
+
+RDEPENDS_${PN} += " \
+    aos-rootca \
+    aos-provfirewall \
+    aos-provfinish \
 "
 
 RDEPENDS_${PN}-dev += " bash make"
 RDEPENDS_${PN}-staticdev += " bash make"
 
 INSANE_SKIP_${PN} = "textrel"
+
+# embed version
+GO_LDFLAGS += '-ldflags="-X main.GitSummary=`git --git-dir=${S}/src/${GO_IMPORT}/.git describe --tags --always`"'
 
 # WA to support go install for v 1.18
 
@@ -69,6 +84,27 @@ do_prepare_ident_modules() {
     done
 
     echo ')' >> ${file}
+}
+
+do_install_append() {
+    install -d ${D}${sysconfdir}/aos
+    install -m 0644 ${WORKDIR}/aos_iamanager.cfg ${D}${sysconfdir}/aos
+
+    install -d ${D}${systemd_system_unitdir}
+    install -m 0644 ${WORKDIR}/aos-iamanager.service ${D}${systemd_system_unitdir}
+
+    install -d ${D}${MIGRATION_SCRIPTS_PATH}
+    source_migration_path="/src/${GO_IMPORT}/database/migration"
+    if [ -d ${S}${source_migration_path} ]; then
+        install -m 0644 ${S}${source_migration_path}/* ${D}${MIGRATION_SCRIPTS_PATH}
+    fi
+}
+
+pkg_postinst_${PN}() {
+    # Add aosiam to /etc/hosts
+    if ! grep -q 'aosiam' $D${sysconfdir}/hosts ; then
+        echo '127.0.0.1	aosiam' >> $D${sysconfdir}/hosts
+    fi
 }
 
 addtask prepare_cert_modules after do_unpack before do_compile
