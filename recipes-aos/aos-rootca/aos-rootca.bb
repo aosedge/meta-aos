@@ -13,6 +13,10 @@ FILES_${PN} = " \
     ${sysconfdir} \
 "
 
+RDEPENDS_${PN} += "\
+    ca-certificates \
+"
+
 do_install() {
     install -d ${D}${sysconfdir}/ssl/certs
     install -m 0644 ${S}/Aos_Root_CA.pem ${D}${sysconfdir}/ssl/certs/
