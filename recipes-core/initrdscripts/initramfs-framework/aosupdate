@@ -55,7 +55,7 @@ mount_update_disk() {
     msg "Mount update disk: $bootparam_aosupdate_disk"
 
     mkdir -p $UPDATE_MOUNT
-    mount $bootparam_aosupdate_disk $UPDATE_MOUNT ${bootparam_selinux_module+"-o context=system_u:object_r:aos_var_run_t:s0"}
+    mount $bootparam_aosupdate_disk $UPDATE_MOUNT ${bootparam_selinux_module+-o context="system_u:object_r:aos_var_run_t:s0"}
 }
 
 umount_update_disk() {
