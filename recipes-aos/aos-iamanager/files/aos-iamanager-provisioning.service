@@ -3,11 +3,11 @@ Description=AOS Identity and Access Manager
 Wants=network-online.target
 After=network-online.target
 PartOf=aos.target
-ConditionPathExists=!/var/aos/.unprovisioned
+ConditionPathExists=/var/aos/.unprovisioned
 
 [Service]
 Type=notify
-ExecStart=/usr/bin/aos_iamanager -c /etc/aos/aos_iamanager.cfg -v debug -j
+ExecStart=/usr/bin/aos_iamanager -c /etc/aos/aos_iamanager.cfg -provisioning -v debug -j
 Restart=always
 RestartSec=10
 

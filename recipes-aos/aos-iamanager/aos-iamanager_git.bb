@@ -13,11 +13,12 @@ SRC_URI = "git://${GO_IMPORT}.git;branch=${BRANCH};protocol=https"
 SRC_URI += " \
     file://aos_iamanager.cfg \
     file://aos-iamanager.service \
+    file://aos-iamanager-provisioning.service \
 "
 
 inherit go goarch systemd
 
-SYSTEMD_SERVICE_${PN} = "aos-iamanager.service"
+SYSTEMD_SERVICE_${PN} = "aos-iamanager.service aos-iamanager-provisioning.service"
 
 AOS_IAM_CERT_MODULES ??= "certhandler/modules/swmodule"
 AOS_IAM_IDENT_MODULES ??= "identhandler/modules/fileidentifier"
@@ -92,6 +93,7 @@ do_install_append() {
 
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/aos-iamanager.service ${D}${systemd_system_unitdir}
+    install -m 0644 ${WORKDIR}/aos-iamanager-provisioning.service ${D}${systemd_system_unitdir}
 
     install -d ${D}${MIGRATION_SCRIPTS_PATH}
     source_migration_path="/src/${GO_IMPORT}/database/migration"
