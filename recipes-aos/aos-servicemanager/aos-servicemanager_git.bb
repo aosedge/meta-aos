@@ -27,8 +27,6 @@ FILES_${PN} += " \
     ${MIGRATION_SCRIPTS_PATH} \
 "
 
-REQUIRED_DISTRO_FEATURES = "virtualization seccomp"
-
 DEPENDS = "systemd"
 
 RDEPENDS_${PN} += "\
