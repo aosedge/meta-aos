@@ -6,8 +6,6 @@ SRC_URI += "\
 "
 
 do_install_append() {
-    if ${@bb.utils.contains('DISTRO_FEATURES', 'read-only-rootfs', 'true', 'false', d)}; then
-        install -d ${D}${sysconfdir}/systemd/system/systemd-journal-flush.service.d
-        install -m 0644 ${WORKDIR}/systemd-journal-flush-override.conf ${D}${sysconfdir}/systemd/system/systemd-journal-flush.service.d
-    fi
+    install -d ${D}${sysconfdir}/systemd/system/systemd-journal-flush.service.d
+    install -m 0644 ${WORKDIR}/systemd-journal-flush-override.conf ${D}${sysconfdir}/systemd/system/systemd-journal-flush.service.d
 }

@@ -8,8 +8,6 @@ do_install_append () {
     # install tmpfiles config
     oe_runmake 'DESTDIR=${D}' install_tmpfiles_configuration
 
-    if ${@bb.utils.contains('DISTRO_FEATURES', 'read-only-rootfs', 'true', 'false', d)}; then
-        # put cache, backup etc. into RW /var/lvm
-        sed -i "s:/etc:/var:g" ${D}${sysconfdir}/lvm/lvm.conf
-    fi
+    # put cache, backup etc. into RW /var/lvm
+    sed -i "s:/etc:/var:g" ${D}${sysconfdir}/lvm/lvm.conf
 }
