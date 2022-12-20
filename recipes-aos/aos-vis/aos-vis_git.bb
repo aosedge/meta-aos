@@ -14,6 +14,7 @@ SRC_URI = "git://${GO_IMPORT}.git;branch=${BRANCH};protocol=https"
 SRC_URI += " \
     file://aos_vis.cfg \
     file://aos-vis.service \
+    file://aos-target.conf \
 "
 
 inherit go goarch systemd
@@ -98,6 +99,9 @@ do_install_append() {
 
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/aos-vis.service ${D}${systemd_system_unitdir}/aos-vis.service
+
+    install -d ${D}${sysconfdir}/systemd/system/aos.target.d
+    install -m 0644 ${WORKDIR}/aos-target.conf ${D}${sysconfdir}/systemd/system/aos.target.d/${PN}.conf
 
     if "${@bb.utils.contains('VIS_DATA_PROVIDER', 'telemetryemulatoradapter', 'true', 'false', d)}"; then
         sed -i -e 's/network-online.target/network-online.target telemetry-emulator.service/g' ${D}${systemd_system_unitdir}/aos-vis.service

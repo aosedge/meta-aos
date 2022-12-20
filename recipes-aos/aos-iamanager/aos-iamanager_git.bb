@@ -14,6 +14,7 @@ SRC_URI += " \
     file://aos_iamanager.cfg \
     file://aos-iamanager.service \
     file://aos-iamanager-provisioning.service \
+    file://aos-target.conf \
 "
 
 inherit go goarch systemd
@@ -93,6 +94,9 @@ do_install_append() {
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/aos-iamanager.service ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/aos-iamanager-provisioning.service ${D}${systemd_system_unitdir}
+
+    install -d ${D}${sysconfdir}/systemd/system/aos.target.d
+    install -m 0644 ${WORKDIR}/aos-target.conf ${D}${sysconfdir}/systemd/system/aos.target.d/${PN}.conf
 
     install -d ${D}${MIGRATION_SCRIPTS_PATH}
     source_migration_path="/src/${GO_IMPORT}/database/migration"

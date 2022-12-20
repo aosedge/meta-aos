@@ -12,6 +12,7 @@ SRC_URI = "git://${GO_IMPORT}.git;branch=${BRANCH};protocol=https"
 SRC_URI += " \
     file://aos_servicemanager.cfg \
     file://aos-servicemanager.service \
+    file://aos-target.conf \
 "
 
 inherit go goarch systemd
@@ -75,6 +76,9 @@ do_install_append() {
     install -m 0644 ${WORKDIR}/aos-servicemanager.service ${D}${systemd_system_unitdir}
     install -m 0644 ${S}/src/${GO_IMPORT}/runner/aos-service@.service ${D}${systemd_system_unitdir}
     sed -i 's/runc/${AOS_RUNNER}/g' ${D}${systemd_system_unitdir}/aos-service@.service
+
+    install -d ${D}${sysconfdir}/systemd/system/aos.target.d
+    install -m 0644 ${WORKDIR}/aos-target.conf ${D}${sysconfdir}/systemd/system/aos.target.d/${PN}.conf
 
     install -d ${D}${MIGRATION_SCRIPTS_PATH}
     source_migration_path="/src/${GO_IMPORT}/database/migration"
