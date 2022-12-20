@@ -33,7 +33,6 @@ FILES_${PN} += " \
 
 RDEPENDS_${PN} += " \
     aos-rootca \
-    aos-provfirewall \
     aos-provfinish \
 "
 
