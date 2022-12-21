@@ -60,10 +60,6 @@ do_compile_prepend() {
 }
 
 do_prepare_modules() {
-    if [ -z "${AOS_UM_UPDATE_MODULES}" ]; then
-        exit 0
-    fi
-
     file="${S}/src/${GO_IMPORT}/updatemodules/modules.go"
 
     echo 'package updatemodules' > ${file}

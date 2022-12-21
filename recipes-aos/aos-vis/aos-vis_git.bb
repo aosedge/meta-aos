@@ -62,10 +62,6 @@ do_compile_prepend() {
 }
 
 do_prepare_adapters() {
-    if [ -z "${AOS_VIS_PLUGINS}" ]; then
-        exit 0
-    fi
-
     file="${S}/src/${GO_IMPORT}/plugins/plugins.go"
 
     echo 'package plugins' > ${file}

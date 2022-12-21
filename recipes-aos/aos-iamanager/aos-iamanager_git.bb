@@ -21,8 +21,8 @@ inherit go goarch systemd
 
 SYSTEMD_SERVICE_${PN} = "aos-iamanager.service aos-iamanager-provisioning.service"
 
-AOS_IAM_CERT_MODULES ??= "certhandler/modules/swmodule"
-AOS_IAM_IDENT_MODULES ??= "identhandler/modules/fileidentifier"
+AOS_IAM_CERT_MODULES ?= "certhandler/modules/swmodule"
+AOS_IAM_IDENT_MODULES ?= ""
 
 MIGRATION_SCRIPTS_PATH = "${base_prefix}/usr/share/aos/iam/migration"
 
@@ -54,10 +54,6 @@ do_compile_prepend() {
 }
 
 do_prepare_cert_modules() {
-    if [ -z "${AOS_IAM_CERT_MODULES}" ]; then
-        exit 0
-    fi
-
     file="${S}/src/${GO_IMPORT}/certhandler/modules/modules.go"
 
     echo 'package certmodules' > ${file}
@@ -71,10 +67,6 @@ do_prepare_cert_modules() {
 }
 
 do_prepare_ident_modules() {
-    if [ -z "${AOS_IAM_IDENT_MODULES}" ]; then
-        exit 0
-    fi
-
     file="${S}/src/${GO_IMPORT}/identhandler/modules/modules.go"
 
     echo 'package identmodules' > ${file}
