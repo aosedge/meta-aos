@@ -86,10 +86,3 @@ do_install_append() {
         install -m 0644 ${S}${source_migration_path}/* ${D}${MIGRATION_SCRIPTS_PATH}
     fi
 }
-
-pkg_postinst_${PN}() {
-    # Add aossm to /etc/hosts
-    if ! grep -q 'aossm' $D${sysconfdir}/hosts ; then
-        echo '127.0.0.1	aossm' >> $D${sysconfdir}/hosts
-    fi
-}

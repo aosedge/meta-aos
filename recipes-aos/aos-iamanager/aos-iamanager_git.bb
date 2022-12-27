@@ -97,12 +97,5 @@ do_install_append() {
     fi
 }
 
-pkg_postinst_${PN}() {
-    # Add aosiam to /etc/hosts
-    if ! grep -q 'aosiam' $D${sysconfdir}/hosts ; then
-        echo '127.0.0.1	aosiam' >> $D${sysconfdir}/hosts
-    fi
-}
-
 addtask prepare_cert_modules after do_unpack before do_compile
 addtask prepare_ident_modules after do_unpack before do_compile
