@@ -6,7 +6,7 @@ LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://src/${GO_IMPORT}/LICENSE;md5=3b83ef96387f14655fc854ddc3c6bd57"
 
 BRANCH = "main"
-SRCREV = "3e6602d95dd9d4ee2240d25a858d37d00752ed20"
+SRCREV = "83da3b377f7aecb14c03b8bacfff5e06eed2ac29"
 SRC_URI = "git://${GO_IMPORT}.git;branch=${BRANCH};protocol=https"
 
 SRC_URI += " \
