@@ -18,6 +18,10 @@ RDEPENDS_${PN} = " \
     jq \
 "
 
+RRECOMMENDS_${PN} += " \
+    kernel-module-dm-mod \
+"
+
 FILES_${PN} = " \
     ${bindir}/diskencryption.sh \
 "
