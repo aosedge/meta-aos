@@ -8,7 +8,6 @@ PartOf=aos.target
 [Service]
 Type=notify
 ExecStart=/usr/bin/aos_messageproxy -c /etc/aos/aos_messageproxy.cfg -v debug -j
-ExecStop=/bin/sh -c "/bin/kill -s TERM $MAINPID; while [ -d /proc/$MAINPID ]; do sleep 1; done"
 Restart=always
 RestartSec=10
 
