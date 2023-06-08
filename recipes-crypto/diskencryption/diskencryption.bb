@@ -9,7 +9,7 @@ SRC_URI = " \
 
 S = "${WORKDIR}"
 
-RDEPENDS_${PN} = " \
+RDEPENDS:${PN} = " \
     cryptsetup \
     lvm2-udevrules \
     opensc \
@@ -18,11 +18,11 @@ RDEPENDS_${PN} = " \
     jq \
 "
 
-RRECOMMENDS_${PN} += " \
+RRECOMMENDS:${PN} += " \
     kernel-module-dm-mod \
 "
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     ${bindir}/diskencryption.sh \
 "
 

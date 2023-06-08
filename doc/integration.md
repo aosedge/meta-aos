@@ -43,7 +43,7 @@ INIT_MANAGER = "systemd"
 Virtualization and seccomp distro features should be enabled in `local.conf`:
 
 ```bash
-DISTRO_FEATURES_append = " virtualization seccomp"
+DISTRO_FEATURES:append = " virtualization seccomp"
 ```
 
 The required kernel options should be enabled in kernel config as modules or builtin. See [Yocto Project Linux Kernel
@@ -74,7 +74,7 @@ WKS_FILE = "custom.wks.in"
 Aos main components should be added into the target image by appending `IMAGE_INSTALL` variable in `local.conf`:
 
 ```bash
-IMAGE_INSTALL_append = " aos-iamanager aos-provfirewall aos-communicationmanager aos-servicemanager aos-updatemanager"
+IMAGE_INSTALL:append = " aos-iamanager aos-provfirewall aos-communicationmanager aos-servicemanager aos-updatemanager"
 ```
 
 `aos-iamanager`, `aos-communicationmanager`, `aos-servicemanager` are core Aos components. `aos-updatemanager` is
@@ -128,7 +128,7 @@ Aos VIS with default configuration can be added into the target system by append
 `local.conf`:
 
 ```bash
-IMAGE_INSTALL_append = " aos-vis aos-iamanager aos-communicationmanager aos-servicemanager aos-provfirewall"
+IMAGE_INSTALL:append = " aos-vis aos-iamanager aos-communicationmanager aos-servicemanager aos-provfirewall"
 ```
 
 In order to get unit identification from VIS, `visidentifier` plugin should be set in aos-iamanger and aos-iamanger

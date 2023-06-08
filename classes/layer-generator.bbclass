@@ -12,7 +12,7 @@ inherit metadata-generator
 
 # Dependencies
 
-DEPENDS_append = " rsync-native"
+DEPENDS:append = " rsync-native"
 
 # Variables
 
@@ -25,7 +25,7 @@ PARENT_LAYER_ROOTFS = "${TMPDIR}/work-shared/${PARENT_LAYER}-${MACHINE}/rootfs"
 ROOTFS_DIFF_DIR = "${WORKDIR}/rootfs_diff"
 SHARED_DIGEST_DIR = "${TMPDIR}/work-shared/layers-${LAYER_DIGEST_TYPE}"
 
-IMAGE_INSTALL_append = "${LAYER_FEATURES_${PN}}"
+IMAGE_INSTALL:append = "${LAYER_FEATURES}"
 
 # Dirs
 
@@ -94,7 +94,7 @@ python do_create_metadata() {
     # Plarform info
 
     platform_info = create_layer_platform_info(d.getVar("MACHINE_ARCH"), d.getVar("TARGET_OS"), d.getVar("DISTRO_VERSION"),
-        d.getVar("LAYER_FEATURES_{}".format(d.getVar("PN"))).split())
+        d.getVar("LAYER_FEATURES").split())
 
     # Annotations
 

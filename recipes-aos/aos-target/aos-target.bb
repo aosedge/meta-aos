@@ -11,9 +11,9 @@ S = "${WORKDIR}"
 
 inherit systemd
 
-SYSTEMD_SERVICE_${PN} = "aos.target"
+SYSTEMD_SERVICE:${PN} = "aos.target"
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     ${systemd_system_unitdir} \
 "
 

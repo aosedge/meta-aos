@@ -1,4 +1,4 @@
-FILESEXTRAPATHS_prepend := "${THISDIR}/initramfs-framework:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/initramfs-framework:"
 
 SRC_URI += " \
     file://aosupdate \
@@ -18,41 +18,41 @@ PACKAGES += " \
     initramfs-module-vardir \
 "
 
-SUMMARY_initramfs-module-aosupdate = "initramfs support for Aos rootfs update"
-RDEPENDS_initramfs-module-aosupdate = "${PN}-base rsync"
-FILES_initramfs-module-aosupdate = "/init.d/95-aosupdate"
-RRECOMMENDS_initramfs-module-aosupdate = " \
+SUMMARY:initramfs-module-aosupdate = "initramfs support for Aos rootfs update"
+RDEPENDS:initramfs-module-aosupdate = "${PN}-base rsync"
+FILES:initramfs-module-aosupdate = "/init.d/95-aosupdate"
+RRECOMMENDS:initramfs-module-aosupdate = " \
     kernel-module-loop \
     kernel-module-overlay \
     kernel-module-squashfs \
 "
 
-SUMMARY_initramfs-module-machineid = "bind /etc/machine-id to /var/machine-id"
-RDEPENDS_initramfs-module-machineid = "${PN}-base initramfs-module-vardir"
-FILES_initramfs-module-machineid = "/init.d/96-machineid"
+SUMMARY:initramfs-module-machineid = "bind /etc/machine-id to /var/machine-id"
+RDEPENDS:initramfs-module-machineid = "${PN}-base initramfs-module-vardir"
+FILES:initramfs-module-machineid = "/init.d/96-machineid"
 
-SUMMARY_initramfs-module-opendisk = "initramfs support for opening encrypted disk"
-RDEPENDS_initramfs-module-opendisk = "${PN}-base diskencryption"
-FILES_initramfs-module-opendisk = "/init.d/05-opendisk"
+SUMMARY:initramfs-module-opendisk = "initramfs support for opening encrypted disk"
+RDEPENDS:initramfs-module-opendisk = "${PN}-base diskencryption"
+FILES:initramfs-module-opendisk = "/init.d/05-opendisk"
 
-SUMMARY_initramfs-module-rundir = "initramfs support for sharing /run dir to local"
-RDEPENDS_initramfs-module-rundir = "${PN}-base"
-FILES_initramfs-module-rundir = "/init.d/00-rundir"
+SUMMARY:initramfs-module-rundir = "initramfs support for sharing /run dir to local"
+RDEPENDS:initramfs-module-rundir = "${PN}-base"
+FILES:initramfs-module-rundir = "/init.d/00-rundir"
 
-SUMMARY_initramfs-module-selinux = "initramfs support for selinux"
-RDEPENDS_initramfs-module-selinux = " \
+SUMMARY:initramfs-module-selinux = "initramfs support for selinux"
+RDEPENDS:initramfs-module-selinux = " \
     ${PN}-base \
     packagegroup-selinux-minimal \
     policycoreutils-hll \
     policycoreutils-loadpolicy \
 "
-FILES_initramfs-module-selinux = "/init.d/03-selinux"
+FILES:initramfs-module-selinux = "/init.d/03-selinux"
 
-SUMMARY_initramfs-module-vardir = "mount RW /var directory"
-RDEPENDS_initramfs-module-vardir = "${PN}-base"
-FILES_initramfs-module-vardir = "/init.d/02-vardir"
+SUMMARY:initramfs-module-vardir = "mount RW /var directory"
+RDEPENDS:initramfs-module-vardir = "${PN}-base"
+FILES:initramfs-module-vardir = "/init.d/02-vardir"
 
-do_install_append() {
+do_install:append() {
     # aosupdate
     install -m 0755 ${WORKDIR}/aosupdate ${D}/init.d/95-aosupdate
 

@@ -13,19 +13,19 @@ S = "${WORKDIR}"
 
 inherit systemd
 
-SYSTEMD_SERVICE_${PN} = "aos-provfirewall.service"
+SYSTEMD_SERVICE:${PN} = "aos-provfirewall.service"
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     ${sysconfdir} \
     ${systemd_system_unitdir} \
     ${aos_opt_dir} \
 "
 
-RDEPENDS_${PN} += " \
+RDEPENDS:${PN} += " \
     iptables \
 "
 
-RRECOMMENDS_${PN} += " \
+RRECOMMENDS:${PN} += " \
     kernel-module-xt-tcpudp \
 "
 

@@ -10,11 +10,11 @@ SRC_URI = " \
 
 S = "${WORKDIR}"
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     ${aos_opt_dir} \
 "
 
-RDEPENDS_${PN} = " \
+RDEPENDS:${PN} = " \
     diskencryption \
     lvm2 \
     lvm2-udevrules \

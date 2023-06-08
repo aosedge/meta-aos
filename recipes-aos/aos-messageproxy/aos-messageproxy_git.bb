@@ -15,7 +15,7 @@ SRC_URI += " \
     file://aos-messageproxy.service \
     file://aos-target.conf \
 "
-FILES_${PN} += " \
+FILES:${PN} += " \
     ${sysconfdir} \
     ${systemd_system_unitdir} \
 "
@@ -23,7 +23,7 @@ FILES_${PN} += " \
 inherit go goarch
 
 DEPENDS = "xen-tools"
-RDEPENDS_${PN} = "xen-tools-libxenvchan"
+RDEPENDS:${PN} = "xen-tools-libxenvchan"
 
 # embed version
 GO_LDFLAGS += '-ldflags="-X main.GitSummary=`git --git-dir=${S}/src/${GO_IMPORT}/.git describe --tags --always`"'
@@ -32,11 +32,11 @@ GO_LDFLAGS += '-ldflags="-X main.GitSummary=`git --git-dir=${S}/src/${GO_IMPORT}
 
 GO_LINKSHARED = ""
 
-do_compile_prepend() {
+do_compile:prepend() {
     cd ${GOPATH}/src/${GO_IMPORT}/
 }
 
-do_install_append() {
+do_install:append() {
     install -d ${D}${sysconfdir}/aos
     install -m 0644 ${WORKDIR}/aos_messageproxy.cfg ${D}${sysconfdir}/aos
 

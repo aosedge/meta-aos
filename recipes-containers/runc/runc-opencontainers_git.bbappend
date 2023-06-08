@@ -1,4 +1,4 @@
-FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
 SRCREV = "5fd4c4d144137e991c4acebb2146ab1483a97925"
 SRC_URI = " \

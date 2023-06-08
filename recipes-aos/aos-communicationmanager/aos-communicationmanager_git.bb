@@ -18,11 +18,11 @@ SRC_URI += " \
 
 inherit go goarch systemd
 
-SYSTEMD_SERVICE_${PN} = "aos-communicationmanager.service"
+SYSTEMD_SERVICE:${PN} = "aos-communicationmanager.service"
 
 MIGRATION_SCRIPTS_PATH = "${base_prefix}/usr/share/aos/cm/migration"
 
-FILES_${PN} += " \
+FILES:${PN} += " \
     ${sysconfdir} \
     ${systemd_system_unitdir} \
     ${MIGRATION_SCRIPTS_PATH} \
@@ -30,14 +30,14 @@ FILES_${PN} += " \
 
 DEPENDS = "systemd"
 
-RDEPENDS_${PN} += " \
+RDEPENDS:${PN} += " \
     aos-rootca \
 "
 
-RDEPENDS_${PN}-dev += " bash make"
-RDEPENDS_${PN}-staticdev += " bash make"
+RDEPENDS:${PN}-dev += " bash make"
+RDEPENDS:${PN}-staticdev += " bash make"
 
-INSANE_SKIP_${PN} = "textrel"
+INSANE_SKIP:${PN} = "textrel"
 
 # embed version
 GO_LDFLAGS += '-ldflags="-X main.GitSummary=`git --git-dir=${S}/src/${GO_IMPORT}/.git describe --tags --always`"'
@@ -46,11 +46,11 @@ GO_LDFLAGS += '-ldflags="-X main.GitSummary=`git --git-dir=${S}/src/${GO_IMPORT}
 
 GO_LINKSHARED = ""
 
-do_compile_prepend() {
+do_compile:prepend() {
     cd ${GOPATH}/src/${GO_IMPORT}/
 }
 
-do_install_append() {
+do_install:append() {
     install -d ${D}${sysconfdir}/aos
     install -m 0644 ${WORKDIR}/aos_communicationmanager.cfg ${D}${sysconfdir}/aos
 
@@ -66,4 +66,3 @@ do_install_append() {
         install -m 0644 ${S}${source_migration_path}/* ${D}${MIGRATION_SCRIPTS_PATH}
     fi
 }
-

@@ -9,11 +9,11 @@ SRC_URI = " \
 
 S = "${WORKDIR}"
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     ${sysconfdir} \
 "
 
-RDEPENDS_${PN} += "\
+RDEPENDS:${PN} += "\
     ca-certificates \
 "
 

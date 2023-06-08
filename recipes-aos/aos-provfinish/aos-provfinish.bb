@@ -9,12 +9,12 @@ SRC_URI = " \
 
 S = "${WORKDIR}"
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     ${aos_var_dir} \
     ${aos_opt_dir} \
 "
 
-RDEPENDS_${PN} = "aos-target"
+RDEPENDS:${PN} = "aos-target"
 
 do_install() {
     install -d ${D}${aos_var_dir}

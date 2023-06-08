@@ -19,28 +19,28 @@ SRC_URI += " \
 
 inherit go goarch systemd
 
-SYSTEMD_SERVICE_${PN} = "aos-iamanager.service aos-iamanager-provisioning.service"
+SYSTEMD_SERVICE:${PN} = "aos-iamanager.service aos-iamanager-provisioning.service"
 
 AOS_IAM_CERT_MODULES ?= "certhandler/modules/swmodule"
 AOS_IAM_IDENT_MODULES ?= ""
 
 MIGRATION_SCRIPTS_PATH = "${base_prefix}/usr/share/aos/iam/migration"
 
-FILES_${PN} += " \
+FILES:${PN} += " \
     ${sysconfdir} \
     ${systemd_system_unitdir} \
     ${MIGRATION_SCRIPTS_PATH} \
 "
 
-RDEPENDS_${PN} += " \
+RDEPENDS:${PN} += " \
     aos-rootca \
     aos-provfinish \
 "
 
-RDEPENDS_${PN}-dev += " bash make"
-RDEPENDS_${PN}-staticdev += " bash make"
+RDEPENDS:${PN}-dev += " bash make"
+RDEPENDS:${PN}-staticdev += " bash make"
 
-INSANE_SKIP_${PN} = "textrel"
+INSANE_SKIP:${PN} = "textrel"
 
 # embed version
 GO_LDFLAGS += '-ldflags="-X main.GitSummary=`git --git-dir=${S}/src/${GO_IMPORT}/.git describe --tags --always`"'
@@ -49,7 +49,7 @@ GO_LDFLAGS += '-ldflags="-X main.GitSummary=`git --git-dir=${S}/src/${GO_IMPORT}
 
 GO_LINKSHARED = ""
 
-do_compile_prepend() {
+do_compile:prepend() {
     cd ${GOPATH}/src/${GO_IMPORT}/
 }
 
@@ -79,7 +79,7 @@ do_prepare_ident_modules() {
     echo ')' >> ${file}
 }
 
-do_install_append() {
+do_install:append() {
     install -d ${D}${sysconfdir}/aos
     install -m 0644 ${WORKDIR}/aos_iamanager.cfg ${D}${sysconfdir}/aos
 

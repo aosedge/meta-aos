@@ -15,9 +15,9 @@ inherit goarch
 # embed version
 GO_LDFLAGS += '-ldflags="-X github.com/containernetworking/plugins/pkg/utils/buildversion.BuildVersion=`git --git-dir=${S}/src/${GO_IMPORT}/.git describe --tags --always`"'
 
-FILES_${PN} = "${libexecdir}/cni"
+FILES:${PN} = "${libexecdir}/cni"
 
-RDEPENDS_${PN} += "\
+RDEPENDS:${PN} += "\
     iptables \
 "
 
@@ -25,7 +25,7 @@ RDEPENDS_${PN} += "\
 
 GO_LINKSHARED = ""
 
-do_compile_prepend() {
+do_compile:prepend() {
     cd ${GOPATH}/src/${GO_IMPORT}/
 }
 

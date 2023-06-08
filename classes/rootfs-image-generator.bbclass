@@ -19,7 +19,7 @@ OSTREE_REPO_TYPE = "archive"
 
 # Dependencies
 
-DEPENDS_append = " \
+DEPENDS:append = " \
     ostree-native \
     squashfs-tools-native \
     ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'policycoreutils-native', '', d)} \
