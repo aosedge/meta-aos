@@ -1,8 +1,8 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/systemd:"
 
 SRC_URI += " \
-    file://0001-systemd-networkd.socket-Add-conflict-with-shutdown.t.patch \
     file://systemd-journal-flush-override.conf \
+    ${@bb.utils.contains('LAYERSERIES_CORENAMES', 'dunfell', 'file://0001-systemd-networkd.socket-Add-conflict-with-shutdown.t.patch', '', d)} \
 "
 
 do_install:append() {
