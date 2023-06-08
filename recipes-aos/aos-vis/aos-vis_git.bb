@@ -21,7 +21,7 @@ inherit go goarch systemd
 
 SYSTEMD_SERVICE:${PN} = "aos-vis.service"
 
-VIS_DATA_PROVIDER ?= "renesassimulatoradapter"
+AOS_VIS_DATA_PROVIDER ?= "renesassimulatoradapter"
 
 AOS_VIS_PLUGINS ?= " \
     plugins/vinadapter \
@@ -30,8 +30,8 @@ AOS_VIS_PLUGINS ?= " \
 "
 
 python __anonymous() {
-    if d.getVar('VIS_DATA_PROVIDER'):
-        d.appendVar('AOS_VIS_PLUGINS', 'plugins/${VIS_DATA_PROVIDER}')
+    if d.getVar('AOS_VIS_DATA_PROVIDER'):
+        d.appendVar('AOS_VIS_PLUGINS', 'plugins/${AOS_VIS_DATA_PROVIDER}')
 }
 
 VIS_CERTS_PATH = "${base_prefix}/usr/share/aos/vis/certs"
@@ -44,7 +44,7 @@ FILES:${PN} += " \
 
 RDEPENDS:${PN} += " \
     aos-rootca \
-    ${@bb.utils.contains('VIS_DATA_PROVIDER', 'telemetryemulatoradapter', 'telemetry-emulator', '', d)} \
+    ${@bb.utils.contains('AOS_VIS_DATA_PROVIDER', 'telemetryemulatoradapter', 'telemetry-emulator', '', d)} \
 "
 
 RDEPENDS:${PN}-dev += " bash make"
@@ -99,7 +99,7 @@ do_install:append() {
     install -d ${D}${sysconfdir}/systemd/system/aos.target.d
     install -m 0644 ${WORKDIR}/aos-target.conf ${D}${sysconfdir}/systemd/system/aos.target.d/${PN}.conf
 
-    if "${@bb.utils.contains('VIS_DATA_PROVIDER', 'telemetryemulatoradapter', 'true', 'false', d)}"; then
+    if "${@bb.utils.contains('AOS_VIS_DATA_PROVIDER', 'telemetryemulatoradapter', 'true', 'false', d)}"; then
         sed -i -e 's/network-online.target/network-online.target telemetry-emulator.service/g' ${D}${systemd_system_unitdir}/aos-vis.service
         sed -i -e '/ExecStart/i ExecStartPre=/bin/sleep 1' ${D}${systemd_system_unitdir}/aos-vis.service
     fi
