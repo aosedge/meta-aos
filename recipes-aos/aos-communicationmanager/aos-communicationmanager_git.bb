@@ -14,6 +14,7 @@ SRC_URI += " \
     file://aos_communicationmanager.cfg \
     file://aos-communicationmanager.service \
     file://aos-target.conf \
+    file://aos-dirs-service.conf \
 "
 
 inherit go goarch systemd
@@ -51,6 +52,51 @@ GO_LDFLAGS += '-ldflags="-X main.GitSummary=`git --git-dir=${S}/src/${GO_IMPORT}
 
 GO_LINKSHARED = ""
 
+python do_update_config() {
+    import json
+
+    file_name = oe.path.join(d.getVar("D"), d.getVar("sysconfdir"), "aos", "aos_communicationmanager.cfg")
+
+    with open(file_name) as f:
+        data = json.load(f)
+
+    node_id = d.getVar("AOS_NODE_ID")
+    remote_nodes = d.getVar("AOS_REMOTE_NODE_IDS").split()
+    node_hostname = d.getVar("AOS_NODE_HOSTNAME")
+ 
+    # Update IAM servers
+    
+    data["IAMProtectedServerURL"]= node_hostname+":8089"
+    data["IAMPublicServerURL"] = node_hostname+":8090"
+
+    # Update SM controller
+
+    sm_controller = data["SMController"]
+
+    if len(remote_nodes) > 0:
+        sm_controller["FileServerURL"] = node_hostname+":8094" 
+ 
+    sm_controller["NodeIDs"] = [node_id]
+
+    for remote_node in remote_nodes:
+        sm_controller["NodeIDs"].append(remote_node)
+
+    # Update CM controller
+
+    um_controller = data["UMController"]
+
+    if len(remote_nodes) > 0:
+        um_controller["FileServerURL"] = node_hostname+":8092" 
+ 
+    um_controller["UMClients"] = [{"UMID": node_id, "IsLocal": True, "Priority": 1}]
+
+    for remote_node in remote_nodes:
+        um_controller["UMClients"].append({"UMID": remote_node})
+
+    with open(file_name, "w") as f:
+        json.dump(data, f, indent=4)
+}
+
 do_compile:prepend() {
     cd ${GOPATH}/src/${GO_IMPORT}/
 }
@@ -65,9 +111,14 @@ do_install:append() {
     install -d ${D}${sysconfdir}/systemd/system/aos.target.d
     install -m 0644 ${WORKDIR}/aos-target.conf ${D}${sysconfdir}/systemd/system/aos.target.d/${PN}.conf
 
+    install -d ${D}${sysconfdir}/systemd/system/aos-communicationmanager.service.d
+    install -m 0644 ${WORKDIR}/aos-dirs-service.conf ${D}${sysconfdir}/systemd/system/aos-communicationmanager.service.d/10-aos-dirs-service.conf
+
     install -d ${D}${MIGRATION_SCRIPTS_PATH}
     source_migration_path="/src/${GO_IMPORT}/database/migration"
     if [ -d ${S}${source_migration_path} ]; then
         install -m 0644 ${S}${source_migration_path}/* ${D}${MIGRATION_SCRIPTS_PATH}
     fi
 }
+
+addtask update_config after do_install before do_package
