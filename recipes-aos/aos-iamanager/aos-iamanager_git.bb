@@ -79,6 +79,46 @@ do_prepare_ident_modules() {
     echo ')' >> ${file}
 }
 
+do_install[vardeps] = "AOS_NODE_ID AOS_NODE_TYPE"
+
+python do_update_config() {
+    import json
+
+    file_name = oe.path.join(d.getVar("D"), d.getVar("sysconfdir"), "aos", "aos_iamanager.cfg")
+
+    with open(file_name) as f:
+        data = json.load(f)
+
+    # Set node ID and node type
+    
+    node_info = {
+        "NodeID": d.getVar("AOS_NODE_ID"),
+        "NodeType" : d.getVar("AOS_NODE_TYPE")
+    }
+
+    data = {**node_info, **data}
+
+    # Set alternative names for server certificates
+
+    for cert_module in data["CertModules"]:
+        if "ExtendedKeyUsage" in cert_module and "serverAuth" in cert_module["ExtendedKeyUsage"]:
+            cert_module["AlternativeNames"] = [d.getVar("AOS_NODE_HOSTNAME")]
+
+    # Add remote IAM's configuration
+
+    remote_nodes = d.getVar("AOS_REMOTE_NODE_IDS").split()
+    remote_hostnames = d.getVar("AOS_REMOTE_NODE_HOSTNAMES").split()
+
+    if len(remote_nodes) != 0:
+        data["RemoteIams"] = []
+
+        for i in range(len(remote_nodes)):
+            data["RemoteIams"].append({"NodeID": remote_nodes[i], "URL": remote_hostnames[i]+":8089"})
+
+    with open(file_name, "w") as f:
+        json.dump(data, f, indent=4)
+}
+
 do_install:append() {
     install -d ${D}${sysconfdir}/aos
     install -m 0644 ${WORKDIR}/aos_iamanager.cfg ${D}${sysconfdir}/aos
@@ -99,3 +139,4 @@ do_install:append() {
 
 addtask prepare_cert_modules after do_unpack before do_compile
 addtask prepare_ident_modules after do_unpack before do_compile
+addtask update_config after do_install before do_package
