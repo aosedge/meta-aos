@@ -34,6 +34,11 @@ RDEPENDS:${PN} += " \
     aos-rootca \
 "
 
+python __anonymous() {
+    if len(d.getVar("AOS_REMOTE_NODE_IDS").split()) > 0:
+        d.appendVar("RDEPENDS:"+d.getVar('PN'), "nfs-exports")
+}
+
 RDEPENDS:${PN}-dev += " bash make"
 RDEPENDS:${PN}-staticdev += " bash make"
 
