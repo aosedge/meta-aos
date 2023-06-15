@@ -15,6 +15,8 @@ SRC_URI += " \
     file://aos_updatemanager.cfg \
     file://aos-updatemanager.service \
     file://aos-target.conf \
+    file://aos-dirs-service.conf \
+    file://aos-cm-service.conf \
 "
 
 inherit go goarch systemd
@@ -72,6 +74,37 @@ do_prepare_modules() {
     echo ')' >> ${file}
 }
 
+python do_update_config() {
+    import json
+
+    file_name = oe.path.join(d.getVar("D"), d.getVar("sysconfdir"), "aos", "aos_updatemanager.cfg")
+
+    with open(file_name) as f:
+        data = json.load(f)
+
+    node_id = d.getVar("AOS_NODE_ID")
+    node_hostname = d.getVar("AOS_NODE_HOSTNAME")
+    main_node_hostname = d.getVar("AOS_MAIN_NODE_HOSTNAME")
+ 
+    # Update IAM servers
+    
+    data["IAMPublicServerURL"] = node_hostname+":8090"
+
+    # Update CM server
+
+    data["CMServerURL"] = main_node_hostname+":8091"
+
+    # Update component IDs
+
+    for update_module in data["UpdateModules"]:
+        update_module["ID"] = d.getVar("AOS_UNIT_MODEL")+"-"+d.getVar("AOS_UNIT_VERSION")+"-"+node_id+"-"+update_module["ID"]
+
+    with open(file_name, "w") as f:
+        json.dump(data, f, indent=4)
+}
+
+do_install[vardeps] = "AOS_NODE_ID AOS_UNIT_MODEL AOS_UNIT_VERSION"
+
 do_install:append() {
     install -d ${D}${sysconfdir}/aos
     install -m 0644 ${WORKDIR}/aos_updatemanager.cfg ${D}${sysconfdir}/aos
@@ -82,6 +115,9 @@ do_install:append() {
     install -d ${D}${sysconfdir}/systemd/system/aos.target.d
     install -m 0644 ${WORKDIR}/aos-target.conf ${D}${sysconfdir}/systemd/system/aos.target.d/${PN}.conf
 
+    install -d ${D}${sysconfdir}/systemd/system/aos-updatemanager.service.d
+    install -m 0644 ${WORKDIR}/aos-dirs-service.conf ${D}${sysconfdir}/systemd/system/aos-updatemanager.service.d/20-aos-dirs-service.conf
+
     install -d ${D}${MIGRATION_SCRIPTS_PATH}
     source_migration_path="src/${GO_IMPORT}/database/migration"
     if [ -d ${S}/${source_migration_path} ]; then
@@ -89,4 +125,10 @@ do_install:append() {
     fi
 }
 
+do_install:append:aos-main-node() {
+    install -d ${D}${sysconfdir}/systemd/system/aos-updatemanager.service.d
+    install -m 0644 ${WORKDIR}/aos-cm-service.conf ${D}${sysconfdir}/systemd/system/aos-updatemanager.service.d/10-aos-cm-service.conf
+}
+
+addtask update_config after do_install before do_package
 addtask prepare_modules after do_unpack before do_compile
