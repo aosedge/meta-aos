@@ -141,7 +141,7 @@ encrypt_device() {
     pkcs11-tool -r --module "$MODULE" ${USER_PIN:+-p "$USER_PIN"} ${TOKEN_LABEL:+--token-label "$TOKEN_LABEL"} \
         ${OBJECT_LABEL:+-a "$OBJECT_LABEL"} ${OBJECT_ID:+-d "$OBJECT_ID"} --type cert -o $tmp_path/encrypt.cert
     openssl x509 -inform DER -in $tmp_path/encrypt.cert -pubkey -out $tmp_path/encrypt.pub
-    echo $passcode | base64 -d | openssl rsautl -encrypt -inkey $tmp_path/encrypt.pub -pubin -out $tmp_path/passcode.enc
+    echo $passcode | base64 -d | openssl pkeyutl -encrypt -inkey $tmp_path/encrypt.pub -pubin -out $tmp_path/passcode.enc
 
     # encrypt disk
     echo $passcode | cryptsetup -q --type luks2 luksFormat $DEVICE
