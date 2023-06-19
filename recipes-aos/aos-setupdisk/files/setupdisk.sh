@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
@@ -37,9 +37,9 @@ fatal() {
 }
 
 get_mount_point() {
-    while read device mount_point remaining; do
+    while read -r device mount_point; do
         # skip comments
-        if [[ $name = \#* ]]; then
+        if [[ $device = \#* ]]; then
             continue
         fi
 
@@ -78,30 +78,30 @@ create_aos_disks() {
     mkdir -p -m 0700 /run/lock/lvm
 
     pvcreate /dev/mapper/$MAPPED_DEVICE
-    vgcreate $AOS_GROUP /dev/mapper/$MAPPED_DEVICE
+    vgcreate "$AOS_GROUP" /dev/mapper/$MAPPED_DEVICE
 
-    while read name size enable_quota; do
+    while read -r name size enable_quota; do
         # skip comments
         if [[ $name = \#* ]]; then
             continue
         fi
 
-        lvcreate -l $size $AOS_GROUP -n $name
-        mkfs.ext4 /dev/$AOS_GROUP/$name
-        mkdir -p $(get_mount_point /dev/$AOS_GROUP/$name)
+        lvcreate -l "$size" "$AOS_GROUP" -n "$name"
+        mkfs.ext4 "/dev/$AOS_GROUP/$name"
+        mkdir -p "$(get_mount_point "/dev/$AOS_GROUP/$name")"
     done <"$CONFIG_FILE"
 
     # wait all parts are mounted
     mount -a
 
-    while read name size enable_quota; do
+    while read -r name size enable_quota; do
         # skip comments
         if [[ $name = \#* ]]; then
             continue
         fi
 
-        if [ $enable_quota -eq 1 ]; then
-            quotacheck -cum /dev/$AOS_GROUP/$name
+        if [ "$enable_quota" -eq 1 ]; then
+            quotacheck -cum "/dev/$AOS_GROUP/$name"
         fi
     done <"$CONFIG_FILE"
 
@@ -110,21 +110,21 @@ create_aos_disks() {
 }
 
 delete_aos_disks() {
-    while read name size enable_quota; do
+    while read -r name size enable_quota; do
         # skip comments
         if [[ $name = \#* ]]; then
             continue
         fi
 
-        mountdir=$(get_mount_point /dev/$AOS_GROUP/$name)
+        mountdir=$(get_mount_point "/dev/$AOS_GROUP/$name")
 
-        if mountpoint -q $mountdir; then
-            umount $mountdir
+        if mountpoint -q "$mountdir"; then
+            umount "$mountdir"
         fi
 
     done <"$CONFIG_FILE"
 
-    lvremove -f -q $AOS_GROUP
+    lvremove -f -q "$AOS_GROUP"
     cryptsetup close $MAPPED_DEVICE
 }
 
@@ -189,7 +189,7 @@ AOS_GROUP="aosvg"
 
 case "$COMMAND" in
 create)
-    create_aos_disks $2
+    create_aos_disks "$2"
     ;;
 
 delete)

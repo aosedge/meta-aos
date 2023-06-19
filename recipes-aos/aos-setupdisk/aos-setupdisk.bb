@@ -16,6 +16,7 @@ FILES:${PN} = " \
 "
 
 RDEPENDS:${PN} = " \
+    bash \
     diskencryption \
     lvm2 \
     lvm2-udevrules \
