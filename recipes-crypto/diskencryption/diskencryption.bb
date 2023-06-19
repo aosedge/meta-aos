@@ -10,6 +10,7 @@ SRC_URI = " \
 S = "${WORKDIR}"
 
 RDEPENDS:${PN} = " \
+    bash \
     cryptsetup \
     lvm2-udevrules \
     opensc \

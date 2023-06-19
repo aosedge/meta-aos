@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
@@ -124,7 +124,7 @@ create_uri() {
         uri="${uri}id=$OBJECT_ID;"
     fi
 
-    echo ${uri%;}
+    echo "${uri%;}"
 }
 
 encrypt_device() {
@@ -141,10 +141,10 @@ encrypt_device() {
     pkcs11-tool -r --module "$MODULE" ${USER_PIN:+-p "$USER_PIN"} ${TOKEN_LABEL:+--token-label "$TOKEN_LABEL"} \
         ${OBJECT_LABEL:+-a "$OBJECT_LABEL"} ${OBJECT_ID:+-d "$OBJECT_ID"} --type cert -o $tmp_path/encrypt.cert
     openssl x509 -inform DER -in $tmp_path/encrypt.cert -pubkey -out $tmp_path/encrypt.pub
-    echo $passcode | base64 -d | openssl pkeyutl -encrypt -inkey $tmp_path/encrypt.pub -pubin -out $tmp_path/passcode.enc
+    echo "$passcode" | base64 -d | openssl pkeyutl -encrypt -inkey $tmp_path/encrypt.pub -pubin -out $tmp_path/passcode.enc
 
     # encrypt disk
-    echo $passcode | cryptsetup -q --type luks2 luksFormat $DEVICE
+    echo "$passcode" | cryptsetup -q --type luks2 luksFormat "$DEVICE"
 
     local aos_token=$(jq -n -c \
         --arg type "aos-pkcs11" \
@@ -154,7 +154,7 @@ encrypt_device() {
         '$ARGS.named')
 
     # set token
-    echo $aos_token | cryptsetup token import --key-slot 0 $DEVICE
+    echo "$aos_token" | cryptsetup token import --key-slot 0 "$DEVICE"
 
     rm -rf $tmp_path
 
@@ -168,7 +168,7 @@ parse_uri() {
         fatal "wrong protocol $proto"
     fi
 
-    echo ${1#*:} | while IFS=';' read -r p; do
+    echo "${1#*:}" | while IFS=';' read -r p; do
         local name="${p%=*}"
         local value="${p#*=}"
 
@@ -213,7 +213,7 @@ get_key_id() {
 
         ID)
             if [ "$OBJECT_LABEL" == "$current_label" ]; then
-                echo $value
+                echo "$value"
             fi
             ;;
         esac
@@ -229,10 +229,10 @@ open_device() {
         fatal "can't get Aos token from device"
     fi
 
-    local pkcs11_uri=$(echo $aos_token | jq -r '."pkcs11-uri"')
-    local pkcs11_key=$(echo $aos_token | jq -r '."pkcs11-key"')
+    local pkcs11_uri=$(echo "$aos_token" | jq -r '."pkcs11-uri"')
+    local pkcs11_key=$(echo "$aos_token" | jq -r '."pkcs11-key"')
 
-    parse_uri $pkcs11_uri
+    parse_uri "$pkcs11_uri"
 
     if [ -n "$OBJECT_LABEL" ] && [ -z "$OBJECT_ID" ]; then
         OBJECT_ID=$(get_key_id)
@@ -243,12 +243,12 @@ open_device() {
     fi
 
     # decrypt passcode
-    local passcode=$(echo $pkcs11_key | base64 -d | pkcs11-tool --decrypt -m RSA-PKCS --module "$MODULE" \
+    local passcode=$(echo "$pkcs11_key" | base64 -d | pkcs11-tool --decrypt -m RSA-PKCS --module "$MODULE" \
         ${USER_PIN:+-p "$USER_PIN"} ${TOKEN_LABEL:+--token-label "$TOKEN_LABEL"} ${OBJECT_ID:+-d "$OBJECT_ID"} |
         base64 -w 0)
 
     # open device
-    echo $passcode | cryptsetup open "$DEVICE" "$MAPPED_DEVICE"
+    echo "$passcode" | cryptsetup open "$DEVICE" "$MAPPED_DEVICE"
 
     echo "Success"
 }
