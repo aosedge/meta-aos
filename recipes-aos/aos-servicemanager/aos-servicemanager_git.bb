@@ -32,6 +32,8 @@ FILES:${PN} += " \
 
 DEPENDS = "systemd"
 
+VIRTUAL_RUNC = "${@bb.utils.contains('LAYERSERIES_CORENAMES', 'dunfell', 'virtual/runc', 'virtual-runc', d)}"
+
 RDEPENDS:${PN} += " \
     aos-rootca \
     iptables \
@@ -39,7 +41,7 @@ RDEPENDS:${PN} += " \
     cni \
     aos-firewall \
     aos-dnsname \
-    ${@bb.utils.contains("AOS_RUNNER", "runc", "virtual-runc", "${AOS_RUNNER}", d)} \
+    ${@bb.utils.contains("AOS_RUNNER", "runc", "${VIRTUAL_RUNC}", "${AOS_RUNNER}", d)} \
 "
 
 RDEPENDS:${PN}:append:aos-secondary-node = " \
