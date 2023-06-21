@@ -5,8 +5,8 @@ GO_IMPORT = "github.com/aoscloud/aos_cni_dns"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://src/${GO_IMPORT}/LICENSE;md5=3b83ef96387f14655fc854ddc3c6bd57"
 
-BRANCH = "main"
-SRCREV = "d02c81e1182f4bc0b2c7991425cae979097d9cb7"
+BRANCH = "develop"
+SRCREV = "${AUTOREV}"
 SRC_URI = "git://${GO_IMPORT}.git;branch=${BRANCH};protocol=https"
 
 inherit go

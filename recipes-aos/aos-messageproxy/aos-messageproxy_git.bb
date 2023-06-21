@@ -5,8 +5,8 @@ GO_IMPORT = "github.com/aoscloud/aos_message_proxy"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://src/${GO_IMPORT}/LICENSE;md5=86d3f3a95c324c9479bd8986968f4327"
 
-BRANCH = "main"
-SRCREV = "648ef1ee6f678da3a7fb285be5563e84973b2fbf"
+BRANCH = "develop"
+SRCREV = "${AUTOREV}"
 
 SRC_URI = "git://${GO_IMPORT}.git;branch=${BRANCH};protocol=https"
 
