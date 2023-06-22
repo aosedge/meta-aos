@@ -41,7 +41,7 @@ do_image_complete[noexec] = "1"
 # Tasks
 
 do_create_rootfs_archive() {
-    rsync -HAXlrvcm --append --progress --delete --compare-dest=${PARENT_LAYER_ROOTFS}/ ${IMAGE_ROOTFS}/* ${ROOTFS_DIFF_DIR}
+    rsync -HXlrvcm --append --progress --delete --compare-dest=${PARENT_LAYER_ROOTFS}/ ${IMAGE_ROOTFS}/* ${ROOTFS_DIFF_DIR}
     find ${ROOTFS_DIFF_DIR} -type d -empty -delete
 
     # Create layer rootfs tar
