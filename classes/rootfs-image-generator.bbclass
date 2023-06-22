@@ -2,18 +2,17 @@
 
 # Configuration
 
-ROOTFS_IMAGE_TYPE ??= ""
-ROOTFS_IMAGE_VERSION ??= "${PV}"
-ROOTFS_REF_VERSION ??= "${PV}"
-ROOTFS_IMAGE_DIR ??= "${WORKDIR}/update"
-ROOTFS_IMAGE_FILE ??= "${IMAGE_BASENAME}-${MACHINE}-${ROOTFS_IMAGE_VERSION}.rootfs.squashfs"
-ROOTFS_OSTREE_REPO ??= "${DEPLOY_DIR_IMAGE}/update/repo"
-ROOTFS_EXCLUDE_FILES ??= "var/* home/*"
-ROOTFS_SOURCE_DIR ??= "${IMAGE_ROOTFS}"
+AOS_ROOTFS_IMAGE_TYPE ??= ""
+AOS_ROOTFS_IMAGE_VERSION ??= "${PV}"
+AOS_ROOTFS_REF_VERSION ??= "${PV}"
+AOS_ROOTFS_IMAGE_DIR ??= "${WORKDIR}/update"
+AOS_ROOTFS_IMAGE_FILE ??= "${IMAGE_BASENAME}-${MACHINE}-${ROOTFS_IMAGE_VERSION}.rootfs.squashfs"
+AOS_ROOTFS_OSTREE_REPO ??= "${DEPLOY_DIR_IMAGE}/update/repo"
+AOS_ROOTFS_EXCLUDE_FILES ??= "var/* home/*"
+AOS_ROOTFS_SOURCE_DIR ??= "${IMAGE_ROOTFS}"
 
 # Variables
 
-BUILD_WIC_DIR="${WORKDIR}/build-wic"
 ROOTFS_DIFF_DIR = "${WORKDIR}/rootfs_diff"
 OSTREE_REPO_TYPE = "archive"
 
@@ -30,38 +29,38 @@ DEPENDS:append = " \
 init_ostree_repo() {
     bbnote "Ostree repo doesn't exist. Create ostree repo"
 
-    mkdir -p ${ROOTFS_OSTREE_REPO}
-    ostree --repo=${ROOTFS_OSTREE_REPO} init --mode=${OSTREE_REPO_TYPE}
+    mkdir -p ${AOS_ROOTFS_OSTREE_REPO}
+    ostree --repo=${AOS_ROOTFS_OSTREE_REPO} init --mode=${OSTREE_REPO_TYPE}
 }
 
 ostree_commit() {
-    ostree --repo=${ROOTFS_OSTREE_REPO} commit \
-           --tree=dir=${ROOTFS_SOURCE_DIR}/ \
+    ostree --repo=${AOS_ROOTFS_OSTREE_REPO} commit \
+           --tree=dir=${AOS_ROOTFS_SOURCE_DIR}/ \
            --skip-if-unchanged \
-           --branch=${ROOTFS_IMAGE_VERSION} \
-           --subject="${ROOTFS_IMAGE_VERSION}-${DATATIME}"
+           --branch=${AOS_ROOTFS_IMAGE_VERSION} \
+           --subject="${AOS_ROOTFS_IMAGE_VERSION}-${DATATIME}"
 }
 
 create_full_update() {
-    mksquashfs ${ROOTFS_SOURCE_DIR}/ ${ROOTFS_IMAGE_DIR}/${ROOTFS_IMAGE_FILE} \
-        -noappend -wildcards -all-root -e ${ROOTFS_EXCLUDE_FILES}
+    mksquashfs ${AOS_ROOTFS_SOURCE_DIR}/ ${AOS_ROOTFS_IMAGE_DIR}/${AOS_ROOTFS_IMAGE_FILE} \
+        -noappend -wildcards -all-root -e ${AOS_ROOTFS_EXCLUDE_FILES}
 }
 
 create_incremental_update() {
     rm -rf ${ROOTFS_DIFF_DIR}
     mkdir -p ${ROOTFS_DIFF_DIR}
 
-    ostree --repo=${ROOTFS_OSTREE_REPO} diff ${ROOTFS_REF_VERSION} ${ROOTFS_IMAGE_VERSION} |
+    ostree --repo=${AOS_ROOTFS_OSTREE_REPO} diff ${AOS_ROOTFS_REF_VERSION} ${AOS_ROOTFS_IMAGE_VERSION} |
     while read -r item; do
         action=${item%% *}
         item=${item##* }
 
         if [ ${action} = "A" ] || [ ${action} = "M" ]; then
-            if [ -d ${ROOTFS_SOURCE_DIR}${item} ]; then
+            if [ -d ${AOS_ROOTFS_SOURCE_DIR}${item} ]; then
                 mkdir -p ${ROOTFS_DIFF_DIR}${item}
             else
                 mkdir -p $(dirname ${ROOTFS_DIFF_DIR}${item})
-                cp -a ${ROOTFS_SOURCE_DIR}${item} ${ROOTFS_DIFF_DIR}${item}
+                cp -a ${AOS_ROOTFS_SOURCE_DIR}${item} ${ROOTFS_DIFF_DIR}${item}
             fi
         elif [ ${action} = "D" ]; then
             mkdir -p $(dirname ${ROOTFS_DIFF_DIR}${item})
@@ -73,33 +72,33 @@ create_incremental_update() {
         bbfatal "incremental roofs update is empty"
     fi
 
-    mksquashfs ${ROOTFS_DIFF_DIR} ${ROOTFS_IMAGE_DIR}/${ROOTFS_IMAGE_FILE} \
-        -noappend -wildcards -all-root -e ${ROOTFS_EXCLUDE_FILES}
+    mksquashfs ${ROOTFS_DIFF_DIR} ${AOS_ROOTFS_IMAGE_DIR}/${AOS_ROOTFS_IMAGE_FILE} \
+        -noappend -wildcards -all-root -e ${AOS_ROOTFS_EXCLUDE_FILES}
 }
 
 do_create_rootfs_image() {
-    if [ -z ${ROOTFS_IMAGE_TYPE} ] || [ ${ROOTFS_IMAGE_TYPE} = "none" ]; then
+    if [ -z ${AOS_ROOTFS_IMAGE_TYPE} ] || [ ${AOS_ROOTFS_IMAGE_TYPE} = "none" ]; then
         exit 0
     fi
 
-    if [ ! -d ${ROOTFS_OSTREE_REPO}/refs ]; then
+    if [ ! -d ${AOS_ROOTFS_OSTREE_REPO}/refs ]; then
         init_ostree_repo
     fi
 
     if ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'true', 'false', d)}; then
-        ROOTFS_FULL_PATH=$(realpath ${ROOTFS_SOURCE_DIR})
+        ROOTFS_FULL_PATH=$(realpath ${AOS_ROOTFS_SOURCE_DIR})
         setfiles -m -r ${ROOTFS_FULL_PATH} ${ROOTFS_FULL_PATH}/etc/selinux/aos/contexts/files/file_contexts ${ROOTFS_FULL_PATH}
     fi
 
     ostree_commit
 
-    if [ ${ROOTFS_IMAGE_TYPE} = "full" ]; then
+    if [ ${AOS_ROOTFS_IMAGE_TYPE} = "full" ]; then
         bbnote "Create full rootfs image"
         create_full_update
-    elif [ "${ROOTFS_IMAGE_TYPE}" = "incremental" ]; then
+    elif [ "${AOS_ROOTFS_IMAGE_TYPE}" = "incremental" ]; then
         bbnote "Create incremental rootfs image"
         create_incremental_update
     else
-        bbfatal "unknown rootfs image type: ${ROOTFS_IMAGE_TYPE}"
+        bbfatal "unknown rootfs image type: ${AOS_ROOTFS_IMAGE_TYPE}"
     fi
 }

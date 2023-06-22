@@ -2,9 +2,11 @@
 
 # Configuration
 
-BASE_IMAGE ??= "aos-image-minimal"
-PARENT_LAYER ??= "${BASE_IMAGE}"
-LAYER_VERSION ??= "1"
+AOS_BASE_IMAGE ??= "aos-image"
+AOS_PARENT_LAYER ??= "${AOS_BASE_IMAGE}"
+AOS_LAYER_VERSION ??= "1"
+AOS_LAYER_DIGEST_TYPE ??= "sha256"
+AOS_LAYER_DEPLOY_DIR ??= "${DEPLOY_DIR_IMAGE}/layers"
 
 # Inherit
 
@@ -16,22 +18,19 @@ DEPENDS:append = " rsync-native"
 
 # Variables
 
-LAYER_DIGEST_TYPE = "sha256"
 LAYER_MEDIA_TYPE = "application/vnd.aos.image.layer.v1.tar"
-
 LAYER_WORK_DIR = "${WORKDIR}/layer"
-LAYER_DEPLOY_DIR = "${DEPLOY_DIR_IMAGE}/layers"
-PARENT_LAYER_ROOTFS = "${TMPDIR}/work-shared/${PARENT_LAYER}-${MACHINE}/rootfs"
+PARENT_LAYER_ROOTFS = "${TMPDIR}/work-shared/${AOS_PARENT_LAYER}-${MACHINE}/rootfs"
 ROOTFS_DIFF_DIR = "${WORKDIR}/rootfs_diff"
-SHARED_DIGEST_DIR = "${TMPDIR}/work-shared/layers-${LAYER_DIGEST_TYPE}"
+SHARED_DIGEST_DIR = "${TMPDIR}/work-shared/layers-${AOS_LAYER_DIGEST_TYPE}"
 
-IMAGE_INSTALL:append = "${LAYER_FEATURES}"
+IMAGE_INSTALL:append = "${AOS_LAYER_FEATURES}"
 
 # Dirs
 
 do_create_layer[cleandirs] += "${LAYER_WORK_DIR} ${ROOTFS_DIFF_DIR}"
-do_create_layer[depends] += "${PARENT_LAYER}:do_create_shared_links"
-do_create_layer[dirs] += "${SHARED_DIGEST_DIR} ${LAYER_DEPLOY_DIR} ${LAYER_WORK_DIR}"
+do_create_layer[depends] += "${AOS_PARENT_LAYER}:do_create_shared_links"
+do_create_layer[dirs] += "${SHARED_DIGEST_DIR} ${AOS_LAYER_DEPLOY_DIR} ${LAYER_WORK_DIR}"
 
 # Disable unneeded tasks
 
@@ -47,14 +46,14 @@ do_create_rootfs_archive() {
 
     # Create layer rootfs tar
 
-    IMAGE_ROOTFS_TAR=${LAYER_WORK_DIR}/${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.tar
+    IMAGE_ROOTFS_TAR=${LAYER_WORK_DIR}/${PN}.tar
 
     ${IMAGE_CMD_TAR} --numeric-owner -cf ${IMAGE_ROOTFS_TAR} -C ${ROOTFS_DIFF_DIR} .
 
     # Create layer rootfs digest
 
-    DIGEST="$(${LAYER_DIGEST_TYPE}sum -b ${IMAGE_ROOTFS_TAR} | cut -d' ' -f1)"
-    echo "${DIGEST} ${LAYER_VERSION}" >  ${SHARED_DIGEST_DIR}/${PN}.${LAYER_DIGEST_TYPE}
+    DIGEST="$(${AOS_LAYER_DIGEST_TYPE}sum -b ${IMAGE_ROOTFS_TAR} | cut -d' ' -f1)"
+    echo "${DIGEST} ${AOS_LAYER_VERSION}" >  ${SHARED_DIGEST_DIR}/${PN}.${AOS_LAYER_DIGEST_TYPE}
 
     mv ${IMAGE_ROOTFS_TAR} ${LAYER_WORK_DIR}/${DIGEST}
 }
@@ -65,7 +64,7 @@ python do_create_whiteouts() {
     whiteoutPrefix = ".wh."
     whiteoutOpaqueDir = ".wh..wh..opq"
 
-    whiteouts = d.getVar("LAYER_WHITEOUTS_{}".format(d.getVar("PN")))
+    whiteouts = d.getVar("AOS_LAYER_WHITEOUTS")
     if whiteouts is None:
         return
 
@@ -94,37 +93,37 @@ python do_create_metadata() {
     # Plarform info
 
     platform_info = create_layer_platform_info(d.getVar("MACHINE_ARCH"), d.getVar("TARGET_OS"), d.getVar("DISTRO_VERSION"),
-        d.getVar("LAYER_FEATURES").split())
+        d.getVar("AOS_LAYER_FEATURES").split())
 
     # Annotations
 
     parent_id = ""
     parent_digest = ""
 
-    if d.getVar("PARENT_LAYER") != d.getVar("BASE_IMAGE"):
+    if d.getVar("AOS_PARENT_LAYER") != d.getVar("AOS_BASE_IMAGE"):
         f = open(os.path.join(d.getVar("SHARED_DIGEST_DIR"),
-            "{}.{}".format(d.getVar("PARENT_LAYER"), d.getVar("LAYER_DIGEST_TYPE"))), "r")
+            "{}.{}".format(d.getVar("AOS_PARENT_LAYER"), d.getVar("AOS_LAYER_DIGEST_TYPE"))), "r")
         
         data = f.read().split()
-        parent_id = "{}:{}".format(d.getVar("PARENT_LAYER"), data[1])
-        parent_digest = "{}:{}".format(d.getVar("LAYER_DIGEST_TYPE"), data[0])
+        parent_id = "{}:{}".format(d.getVar("AOS_PARENT_LAYER"), data[1])
+        parent_digest = "{}:{}".format(d.getVar("AOS_LAYER_DIGEST_TYPE"), data[0])
 
-    annotations = create_layer_annotations("{}:{}".format(d.getVar("PN"), d.getVar("LAYER_VERSION")), parent_id, parent_digest)
+    annotations = create_layer_annotations("{}:{}".format(d.getVar("PN"), d.getVar("AOS_LAYER_VERSION")), parent_id, parent_digest)
 
     # Write metadata
 
     f = open(os.path.join(d.getVar("SHARED_DIGEST_DIR"),
-        "{}.{}".format(d.getVar("PN"), d.getVar("LAYER_DIGEST_TYPE"))), "r")
+        "{}.{}".format(d.getVar("PN"), d.getVar("AOS_LAYER_DIGEST_TYPE"))), "r")
 
     data = f.read().split()
-    digest = "{}:{}".format(d.getVar("LAYER_DIGEST_TYPE"), data[0])
+    digest = "{}:{}".format(d.getVar("AOS_LAYER_DIGEST_TYPE"), data[0])
 
     write_layer_metadata(d.getVar("LAYER_WORK_DIR"), d.getVar("LAYER_MEDIA_TYPE"), digest,
         os.path.getsize(os.path.join(d.getVar("LAYER_WORK_DIR"), data[0])), platform_info, annotations)
 }
 
 do_pack_layer() {
-    ${IMAGE_CMD_TAR} --numeric-owner -czf ${LAYER_DEPLOY_DIR}/${PN}-${MACHINE}-${LAYER_VERSION}.tar.gz -C ${LAYER_WORK_DIR} .
+    ${IMAGE_CMD_TAR} --numeric-owner -czf ${AOS_LAYER_DEPLOY_DIR}/${PN}-${MACHINE}-${AOS_LAYER_VERSION}.tar.gz -C ${LAYER_WORK_DIR} .
 }
 
 fakeroot python do_create_layer() {
