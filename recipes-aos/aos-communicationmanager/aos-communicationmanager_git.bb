@@ -36,7 +36,12 @@ RDEPENDS:${PN} += " \
 "
 
 python __anonymous() {
-    if len(d.getVar("AOS_REMOTE_NODE_IDS").split()) > 0:
+    node_id = d.getVar("AOS_NODE_ID")
+    sm_nodes = d.getVar("AOS_SM_NODES").split()
+
+    # if we have remote nodes, add nfs-exports
+
+    if len(sm_nodes) > 1 or (len(sm_nodes) == 1 and node_id not in sm_nodes):
         d.appendVar("RDEPENDS:"+d.getVar('PN'), "nfs-exports")
 }
 
@@ -61,7 +66,8 @@ python do_update_config() {
         data = json.load(f)
 
     node_id = d.getVar("AOS_NODE_ID")
-    remote_nodes = d.getVar("AOS_REMOTE_NODE_IDS").split()
+    sm_nodes = d.getVar("AOS_SM_NODES").split()
+    um_nodes = d.getVar("AOS_UM_NODES").split()
     node_hostname = d.getVar("AOS_NODE_HOSTNAME")
  
     # Update IAM servers
@@ -73,25 +79,30 @@ python do_update_config() {
 
     sm_controller = data["SMController"]
 
-    if len(remote_nodes) > 0:
+    if len(sm_nodes) > 1 or (len(sm_nodes) == 1 and node_id not in sm_nodes):
         sm_controller["FileServerURL"] = node_hostname+":8094" 
  
-    sm_controller["NodeIDs"] = [node_id]
+    if len(sm_nodes) > 0:
+        sm_controller["NodeIDs"] = []
 
-    for remote_node in remote_nodes:
-        sm_controller["NodeIDs"].append(remote_node)
+    for sm in sm_nodes:
+        sm_controller["NodeIDs"].append(sm)
 
     # Update CM controller
 
     um_controller = data["UMController"]
 
-    if len(remote_nodes) > 0:
+    if len(um_nodes) > 1 or (len(um_nodes) == 1 and node_id not in um_nodes):
         um_controller["FileServerURL"] = node_hostname+":8092" 
- 
-    um_controller["UMClients"] = [{"UMID": node_id, "IsLocal": True, "Priority": 1}]
 
-    for remote_node in remote_nodes:
-        um_controller["UMClients"].append({"UMID": remote_node})
+    if len(um_nodes) > 0:
+        um_controller["UMClients"] = []
+
+    for um in um_nodes:
+        if um == node_id:
+            um_controller["UMClients"].append({"UMID": um, "IsLocal": True, "Priority": 1})
+        else:
+            um_controller["UMClients"].append({"UMID": um})
 
     with open(file_name, "w") as f:
         json.dump(data, f, indent=4)

@@ -82,7 +82,6 @@ python do_update_config() {
     with open(file_name) as f:
         data = json.load(f)
 
-    node_id = d.getVar("AOS_NODE_ID")
     node_hostname = d.getVar("AOS_NODE_HOSTNAME")
     main_node_hostname = d.getVar("AOS_MAIN_NODE_HOSTNAME")
  
@@ -96,14 +95,16 @@ python do_update_config() {
 
     # Update component IDs
 
+    comp_prefix = d.getVar("AOS_UM_COMPONENT_PREFIX")
+
     for update_module in data["UpdateModules"]:
-        update_module["ID"] = d.getVar("AOS_UNIT_MODEL")+"-"+d.getVar("AOS_UNIT_VERSION")+"-"+node_id+"-"+update_module["ID"]
+        update_module["ID"] = comp_prefix+update_module["ID"]
 
     with open(file_name, "w") as f:
         json.dump(data, f, indent=4)
 }
 
-do_install[vardeps] = "AOS_NODE_ID AOS_UNIT_MODEL AOS_UNIT_VERSION"
+do_compile[vardeps] += "AOS_UM_COMPONENT_PREFIX"
 
 do_install:append() {
     install -d ${D}${sysconfdir}/aos

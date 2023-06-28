@@ -79,7 +79,7 @@ do_prepare_ident_modules() {
     echo ')' >> ${file}
 }
 
-do_install[vardeps] = "AOS_NODE_ID AOS_NODE_TYPE"
+do_compile[vardeps] += "AOS_NODE_ID AOS_NODE_TYPE"
 
 python do_update_config() {
     import json
@@ -106,14 +106,18 @@ python do_update_config() {
 
     # Add remote IAM's configuration
 
-    remote_nodes = d.getVar("AOS_REMOTE_NODE_IDS").split()
-    remote_hostnames = d.getVar("AOS_REMOTE_NODE_HOSTNAMES").split()
+    node_id = d.getVar("AOS_NODE_ID")
+    iam_nodes = d.getVar("AOS_IAM_NODES").split()
+    iam_hostnames = d.getVar("AOS_IAM_HOSTNAMES").split()
 
-    if len(remote_nodes) != 0:
+    if len(iam_nodes) > 1 or (len(iam_nodes) == 1 and node_id not in iam_nodes):
         data["RemoteIams"] = []
 
-        for i in range(len(remote_nodes)):
-            data["RemoteIams"].append({"NodeID": remote_nodes[i], "URL": remote_hostnames[i]+":8089"})
+        for i in range(len(iam_nodes)):
+            if iam_nodes[i] == node_id:
+                continue
+
+            data["RemoteIams"].append({"NodeID": iam_nodes[i], "URL": iam_hostnames[i]+":8089"})
 
     with open(file_name, "w") as f:
         json.dump(data, f, indent=4)
