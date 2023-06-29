@@ -5,8 +5,8 @@ LICENSE = "Apache-2.0"
 
 inherit ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'selinux-image', '', d)}
 
-# Enable RO rootfs for Aos update
-IMAGE_FEATURES:append:aos-update = " read-only-rootfs"
+# Enable RO rootfs
+IMAGE_FEATURES:append = " read-only-rootfs"
 
 # Set rootfs version
 
@@ -52,7 +52,7 @@ do_create_shared_links() {
     fi
 }
 
-addtask create_shared_links after do_image_wic before do_image_complete
+addtask create_shared_links after do_image_qa do_image_wic before do_image_complete
 
 # Packages
 
