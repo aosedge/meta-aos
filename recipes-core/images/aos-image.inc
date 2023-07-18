@@ -10,12 +10,22 @@ IMAGE_FEATURES:append = " read-only-rootfs"
 
 # Set rootfs version
 
-ROOTFS_POSTPROCESS_COMMAND:append = "set_rootfs_version;"
+ROOTFS_POSTPROCESS_COMMAND:append = "set_rootfs_version; create_boot_version;"
 
 set_rootfs_version() {
-    install -d ${IMAGE_ROOTFS}/etc/aos
+    if [ -z "$AOS_ROOTFS_IMAGE_VERSION" ]; then
+        install -d ${IMAGE_ROOTFS}/etc/aos
 
-    echo "VERSION=\"${AOS_ROOTFS_IMAGE_VERSION}\"" > ${IMAGE_ROOTFS}/etc/aos/version
+        echo "VERSION=\"${AOS_ROOTFS_IMAGE_VERSION}\"" > ${IMAGE_ROOTFS}/etc/aos/version
+    fi
+}
+
+create_boot_version() {
+    if [ -z "$AOS_BOOT_IMAGE_VERSION" ]; then
+        install -d ${DEPLOY_DIR_IMAGE}/aos/boot
+
+        echo "VERSION=\"${AOS_BOOT_IMAGE_VERSION}\"" > ${DEPLOY_DIR_IMAGE}/aos/boot/version
+    fi
 }
 
 # Set unit model
