@@ -203,6 +203,8 @@ class FotaBuilder:
 
             self._copy(conf["partition"]["items"], file, rootfs_dir)
 
+        self._exclude_items(rootfs_dir, conf)
+
         args = [
             "dd",
             "if=/dev/zero",
@@ -246,8 +248,6 @@ class FotaBuilder:
             "-noappend",
             "-wildcards",
             "-all-root",
-            "-e",
-            "var/*",
         ]
 
         self._run_cmd(args)  # run  mksquashfs
@@ -303,8 +303,6 @@ class FotaBuilder:
             "-noappend",
             "-wildcards",
             "-all-root",
-            "-e",
-            "var/*",
         ]
 
         self._run_cmd(args)  # run  mksquashfs
@@ -325,20 +323,17 @@ class FotaBuilder:
         args = ["tar", "-C", rootfs_dir, "-xjf", conf["rootfs"]]
         self._run_cmd(args)  # run tar
 
-        exclude = conf.get("exclude")
+        items = conf.get("items")
+        if items:
+            self._copy_files(items, rootfs_dir)
 
-        if exclude:
-            for item in exclude:
-                if item[0] == os.sep:
-                    item = item[1:]
+        self._exclude_items(rootfs_dir, conf)
 
                 dir_for_rm = os.path.join(rootfs_dir, item)
                 os.system(f"rm -rf {dir_for_rm}")
 
         items = conf.get("items")
 
-        if items:
-            self._copy_files(items, rootfs_dir)
 
         if overlay_type == "full":
             self._overlay_full(metadata, rootfs_dir)
@@ -354,6 +349,20 @@ class FotaBuilder:
         self._metadata["components"].append(metadata)
         src = conf["file"]
         self._do_copy(src, os.path.join(self._bundle_dir, metadata["fileName"]))
+
+    def _exclude_items(self, rootfs_dir, conf):
+        exclude = conf.get("exclude")
+
+        if not exclude:
+            return
+
+        for item in exclude:
+            if self._verbose:
+                print(f"Exclude item: {item}")
+
+            if item[0] == os.sep:
+                item = item[1:]
+            os.system(f"rm -rf {os.path.join(rootfs_dir, item)}")
 
 
 def main():
