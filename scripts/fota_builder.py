@@ -12,6 +12,7 @@ from datetime import datetime
 from pathlib import Path
 
 import yaml
+from moulin import rouge
 
 
 class FotaError(Exception):
@@ -33,11 +34,12 @@ class FotaBuilder:
     """Create fota archive class"""
 
     def __init__(self, conf, verbose) -> None:
-        self._conf = conf
+        self._work_dir = conf["work_dir"].as_str
+        self._components = conf["components"]
         self._verbose = verbose
-        self._bundle_name = conf["target_images"][0]
+        self._bundle_name = conf["target_images"][0].as_str
         self._metadata = {"formatVersion": 1, "components": []}
-        self._bundle_dir = os.path.join(self._conf["work_dir"], "bundle")
+        self._bundle_dir = os.path.join(self._work_dir, "bundle")
 
     def create_bundle(self):
         """Create bundle from prepared files"""
@@ -48,8 +50,8 @@ class FotaBuilder:
     def process_component(self, component, conf):
         """Process component "component" """
         metadata = self._create_component_metadata(component, conf)
-        work_dir = os.path.join(self._conf["work_dir"], "components", metadata["id"])
-        method = conf["method"]
+        work_dir = os.path.join(self._work_dir, "components", metadata["id"])
+        method = conf["method"].as_str
 
         if method == "raw":
             self._do_raw_component(work_dir, metadata, conf)
@@ -69,7 +71,7 @@ class FotaBuilder:
 
     def get_components(self):
         """Get dictionary with components configuration"""
-        return self._conf["components"]
+        return self._components
 
     def prepare_bundle_dir(self):
         """Prepare empty temporary dir for bundle"""
@@ -166,19 +168,19 @@ class FotaBuilder:
                 os.mkdir(path)
 
     def _update_metadata_var(self, conf, varname, metadata):
-        var = conf.get(varname)
+        var = conf.get(varname, None)
 
         if var:
-            metadata[varname] = var
+            metadata[varname] = var.as_str
 
     def _create_component_metadata(self, component, conf):
         metadata = {
-            "id": conf.get("componentType", component),
-            "vendorVersion": conf["vendorVersion"],
+            "id": conf.get("componentType", component).as_str,
+            "vendorVersion": conf["vendorVersion"].as_str,
         }
         metadata["fileName"] = conf.get(
             "fileName", f'{metadata["id"]}-{metadata["vendorVersion"]}.img'
-        )
+        ).as_str
 
         self._update_metadata_var(conf, "requiredVersion", metadata)
         self._update_metadata_var(conf, "minVersion", metadata)
@@ -190,57 +192,16 @@ class FotaBuilder:
 
     def _do_raw_component(self, work_dir, metadata, conf):
         """Create archive for raw component"""
-        rootfs_dir = os.path.join(work_dir, "rootfs")
+        self._prepare_dir(work_dir)
 
-        self._prepare_dir(rootfs_dir)
+        block_entry = rouge.construct_entry(conf["partition"])
+        image_file = os.path.join(work_dir, "image.raw")
 
-        fstype = conf["partition"].get("type", "ext4")
+        with open(image_file, "wb") as file:
+            file.truncate(block_entry.size())
+            block_entry.write(file, 0)
 
-        if fstype not in ["ext4"]:
-            raise FotaError(errno.EINVAL, f"unsupported partition type {fstype}")
-
-        image_file = os.path.join(work_dir, f"image.{fstype}")
         gz_image = os.path.join(self._bundle_dir, metadata["fileName"])
-
-        for file in conf["partition"]["items"].keys():
-            if self._verbose:
-                print(f'{file} -> {conf["partition"]["items"][file]}')
-
-            self._copy(conf["partition"]["items"], file, rootfs_dir)
-
-        self._exclude_items(rootfs_dir, conf)
-
-        args = [
-            "dd",
-            "if=/dev/zero",
-            f"of={image_file}",
-            "bs=1M",
-            f'count={str(conf["partition"]["size"])}',
-        ]
-
-        self._run_cmd(args)  # run dd
-
-        if fstype == "ext4":
-            args = [
-                "mkfs.ext4",
-                "-F",
-                "-E",
-                "root_owner=0:0",
-            ]
-
-            label = conf["partition"].get("label")
-
-            if label:
-                args.extend(["-L", label])
-
-            gpt = conf["partition"].get("gpt_type")
-
-            if gpt:
-                args.extend(["-U", gpt])
-
-            args.extend(["-d", rootfs_dir, image_file])
-
-            self._run_cmd(args)  # run mkfs.ext4
 
         os.system(f"gzip < {image_file} > {gz_image}")
 
@@ -309,7 +270,7 @@ class FotaBuilder:
 
     def _do_overlay_component(self, work_dir, metadata, conf):
         component = metadata["id"]
-        overlay_type = conf["type"]
+        overlay_type = conf["type"].as_str
 
         if self._verbose:
             print(f"Creating {overlay_type} overlay image for {component}")
@@ -322,10 +283,10 @@ class FotaBuilder:
 
         self._prepare_dir(rootfs_dir)
 
-        args = ["tar", "-C", rootfs_dir, "-xjf", conf["rootfs"]]
+        args = ["tar", "-C", rootfs_dir, "-xjf", conf["rootfs"].as_str]
         self._run_cmd(args)  # run tar
 
-        items = conf.get("items")
+        items = conf.get("items", None)
         if items:
             self._copy_files(items, rootfs_dir)
 
@@ -333,8 +294,8 @@ class FotaBuilder:
 
         repo = conf.get(
             "ostree_repo",
-            os.path.join(self._conf["work_dir"], "ostree_repo", component),
-        )
+            os.path.join(self._work_dir, "ostree_repo", component),
+        ).as_str
 
         if not os.path.isdir(os.path.join(repo, "refs")):
             self._init_ostree_repo(repo)
@@ -353,18 +314,20 @@ class FotaBuilder:
         self._do_copy(src, os.path.join(self._bundle_dir, metadata["fileName"]))
 
     def _exclude_items(self, rootfs_dir, conf):
-        exclude = conf.get("exclude")
+        exclude = conf.get("exclude", None)
 
         if not exclude:
             return
 
         for item in exclude:
-            if self._verbose:
-                print(f"Exclude item: {item}")
+            value = item.as_str
 
-            if item[0] == os.sep:
-                item = item[1:]
-            os.system(f"rm -rf {os.path.join(rootfs_dir, item)}")
+            if self._verbose:
+                print(f"Exclude item: {value}")
+
+            if value[0] == os.sep:
+                value = value[1:]
+            os.system(f"rm -rf {os.path.join(rootfs_dir, value)}")
 
 
 def main():
@@ -379,21 +342,19 @@ def main():
     )
 
     args = parser.parse_args()
+    conf = yaml.compose(open(args.conf, "r", encoding="utf-8"))
 
-    with open(args.conf, "r", encoding="utf-8") as config_file:
-        conf = yaml.load(config_file, Loader=yaml.CLoader)
-
-    builder = FotaBuilder(conf, args.verbose)
+    builder = FotaBuilder(rouge.YamlValue(conf), args.verbose)
 
     try:
         builder.prepare_bundle_dir()
 
         components = builder.get_components()
 
-        for component in components.keys():
-            print(f"Processing {component}")
+        for component in components.keys():  # pylint: disable=consider-using-dict-items
+            print(f"Processing {component}...")
 
-            if not components[component].get("enabled", True):
+            if not components[component].get("enabled", True).as_bool:
                 if args.verbose:
                     print(f"{component} skipped")
 
