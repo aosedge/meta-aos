@@ -47,14 +47,18 @@ class FotaBuilder:
 
     def process_component(self, component, conf):
         """Process component "component" """
+        metadata = self._create_component_metadata(component, conf)
+
         method = conf["method"]
 
         if method == "raw":
-            self._do_raw_component(component, conf)
+            self._do_raw_component(metadata, conf)
         elif method == "overlay":
-            self._do_overlay_component(component, conf)
+            self._do_overlay_component(metadata, conf)
         elif method == "custom":
-            self._do_custom_component(component, conf)
+            self._do_custom_component(metadata, conf)
+
+        self._metadata["components"].append(metadata)
 
     def create_manifest(self):
         """Create manifest file in bundle directory"""
@@ -183,13 +187,12 @@ class FotaBuilder:
 
         return metadata
 
-    def _do_raw_component(self, component, conf):
+    def _do_raw_component(self, metadata, conf):
         """Create archive for raw component"""
+        component = metadata["id"]
         rootfs_dir = os.path.join(self._conf["work_dir"], f"rootfs_{component}")
-        self._prepare_dir(rootfs_dir)
 
-        metadata = self._create_component_metadata(component, conf)
-        self._metadata["components"].append(metadata)
+        self._prepare_dir(rootfs_dir)
 
         fstype = conf["partition"].get("type", "ext4")
 
@@ -241,11 +244,11 @@ class FotaBuilder:
 
         os.system(f"gzip < {image_file} > {gz_image}")
 
-    def _overlay_full(self, metadata, work_dir):
+    def _overlay_full(self, metadata, src_dir):
         """Create full update"""
         args = [
             "mksquashfs",
-            work_dir,
+            src_dir,
             os.path.join(self._bundle_dir, metadata["fileName"]),
             "-noappend",
             "-wildcards",
@@ -305,8 +308,8 @@ class FotaBuilder:
 
         self._run_cmd(args)  # run  mksquashfs
 
-    def _do_overlay_component(self, component, conf):
-        metadata = self._create_component_metadata(component, conf)
+    def _do_overlay_component(self, metadata, conf):
+        component = metadata["id"]
         overlay_type = conf["type"]
 
         if self._verbose:
@@ -342,11 +345,7 @@ class FotaBuilder:
         else:
             raise FotaError(errno.EINVAL, f"unknown bundle type {type}")
 
-        self._metadata["components"].append(metadata)
-
-    def _do_custom_component(self, component, conf):
-        metadata = self._create_component_metadata(component, conf)
-        self._metadata["components"].append(metadata)
+    def _do_custom_component(self, metadata, conf):
         src = conf["file"]
         self._do_copy(src, os.path.join(self._bundle_dir, metadata["fileName"]))
 
