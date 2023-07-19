@@ -48,13 +48,13 @@ class FotaBuilder:
     def process_component(self, component, conf):
         """Process component "component" """
         metadata = self._create_component_metadata(component, conf)
-
+        work_dir = os.path.join(self._conf["work_dir"], "components", metadata["id"])
         method = conf["method"]
 
         if method == "raw":
-            self._do_raw_component(metadata, conf)
+            self._do_raw_component(work_dir, metadata, conf)
         elif method == "overlay":
-            self._do_overlay_component(metadata, conf)
+            self._do_overlay_component(work_dir, metadata, conf)
         elif method == "custom":
             self._do_custom_component(metadata, conf)
 
@@ -129,8 +129,9 @@ class FotaBuilder:
         self._run_cmd(args)
 
     def _ostree_commit(self, repo, rootfs_dir, version):
-        now = datetime.now()
-        date_time = now.strftime("%m/%d/%Y-%H:%M")
+        date_time = datetime.now().strftime("%m/%d/%Y-%H:%M")
+        subject = f"{version}-{date_time}"
+
         args = [
             "ostree",
             f"--repo={repo}",
@@ -138,7 +139,7 @@ class FotaBuilder:
             f"--tree=dir={rootfs_dir}/",
             "--skip-if-unchanged",
             f"--branch={version}",
-            f'--subject="{version}-{date_time}"',
+            f'--subject="{subject}"',
         ]
 
         self._run_cmd(args)
@@ -187,10 +188,9 @@ class FotaBuilder:
 
         return metadata
 
-    def _do_raw_component(self, metadata, conf):
+    def _do_raw_component(self, work_dir, metadata, conf):
         """Create archive for raw component"""
-        component = metadata["id"]
-        rootfs_dir = os.path.join(self._conf["work_dir"], f"rootfs_{component}")
+        rootfs_dir = os.path.join(work_dir, "rootfs")
 
         self._prepare_dir(rootfs_dir)
 
@@ -199,7 +199,7 @@ class FotaBuilder:
         if fstype not in ["ext4"]:
             raise FotaError(errno.EINVAL, f"unsupported partition type {fstype}")
 
-        image_file = os.path.join(self._conf["work_dir"], f"{component}.{fstype}")
+        image_file = os.path.join(work_dir, f"image.{fstype}")
         gz_image = os.path.join(self._bundle_dir, metadata["fileName"])
 
         for file in conf["partition"]["items"].keys():
@@ -257,16 +257,15 @@ class FotaBuilder:
 
         self._run_cmd(args)  # run  mksquashfs
 
-    def _overlay_incremental(self, metadata, src_dir):
+    def _overlay_incremental(self, work_dir, repo, metadata, src_dir):
         """Create incremental update"""
-        vendor_ver = metadata["vendorVersion"]
-        base_ver = metadata["requiredVersion"]
-        repo = self._conf.get("ostree_repo", "ostree_repo")
-        diff_dir = os.path.join(self._conf["work_dir"], f"diff_{metadata['id']}")
+        diff_dir = os.path.join(work_dir, "diff")
 
         self._prepare_dir(diff_dir)
 
-        diffs = self._ostree_diff(repo, vendor_ver, base_ver)
+        diffs = self._ostree_diff(
+            repo, metadata["vendorVersion"], metadata["requiredVersion"]
+        )
 
         for line in diffs:
             if len(line) != 2:
@@ -308,7 +307,7 @@ class FotaBuilder:
 
         self._run_cmd(args)  # run  mksquashfs
 
-    def _do_overlay_component(self, metadata, conf):
+    def _do_overlay_component(self, work_dir, metadata, conf):
         component = metadata["id"]
         overlay_type = conf["type"]
 
@@ -319,8 +318,10 @@ class FotaBuilder:
         annotats["type"] = overlay_type
         metadata["annotations"] = annotats
 
-        rootfs_dir = os.path.join(self._conf["work_dir"], f"rootfs_{component}")
+        rootfs_dir = os.path.join(work_dir, "rootfs")
+
         self._prepare_dir(rootfs_dir)
+
         args = ["tar", "-C", rootfs_dir, "-xjf", conf["rootfs"]]
         self._run_cmd(args)  # run tar
 
@@ -330,18 +331,20 @@ class FotaBuilder:
 
         self._exclude_items(rootfs_dir, conf)
 
-        repo = self._conf.get("ostree_repo", "ostree_repo")
-        vendor_ver = metadata["vendorVersion"]
+        repo = conf.get(
+            "ostree_repo",
+            os.path.join(self._conf["work_dir"], "ostree_repo", component),
+        )
 
         if not os.path.isdir(os.path.join(repo, "refs")):
             self._init_ostree_repo(repo)
 
-        self._ostree_commit(repo, rootfs_dir, vendor_ver)
+        self._ostree_commit(repo, rootfs_dir, metadata["vendorVersion"])
 
         if overlay_type == "full":
             self._overlay_full(metadata, rootfs_dir)
         elif overlay_type == "incremental":
-            self._overlay_incremental(metadata, rootfs_dir)
+            self._overlay_incremental(work_dir, repo, metadata, rootfs_dir)
         else:
             raise FotaError(errno.EINVAL, f"unknown bundle type {type}")
 
