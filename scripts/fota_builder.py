@@ -94,7 +94,7 @@ class FotaBuilder:
             else:
                 shutil.rmtree(wdir)
 
-        os.mkdir(wdir)
+        os.makedirs(wdir, exist_ok=True)
 
     def _copy(self, conf, file_name, dst_dir):
         path, _ = os.path.split(file_name)
@@ -118,6 +118,8 @@ class FotaBuilder:
             self._do_copy(src, dst)
 
     def _init_ostree_repo(self, repo_path, mode="archive"):
+        self._prepare_dir(repo_path)
+
         args = ["ostree", f"--repo={repo_path}", "init", f"--mode={mode}"]
 
         self._run_cmd(args)
@@ -261,10 +263,6 @@ class FotaBuilder:
 
         self._prepare_dir(diff_dir)
 
-        if not os.path.isdir(os.path.join(repo, "refs")):
-            self._init_ostree_repo(repo)
-
-        self._ostree_commit(repo, src_dir, vendor_ver)
         diffs = self._ostree_diff(repo, vendor_ver, base_ver)
 
         for line in diffs:
@@ -329,11 +327,13 @@ class FotaBuilder:
 
         self._exclude_items(rootfs_dir, conf)
 
-                dir_for_rm = os.path.join(rootfs_dir, item)
-                os.system(f"rm -rf {dir_for_rm}")
+        repo = self._conf.get("ostree_repo", "ostree_repo")
+        vendor_ver = metadata["vendorVersion"]
 
-        items = conf.get("items")
+        if not os.path.isdir(os.path.join(repo, "refs")):
+            self._init_ostree_repo(repo)
 
+        self._ostree_commit(repo, rootfs_dir, vendor_ver)
 
         if overlay_type == "full":
             self._overlay_full(metadata, rootfs_dir)
