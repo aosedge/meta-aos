@@ -203,13 +203,6 @@ class FotaBuilder:
 
             self._copy(conf["partition"]["items"], file, rootfs_dir)
 
-        os.mkdir(os.path.join(rootfs_dir, "aos"))
-
-        with open(
-            os.path.join(rootfs_dir, "aos", "version"), "w", encoding="utf-8"
-        ) as ver_file:
-            ver_file.write(f'VERSION="{metadata["vendorVersion"]}"\n')
-
         args = [
             "dd",
             "if=/dev/zero",
