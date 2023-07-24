@@ -62,12 +62,12 @@ class FotaBuilder:
 
         self._metadata["components"].append(metadata)
 
-    def create_manifest(self):
-        """Create manifest file in bundle directory"""
-        manifest_file_name = os.path.join(self._bundle_dir, "manifest.json")
+    def create_metadata(self):
+        """Create metadata file in bundle directory"""
+        metadata_file_name = os.path.join(self._bundle_dir, "metadata.json")
 
-        with open(manifest_file_name, "w", encoding="utf-8") as manifest_file:
-            json.dump(self._metadata, manifest_file, indent=4)
+        with open(metadata_file_name, "w", encoding="utf-8") as metadata_file:
+            json.dump(self._metadata, metadata_file, indent=4)
 
     def get_components(self):
         """Get dictionary with components configuration"""
@@ -362,7 +362,7 @@ def main():
 
             builder.process_component(component, components[component])
 
-        builder.create_manifest()
+        builder.create_metadata()
         builder.create_bundle()
     except FotaError as err:
         print(err)
