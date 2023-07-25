@@ -50,15 +50,9 @@ do_create_shared_links[cleandirs] = "${AOS_SHARED_RESOURCE_DIR}"
 AOS_BUILD_WIC_DIR = "${WORKDIR}/build-wic"
 
 # We need to have shared resources in work-shared dir for the layer functionality.
-# Creating symlink IMAGE_ROOTFS and BUILD_WIC_DIR to work-shared to get an access to them by
-# layers and update
 do_create_shared_links() {
     if [ -d ${IMAGE_ROOTFS} ]; then
         ln -r -s ${IMAGE_ROOTFS} ${AOS_SHARED_RESOURCE_DIR}/rootfs
-    fi
-
-    if [ -d ${AOS_BUILD_WIC_DIR} ]; then
-        ln -r -s ${AOS_BUILD_WIC_DIR} ${AOS_SHARED_RESOURCE_DIR}/build-wic
     fi
 }
 
