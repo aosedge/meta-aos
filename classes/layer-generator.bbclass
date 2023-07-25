@@ -89,7 +89,7 @@ python do_create_whiteouts() {
 
 python do_create_metadata() {
     import os
-    
+
     # Plarform info
 
     platform_info = create_layer_platform_info(d.getVar("MACHINE_ARCH"), d.getVar("TARGET_OS"), d.getVar("DISTRO_VERSION"),
@@ -103,7 +103,7 @@ python do_create_metadata() {
     if d.getVar("AOS_PARENT_LAYER") != d.getVar("AOS_BASE_IMAGE"):
         f = open(os.path.join(d.getVar("SHARED_DIGEST_DIR"),
             "{}.{}".format(d.getVar("AOS_PARENT_LAYER"), d.getVar("AOS_LAYER_DIGEST_TYPE"))), "r")
-        
+
         data = f.read().split()
         parent_id = "{}:{}".format(d.getVar("AOS_PARENT_LAYER"), data[1])
         parent_digest = "{}:{}".format(d.getVar("AOS_LAYER_DIGEST_TYPE"), data[0])
@@ -123,7 +123,7 @@ python do_create_metadata() {
 }
 
 do_pack_layer() {
-    ${IMAGE_CMD_TAR} --numeric-owner -czf ${AOS_LAYER_DEPLOY_DIR}/${PN}-${MACHINE}-${AOS_LAYER_VERSION}.tar.gz -C ${LAYER_WORK_DIR} .
+    ${IMAGE_CMD_TAR} --numeric-owner -czf ${AOS_LAYER_DEPLOY_DIR}/${PN}-${AOS_LAYER_VERSION}-${MACHINE}.tar.gz -C ${LAYER_WORK_DIR} .
 }
 
 fakeroot python do_create_layer() {
