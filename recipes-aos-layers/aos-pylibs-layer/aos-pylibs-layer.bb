@@ -1,6 +1,6 @@
 SUMMARY = "python libs layer"
 
-require recipes-aos-layers/base-layer/base-layer.inc
+require recipes-aos-layers/aos-base-layer/aos-base-layer.inc
 
 AOS_LAYER_FEATURES += " \
     python3-compression \
