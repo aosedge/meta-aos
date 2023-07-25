@@ -7,12 +7,21 @@ import sys
 import yaml
 
 
-def call_bitbake(yocto_dir, conf):
-    """Call bitbake"""
+def call_bitbake(work_dir, yocto_dir, build_dir, layer_conf, common_conf):
+    """Call bitbake."""
+
+    target = layer_conf["target"]
+
+    # Create config file
+
+    conf_file = os.path.abspath(os.path.join(work_dir, f"{target}.conf"))
+
+    create_conf_file(conf_file, layer_conf.get("conf", None), common_conf)
+
     cmd = [
         f"cd {yocto_dir}",
-        f'. ./poky/oe-init-build-env {conf["build_dir"]}',
-        f'bitbake {conf["target"]}',
+        f". ./poky/oe-init-build-env {build_dir}",
+        f"bitbake {target} --postread {conf_file}",
     ]
     line = " && ".join(c for c in cmd)
 
@@ -21,7 +30,20 @@ def call_bitbake(yocto_dir, conf):
     return ret >> 8
 
 
-def _read_layers_file(enabled_file):
+def create_conf_file(conf_file, layer_conf, common_conf):
+    """Creates yocto conf file for layer."""
+    conf = []
+
+    conf += common_conf if common_conf else []
+    conf += layer_conf if layer_conf else []
+
+    with open(conf_file, "w+", encoding="utf8") as file:
+        for var in conf:
+            file.write(f'{var[0]} = "{var[1]}"\n')
+
+
+def read_layers_file(enabled_file):
+    """Reads layers file."""
     layers = []
 
     for line in enabled_file:
@@ -64,14 +86,17 @@ def main():
         if args.file is not None:
             try:
                 with open(args.file, "r", encoding="utf-8") as enabled_file:
-                    enabled_layers.extend(_read_layers_file(enabled_file))
+                    enabled_layers.extend(read_layers_file(enabled_file))
             except FileNotFoundError:
                 print(f"File {args.file} can't be opened")
     else:
         enabled_layers = None
 
     layers = conf["layers"]
-    yocto_dir = layers["yocto_dir"]
+    work_dir = conf.get("work_dir", "layers")
+    yocto_dir = layers.get("yocto_dir", "yocto")
+    build_dir = layers.get("build_dir", "build")
+    common_conf = layers.get("conf", None)
 
     for layer in layers["items"]:
         if enabled_layers:
@@ -80,7 +105,9 @@ def main():
             enabled = layers["items"][layer].get("enabled", True)
 
         if enabled:
-            ret = call_bitbake(yocto_dir, layers["items"][layer])
+            ret = call_bitbake(
+                work_dir, yocto_dir, build_dir, layers["items"][layer], common_conf
+            )
 
     return ret
 
