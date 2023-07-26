@@ -127,6 +127,8 @@ do_pack_layer() {
     ${IMAGE_CMD_TAR} --numeric-owner -czf ${AOS_LAYER_DEPLOY_DIR}/${PN}-${AOS_LAYER_VERSION}-${MACHINE}.tar.gz -C ${LAYER_WORK_DIR} .
 }
 
+do_create_layer[nostamp] += "1"
+
 fakeroot python do_create_layer() {
     bb.build.exec_func("do_create_whiteouts", d)
     bb.build.exec_func("do_create_rootfs_archive", d)
