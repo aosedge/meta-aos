@@ -9,8 +9,9 @@ import yaml
 
 def call_bitbake(work_dir, yocto_dir, build_dir, layer_conf, common_conf):
     """Call bitbake."""
-
     target = layer_conf["target"]
+
+    print(f"\nCreating {target} layer...")
 
     # Create config file
 
