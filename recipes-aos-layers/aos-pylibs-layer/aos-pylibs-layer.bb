@@ -11,6 +11,7 @@ AOS_LAYER_FEATURES += " \
     python3-six \
     python3-threading \
     python3-websocket-client \
+    python3-requests \
 "
 
 AOS_LAYER_VERSION = "1"
