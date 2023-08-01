@@ -25,7 +25,7 @@ AOS_VIS_DATA_PROVIDER ?= "renesassimulatoradapter"
 
 AOS_VIS_PLUGINS ?= " \
     plugins/vinadapter \
-    plugins/boardmodeladapter \
+    plugins/unitmodeladapter \
     plugins/subjectsadapter \
 "
 
