@@ -37,7 +37,7 @@ fatal() {
 }
 
 get_mount_point() {
-    while read -r device mount_point; do
+    while read -r device mount_point _; do
         # skip comments
         if [[ $device = \#* ]]; then
             continue
