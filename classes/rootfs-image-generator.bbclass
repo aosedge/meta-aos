@@ -2,14 +2,13 @@
 
 # Configuration
 
-AOS_ROOTFS_IMAGE_TYPE ??= ""
+AOS_ROOTFS_IMAGE_TYPE ??= "full"
 AOS_ROOTFS_IMAGE_VERSION ??= "${PV}"
 AOS_ROOTFS_REF_VERSION ??= "${PV}"
-AOS_ROOTFS_IMAGE_DIR ??= "${WORKDIR}/update"
-AOS_ROOTFS_IMAGE_FILE ??= "${IMAGE_BASENAME}-${MACHINE}-${ROOTFS_IMAGE_VERSION}.rootfs.squashfs"
+AOS_ROOTFS_IMAGE_FILE ??= "${DEPLOY_DIR_IMAGE}/update/${IMAGE_BASENAME}-${MACHINE}-${ROOTFS_IMAGE_VERSION}.rootfs.squashfs"
 AOS_ROOTFS_OSTREE_REPO ??= "${DEPLOY_DIR_IMAGE}/update/repo"
-AOS_ROOTFS_EXCLUDE_FILES ??= "var/* home/*"
-AOS_ROOTFS_SOURCE_DIR ??= "${IMAGE_ROOTFS}"
+AOS_ROOTFS_EXCLUDE_ITEMS ??= "var/* home/*"
+AOS_ROOTFS_SOURCE_DIR ??= "${TMPDIR}/work-shared/${IMAGE_BASENAME}-${MACHINE}/rootfs"
 
 # Variables
 
@@ -42,8 +41,8 @@ ostree_commit() {
 }
 
 create_full_update() {
-    mksquashfs ${AOS_ROOTFS_SOURCE_DIR}/ ${AOS_ROOTFS_IMAGE_DIR}/${AOS_ROOTFS_IMAGE_FILE} \
-        -noappend -wildcards -all-root -e ${AOS_ROOTFS_EXCLUDE_FILES}
+    mksquashfs ${AOS_ROOTFS_SOURCE_DIR}/ ${AOS_ROOTFS_IMAGE_FILE} \
+        -noappend -wildcards -all-root -e ${AOS_ROOTFS_EXCLUDE_ITEMS}
 }
 
 create_incremental_update() {
@@ -72,22 +71,22 @@ create_incremental_update() {
         bbfatal "incremental roofs update is empty"
     fi
 
-    mksquashfs ${ROOTFS_DIFF_DIR} ${AOS_ROOTFS_IMAGE_DIR}/${AOS_ROOTFS_IMAGE_FILE} \
-        -noappend -wildcards -all-root -e ${AOS_ROOTFS_EXCLUDE_FILES}
+    mksquashfs ${ROOTFS_DIFF_DIR} ${AOS_ROOTFS_IMAGE_FILE} \
+        -noappend -wildcards -all-root -e ${AOS_ROOTFS_EXCLUDE_ITEMS}
+}
+
+fakeroot set_selinux_context() {
+    ROOTFS_FULL_PATH=$(realpath ${AOS_ROOTFS_SOURCE_DIR})
+    setfiles -m -r ${ROOTFS_FULL_PATH} ${ROOTFS_FULL_PATH}/etc/selinux/aos/contexts/files/file_contexts ${ROOTFS_FULL_PATH}
 }
 
 do_create_rootfs_image() {
-    if [ -z ${AOS_ROOTFS_IMAGE_TYPE} ] || [ ${AOS_ROOTFS_IMAGE_TYPE} = "none" ]; then
-        exit 0
-    fi
-
     if [ ! -d ${AOS_ROOTFS_OSTREE_REPO}/refs ]; then
         init_ostree_repo
     fi
 
     if ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'true', 'false', d)}; then
-        ROOTFS_FULL_PATH=$(realpath ${AOS_ROOTFS_SOURCE_DIR})
-        setfiles -m -r ${ROOTFS_FULL_PATH} ${ROOTFS_FULL_PATH}/etc/selinux/aos/contexts/files/file_contexts ${ROOTFS_FULL_PATH}
+        set_selinux_context
     fi
 
     ostree_commit

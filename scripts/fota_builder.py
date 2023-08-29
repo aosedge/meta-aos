@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 """ Create fota archive """
 import argparse
-import errno
 import json
 import os
 import shutil
-import stat
 import subprocess
 import sys
-from datetime import datetime
 from pathlib import Path
 
 import yaml
+from bitbake import call_bitbake
 from moulin import rouge
 
 
@@ -102,58 +100,6 @@ class FotaBuilder:
 
         os.makedirs(wdir, exist_ok=True)
 
-    def _copy(self, conf, file_name, dst_dir):
-        path, _ = os.path.split(file_name)
-        dst = os.path.join(dst_dir, file_name)
-        src = conf[file_name]
-
-        self._mkdir(dst_dir, path)
-        self._do_copy(src, dst)
-
-    def _copy_files(self, conf, dst_dir):
-        for dst_file in conf.keys():
-            src = conf[dst_file]
-
-            if dst_file[0] == os.sep:
-                dst_file = dst_file[1:]
-
-            path, _ = os.path.split(dst_file)
-            dst = os.path.join(dst_dir, dst_file)
-
-            self._mkdir(dst_dir, path)
-            self._do_copy(src, dst)
-
-    def _init_ostree_repo(self, repo_path, mode="archive"):
-        self._prepare_dir(repo_path)
-
-        args = ["ostree", f"--repo={repo_path}", "init", f"--mode={mode}"]
-
-        self._run_cmd(args)
-
-    def _ostree_commit(self, repo, rootfs_dir, version):
-        date_time = datetime.now().strftime("%m/%d/%Y-%H:%M")
-        subject = f"{version}-{date_time}"
-
-        args = [
-            "ostree",
-            f"--repo={repo}",
-            "commit",
-            f"--tree=dir={rootfs_dir}/",
-            "--skip-if-unchanged",
-            f"--branch={version}",
-            f'--subject="{subject}"',
-        ]
-
-        self._run_cmd(args)
-
-    def _ostree_diff(self, repo, vendor_ver, ref_ver):
-        args = ["ostree", f"--repo={repo}", "diff", f"{ref_ver}", f"{vendor_ver}"]
-        result = subprocess.run(args, stdout=subprocess.PIPE, check=True)
-
-        return [
-            list(line.split()) for line in result.stdout.decode("utf-8").split("\n")
-        ]
-
     def _mkdir(self, root, new_dir):
         if len(new_dir) == 0:
             return
@@ -205,72 +151,11 @@ class FotaBuilder:
 
         os.system(f"gzip < {image_file} > {gz_image}")
 
-    def _overlay_full(self, metadata, src_dir):
-        """Create full update"""
-        args = [
-            "mksquashfs",
-            src_dir,
-            os.path.join(self._bundle_dir, metadata["fileName"]),
-            "-noappend",
-            "-wildcards",
-            "-all-root",
-        ]
-
-        self._run_cmd(args)  # run  mksquashfs
-
-    def _overlay_incremental(self, work_dir, repo, metadata, src_dir):
-        """Create incremental update"""
-        diff_dir = os.path.join(work_dir, "diff")
-
-        self._prepare_dir(diff_dir)
-
-        diffs = self._ostree_diff(
-            repo, metadata["vendorVersion"], metadata["requiredVersion"]
-        )
-
-        for line in diffs:
-            if len(line) != 2:
-                continue
-
-            item = line[1]
-
-            if item[0] == os.sep:
-                item = item[1:]
-
-            if line[0] == "A" or line[0] == "M":
-                if os.path.isdir(os.path.join(src_dir, item)):
-                    self._mkdir(diff_dir, item)
-                else:
-                    path, _ = os.path.split(item)
-                    self._mkdir(diff_dir, path)
-                    self._do_copy(
-                        os.path.join(src_dir, item), os.path.join(diff_dir, item)
-                    )
-            elif line[0] == "D":
-                path, _ = os.path.split(item)
-
-                self._mkdir(diff_dir, path)
-                os.mknod(os.path.join(diff_dir, item), stat.S_IFCHR, os.makedev(0, 0))
-
-        list_dir = os.listdir(diff_dir)
-
-        if len(list_dir) == 0:
-            print("incremental roofs update is empty")
-
-        args = [
-            "mksquashfs",
-            diff_dir,
-            os.path.join(self._bundle_dir, metadata["fileName"]),
-            "-noappend",
-            "-wildcards",
-            "-all-root",
-        ]
-
-        self._run_cmd(args)  # run  mksquashfs
-
     def _do_overlay_component(self, work_dir, metadata, conf):
         component = metadata["id"]
         overlay_type = conf["type"].as_str
+
+        self._prepare_dir(work_dir)
 
         if self._verbose:
             print(f"Creating {overlay_type} overlay image for {component}")
@@ -279,35 +164,36 @@ class FotaBuilder:
         annotats["type"] = overlay_type
         metadata["annotations"] = annotats
 
-        rootfs_dir = os.path.join(work_dir, "rootfs")
-
-        self._prepare_dir(rootfs_dir)
-
-        args = ["tar", "-C", rootfs_dir, "-xjf", conf["rootfs"].as_str]
-        self._run_cmd(args)  # run tar
-
-        items = conf.get("items", None)
-        if items:
-            self._copy_files(items, rootfs_dir)
-
-        self._exclude_items(rootfs_dir, conf)
-
         repo = conf.get(
             "ostree_repo",
             os.path.join(self._work_dir, "ostree_repo", component),
         ).as_str
 
-        if not os.path.isdir(os.path.join(repo, "refs")):
-            self._init_ostree_repo(repo)
+        bbake_conf = [
+            ("AOS_ROOTFS_IMAGE_TYPE", overlay_type),
+            ("AOS_ROOTFS_IMAGE_VERSION", metadata["vendorVersion"]),
+            ("AOS_ROOTFS_REF_VERSION", metadata.get("requiredVersion", "")),
+            ("AOS_ROOTFS_OSTREE_REPO", os.path.abspath(repo)),
+            (
+                "AOS_ROOTFS_IMAGE_FILE",
+                os.path.join(os.path.abspath(self._bundle_dir), metadata["fileName"]),
+            ),
+            (
+                "AOS_ROOTFS_EXCLUDE_ITEMS",
+                " ".join([item.as_str for item in conf.get("exclude", None)]),
+            ),
+        ]
 
-        self._ostree_commit(repo, rootfs_dir, metadata["vendorVersion"])
+        ret = call_bitbake(
+            work_dir,
+            conf.get("yocto_dir", "yocto").as_str,
+            conf.get("build_dir", "build").as_str,
+            "aos-rootfs",
+            bbake_conf,
+        )
 
-        if overlay_type == "full":
-            self._overlay_full(metadata, rootfs_dir)
-        elif overlay_type == "incremental":
-            self._overlay_incremental(work_dir, repo, metadata, rootfs_dir)
-        else:
-            raise FotaError(errno.EINVAL, f"unknown bundle type {type}")
+        if ret != 0:
+            raise FotaError(ret)
 
     def _do_custom_component(self, metadata, conf):
         src = conf["file"]
