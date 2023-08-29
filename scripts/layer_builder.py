@@ -1,46 +1,11 @@
 #!/usr/bin/env python3
-""" Script for building custom bitbake target """
+""" Script for building Aos layers """
 import argparse
 import os
 import sys
 
 import yaml
-
-
-def call_bitbake(work_dir, yocto_dir, build_dir, layer_conf, common_conf):
-    """Call bitbake."""
-    target = layer_conf["target"]
-
-    print(f"\nCreating {target} layer...")
-
-    # Create config file
-
-    conf_file = os.path.abspath(os.path.join(work_dir, f"{target}.conf"))
-
-    create_conf_file(conf_file, layer_conf.get("conf", None), common_conf)
-
-    cmd = [
-        f"cd {yocto_dir}",
-        f". ./poky/oe-init-build-env {build_dir}",
-        f"bitbake {target} --postread {conf_file}",
-    ]
-    line = " && ".join(c for c in cmd)
-
-    ret = os.system(f'bash -c "{line}"')
-
-    return ret >> 8
-
-
-def create_conf_file(conf_file, layer_conf, common_conf):
-    """Creates yocto conf file for layer."""
-    conf = []
-
-    conf += common_conf if common_conf else []
-    conf += layer_conf if layer_conf else []
-
-    with open(conf_file, "w+", encoding="utf8") as file:
-        for var in conf:
-            file.write(f'{var[0]} = "{var[1]}"\n')
+from bitbake import call_bitbake
 
 
 def read_layers_file(enabled_file):
@@ -93,21 +58,28 @@ def main():
     else:
         enabled_layers = None
 
-    layers = conf["layers"]
-    work_dir = conf.get("work_dir", "layers")
-    yocto_dir = layers.get("yocto_dir", "yocto")
-    build_dir = layers.get("build_dir", "build")
-    common_conf = layers.get("conf", None)
+    layers_conf = conf["layers"]
 
-    for layer in layers["items"]:
+    for layer in layers_conf["items"]:
+        layer_conf = layers_conf["items"][layer]
+
         if enabled_layers:
             enabled = layer in enabled_layers
         else:
-            enabled = layers["items"][layer].get("enabled", True)
+            enabled = layer_conf.get("enabled", True)
+
+        bbake_conf = [
+            ("AOS_BASE_IMAGE", layers_conf["base_image"]),
+            ("AOS_LAYER_DEPLOY_DIR", os.path.abspath(layers_conf["output_dir"])),
+        ]
 
         if enabled:
             ret = call_bitbake(
-                work_dir, yocto_dir, build_dir, layers["items"][layer], common_conf
+                conf.get("work_dir", "layers"),
+                layers_conf.get("yocto_dir", "yocto"),
+                layers_conf.get("build_dir", "build"),
+                layer_conf["target"],
+                bbake_conf,
             )
 
     return ret
