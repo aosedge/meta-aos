@@ -178,11 +178,17 @@ class FotaBuilder:
                 "AOS_ROOTFS_IMAGE_FILE",
                 os.path.join(os.path.abspath(self._bundle_dir), metadata["fileName"]),
             ),
-            (
-                "AOS_ROOTFS_EXCLUDE_ITEMS",
-                " ".join([item.as_str for item in conf.get("exclude", None)]),
-            ),
         ]
+
+        exclude_items = conf.get("exclude", None)
+
+        if exclude_items:
+            bbake_conf.append(
+                (
+                    "AOS_ROOTFS_EXCLUDE_ITEMS",
+                    " ".join([item.as_str for item in exclude_items]),
+                )
+            )
 
         ret = call_bitbake(
             work_dir,
