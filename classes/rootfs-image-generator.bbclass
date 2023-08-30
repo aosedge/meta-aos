@@ -25,14 +25,19 @@ DEPENDS:append = " \
 
 # Functions
 
-init_ostree_repo() {
-    bbnote "Ostree repo doesn't exist. Create ostree repo"
-
-    mkdir -p ${AOS_ROOTFS_OSTREE_REPO}
-    ostree --repo=${AOS_ROOTFS_OSTREE_REPO} init --mode=${OSTREE_REPO_TYPE}
+fakeroot do_set_selinux_context() {
+    ROOTFS_FULL_PATH=$(realpath ${AOS_ROOTFS_SOURCE_DIR})
+    setfiles -m -r ${ROOTFS_FULL_PATH} ${ROOTFS_FULL_PATH}/etc/selinux/aos/contexts/files/file_contexts ${ROOTFS_FULL_PATH}
 }
 
-ostree_commit() {
+do_ostree_commit() {
+    if [ ! -d ${AOS_ROOTFS_OSTREE_REPO}/refs ]; then
+        bbnote "Ostree repo doesn't exist. Create ostree repo"
+
+        mkdir -p ${AOS_ROOTFS_OSTREE_REPO}
+        ostree --repo=${AOS_ROOTFS_OSTREE_REPO} init --mode=${OSTREE_REPO_TYPE}
+    fi
+
     ostree --repo=${AOS_ROOTFS_OSTREE_REPO} commit \
            --tree=dir=${AOS_ROOTFS_SOURCE_DIR}/ \
            --skip-if-unchanged \
@@ -75,22 +80,7 @@ create_incremental_update() {
         -noappend -wildcards -all-root -e ${AOS_ROOTFS_EXCLUDE_ITEMS}
 }
 
-fakeroot set_selinux_context() {
-    ROOTFS_FULL_PATH=$(realpath ${AOS_ROOTFS_SOURCE_DIR})
-    setfiles -m -r ${ROOTFS_FULL_PATH} ${ROOTFS_FULL_PATH}/etc/selinux/aos/contexts/files/file_contexts ${ROOTFS_FULL_PATH}
-}
-
-do_create_rootfs_image() {
-    if [ ! -d ${AOS_ROOTFS_OSTREE_REPO}/refs ]; then
-        init_ostree_repo
-    fi
-
-    if ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'true', 'false', d)}; then
-        set_selinux_context
-    fi
-
-    ostree_commit
-
+fakeroot do_create_rootfs_image() {
     if [ ${AOS_ROOTFS_IMAGE_TYPE} = "full" ]; then
         bbnote "Create full rootfs image"
         create_full_update
@@ -100,4 +90,11 @@ do_create_rootfs_image() {
     else
         bbfatal "unknown rootfs image type: ${AOS_ROOTFS_IMAGE_TYPE}"
     fi
+}
+
+addtask ostree_commit before do_create_rootfs_image after do_prepare_recipe_sysroot
+
+python () {
+    if bb.utils.contains('DISTRO_FEATURES', 'selinux', True, False, d):
+        bb.build.addtask("set_selinux_context", "do_ostree_commit", "do_prepare_recipe_sysroot", d)
 }
