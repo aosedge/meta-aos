@@ -4,7 +4,7 @@
 import os
 
 
-def call_bitbake(work_dir, yocto_dir, build_dir, target, bbake_conf):
+def call_bitbake(work_dir, yocto_dir, build_dir, target, bbake_conf, do_clean=False):
     """Calls bitbake."""
     print(f"Bitbake target: {target}...\n")
 
@@ -14,11 +14,13 @@ def call_bitbake(work_dir, yocto_dir, build_dir, target, bbake_conf):
 
     create_bbake_conf(conf_file, bbake_conf)
 
-    cmd = [
-        f"cd {yocto_dir}",
-        f". ./poky/oe-init-build-env {build_dir}",
-        f"bitbake {target} --postread {conf_file}",
-    ]
+    cmd = [f"cd {yocto_dir}", f". ./poky/oe-init-build-env {build_dir}"]
+
+    if do_clean:
+        cmd.append(f"bitbake {target} -c cleanall")
+
+    cmd.append(f"bitbake {target} --postread {conf_file}")
+
     line = " && ".join(c for c in cmd)
 
     ret = os.system(f'bash -c "{line}"')

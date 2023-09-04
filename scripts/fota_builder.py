@@ -196,6 +196,7 @@ class FotaBuilder:
             conf.get("build_dir", "build").as_str,
             "aos-rootfs",
             bbake_conf,
+            do_clean=True,
         )
 
         if ret != 0:
