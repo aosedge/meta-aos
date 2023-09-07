@@ -1,0 +1,12 @@
+[Unit]
+Description=SELinux autorelabel service loading
+DefaultDependencies=no
+Before=sysinit.target
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/selinux-autorelabel.sh
+
+[Install]
+WantedBy=sysinit.target
