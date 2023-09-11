@@ -133,6 +133,7 @@ class FotaBuilder:
         self._update_metadata_var(conf, "maxVersion", metadata)
         self._update_metadata_var(conf, "description", metadata)
         self._update_metadata_var(conf, "annotations", metadata)
+        self._update_metadata_var(conf, "downloadTTL", metadata)
 
         return metadata
 
