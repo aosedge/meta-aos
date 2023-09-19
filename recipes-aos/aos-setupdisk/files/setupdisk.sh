@@ -88,6 +88,7 @@ create_aos_disks() {
 
         lvcreate -l "$size" "$AOS_GROUP" -n "$name"
         mkfs.ext4 "/dev/$AOS_GROUP/$name"
+        mkdir -p "$(get_mount_point "/dev/$AOS_GROUP/$name")"
     done <"$CONFIG_FILE"
 
     # wait all parts are mounted
