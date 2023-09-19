@@ -50,11 +50,14 @@ RDEPENDS:${PN}:append:aos-secondary-node = " \
 "
 
 RRECOMMENDS:${PN} += " \
+    kernel-module-8021q \
     kernel-module-bridge \
+    kernel-module-ifb \
     kernel-module-nf-conncount \
     kernel-module-nfnetlink \
     kernel-module-overlay \
     kernel-module-veth \
+    kernel-module-vxlan \
     kernel-module-xt-addrtype \
     kernel-module-xt-comment \
     kernel-module-xt-conntrack \
