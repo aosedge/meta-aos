@@ -1,6 +1,11 @@
 hostname = "${AOS_NODE_HOSTNAME}"
 
 do_install:append() {
+    # add Aos related hosts
+    for host in ${AOS_HOSTS}; do
+        echo ${host} | sed "s/=/ /g" >> ${D}${sysconfdir}/hosts
+    done
+
     # remove /run from fstab, run is mounted in initramfs
     sed -i "\:[[:blank:]]*/run:d" ${D}${sysconfdir}/fstab
 
