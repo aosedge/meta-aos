@@ -30,11 +30,13 @@ ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ',context=system_u:object_r:a
 
 do_install:append:aos-secondary-node() {
     # add Aos partitions
-   echo '${AOS_MAIN_NODE_HOSTNAME}:/var/aos/storages /var/aos/storages nfs4 defaults,nofail,noatime,x-systemd.automount'\
+   echo '${AOS_MAIN_NODE_HOSTNAME}:/var/aos/storages /var/aos/storages nfs4 defaults,nofail,noatime,'\
+'retrans=0,timeo=100,x-systemd.automount'\
 ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ',context=system_u:object_r:aos_var_run_t:s0', '', d)} '0 0' \
    >> ${D}/${sysconfdir}/fstab
 
-    echo '${AOS_MAIN_NODE_HOSTNAME}:/var/aos/states /var/aos/states nfs4 defaults,nofail,noatime,x-systemd.automount'\
+    echo '${AOS_MAIN_NODE_HOSTNAME}:/var/aos/states /var/aos/states nfs4 defaults,nofail,noatime,'\
+'retrans=0,timeo=100,x-systemd.automount'\
 ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ',context=system_u:object_r:aos_var_run_t:s0', '', d)} '0 0' \
    >> ${D}/${sysconfdir}/fstab
 }
