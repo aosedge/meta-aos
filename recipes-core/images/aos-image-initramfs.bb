@@ -5,7 +5,6 @@ LICENSE = "Apache-2.0"
 AOS_INITRAMFS_SCRIPTS ?= " \
     initramfs-module-aosupdate \
     initramfs-module-machineid \
-    ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'initramfs-module-selinux', '', d)} \
     initramfs-module-udev \
     initramfs-module-vardir \
 "

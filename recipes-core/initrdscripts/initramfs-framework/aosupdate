@@ -1,8 +1,9 @@
 #!/bin/sh
 
 # This module requires the following boot parameters:
-#     aosupdate.device - specifies device where update artifacts are stored;
-#     aosupdate.path   - specifies path whre update artifacts are stored.
+#     aosupdate.device         - specifies device where update artifacts are stored;
+#     aosupdate.path           - specifies path whre update artifacts are stored;
+#     aosupdate.selinux_module - specifies SELinux module.
 
 # consts
 
@@ -66,6 +67,27 @@ umount_update_disk() {
     fi
 }
 
+load_selinux_module() {
+    if [ -z "${bootparam_aosupdate_selinux_module}" ]; then
+        return
+    fi
+
+    msg "Loading selinux module: $bootparam_aosupdate_selinux_module"
+
+    if [ -n "${bootparam_aosupdate_disk}" ]; then
+        umount "$UPDATE_MOUNT"
+    fi
+
+    mount -t selinuxfs selinuxfs /sys/fs/selinux
+    semodule -i "$bootparam_aosupdate_selinux_module"
+
+    if [ -n "${bootparam_aosupdate_disk}" ]; then
+        msg "Remount update disk: $bootparam_aosupdate_disk"
+
+        mount "$bootparam_aosupdate_disk" "$UPDATE_MOUNT" -o context="system_u:object_r:aos_var_run_t:s0"
+    fi
+}
+
 mount_update_image() {
     msg "Mount update image: $UPDATE_IMAGE"
 
@@ -120,6 +142,7 @@ do_update() {
         error "update iamge not found"
     fi
 
+    load_selinux_module
     mount_update_image
 
     case "$update_type" in
@@ -165,6 +188,7 @@ do_apply() {
 
     msg "Start $update_type apply..."
 
+    load_selinux_module
     mount_update_image
     mount -o remount,rw $ROOTFS_DIR
 
