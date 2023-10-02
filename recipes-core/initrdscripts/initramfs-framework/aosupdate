@@ -20,13 +20,13 @@ UPDATE_DIR="${bootparam_aosupdate_disk:+${UPDATE_MOUNT}/}${bootparam_aosupdate_p
 UPDATE_EXT="*.squashfs"
 
 fail() {
-    local err="${1:-"unknown error"}"
+    err="${1:-"unknown error"}"
 
     # NOTE <3> is KERN_ERR loglevel, which cause alerts to be sent
     echo "<3>Aos update failed: $err" >/dev/kmsg
 
     # Put to fail flag file if update mounted
-    if [ -z ${bootparam_aosupdate_disk} ] || grep -qs "$UPDATE_MOUNT" /proc/mounts; then
+    if [ -z "${bootparam_aosupdate_disk}" ] || grep -qs "$UPDATE_MOUNT" /proc/mounts; then
         mkdir -p "$UPDATE_DIR"
         echo "$err" >"$UPDATE_DIR/$FAIL_FLAG"
     fi
@@ -40,11 +40,11 @@ error() {
 }
 
 aosupdate_enabled() {
-    if [ -z ${bootparam_aosupdate_disk} ] && [ -z ${bootparam_aosupdate_path} ]; then
+    if [ -z "${bootparam_aosupdate_disk}" ] && [ -z "${bootparam_aosupdate_path}" ]; then
         return 1
     fi
 
-    if [ -n "${bootparam_aosupdate_disk}" ] && [ ! -e ${bootparam_aosupdate_disk} ]; then
+    if [ -n "${bootparam_aosupdate_disk}" ] && [ ! -e "${bootparam_aosupdate_disk}" ]; then
         msg "Aos update disabled: device ${bootparam_aosupdate_disk} not exist."
         return 1
     fi
@@ -55,15 +55,15 @@ aosupdate_enabled() {
 mount_update_disk() {
     msg "Mount update disk: $bootparam_aosupdate_disk"
 
-    mkdir -p $UPDATE_MOUNT
-    mount $bootparam_aosupdate_disk $UPDATE_MOUNT ${bootparam_selinux_module+-o context="system_u:object_r:aos_var_run_t:s0"}
+    mkdir -p "$UPDATE_MOUNT"
+    mount "$bootparam_aosupdate_disk" "$UPDATE_MOUNT"
 }
 
 umount_update_disk() {
     if grep -qs "$UPDATE_MOUNT" /proc/mounts && [ ! -f "$UPDATE_DIR/$UPDATED_FLAG" ]; then
         msg "Umount update disk: $bootparam_aosupdate_disk"
 
-        umount $UPDATE_MOUNT
+        umount "$UPDATE_MOUNT"
     fi
 }
 
@@ -91,15 +91,15 @@ load_selinux_module() {
 mount_update_image() {
     msg "Mount update image: $UPDATE_IMAGE"
 
-    mkdir -p $IMAGE_MOUNT
-    mount -t squashfs -o loop $UPDATE_IMAGE $IMAGE_MOUNT
+    mkdir -p "$IMAGE_MOUNT"
+    mount -t squashfs -o loop "$UPDATE_IMAGE" "$IMAGE_MOUNT"
 }
 
 umount_update_image() {
     if grep -qs "$IMAGE_MOUNT" /proc/mounts; then
         msg "Umount update image: $UPDATE_IMAGE"
 
-        umount $IMAGE_MOUNT
+        umount "$IMAGE_MOUNT"
     fi
 }
 
@@ -122,19 +122,19 @@ get_action() {
 }
 
 get_update_type() {
-    local update=$(cat $UPDATE_DIR/$DO_UPDATE_FLAG)
+    update=$(cat "$UPDATE_DIR/$DO_UPDATE_FLAG")
 
-    if [ -z $update ]; then
+    if [ -z "$update" ]; then
         echo "full"
     else
-        echo $update
+        echo "$update"
     fi
 }
 
 do_update() {
     UPDATE_IMAGE="$(find "$UPDATE_DIR" -name "${UPDATE_EXT}" | head -n1)"
 
-    local update_type="$(get_update_type)"
+    update_type="$(get_update_type)"
 
     msg "Start $update_type update..."
 
@@ -147,11 +147,11 @@ do_update() {
 
     case "$update_type" in
     full)
-        mount --move $IMAGE_MOUNT $ROOTFS_DIR
+        mount --move "$IMAGE_MOUNT" "$ROOTFS_DIR"
         ;;
 
     incremental)
-        mount -t overlay overlay -o lowerdir=$IMAGE_MOUNT:$ROOTFS_DIR $ROOTFS_DIR
+        mount -t overlay overlay -o lowerdir="$IMAGE_MOUNT":"$ROOTFS_DIR $ROOTFS_DIR"
         ;;
 
     *)
@@ -159,7 +159,7 @@ do_update() {
         ;;
     esac
 
-    touch $UPDATE_DIR/$UPDATED_FLAG
+    touch "$UPDATE_DIR"/"$UPDATED_FLAG"
 
     msg "Successfully updated!"
 }
@@ -173,7 +173,7 @@ do_revert() {
 }
 
 cleanup() {
-    mount -o remount,ro $ROOTFS_DIR
+    mount -o remount,ro "$ROOTFS_DIR"
     umount_update_image
 }
 
@@ -184,23 +184,23 @@ clear_all_flags() {
 do_apply() {
     UPDATE_IMAGE="$(find "$UPDATE_DIR" -name "${UPDATE_EXT}" | head -n1)"
 
-    local update_type="$(get_update_type)"
+    update_type="$(get_update_type)"
 
     msg "Start $update_type apply..."
 
     load_selinux_module
     mount_update_image
-    mount -o remount,rw $ROOTFS_DIR
+    mount -o remount,rw "$ROOTFS_DIR"
 
     case "$update_type" in
     full)
-        rsync -av -A -X --ignore-times --delete $IMAGE_MOUNT/ $ROOTFS_DIR/
+        rsync -av -A -X --ignore-times --delete "$IMAGE_MOUNT/" "$ROOTFS_DIR/"
         ;;
 
     incremental)
-        rsync -av -A -X --ignore-times $IMAGE_MOUNT/ $ROOTFS_DIR/
+        rsync -av -A -X --ignore-times "$IMAGE_MOUNT/" "$ROOTFS_DIR/"
 
-        find $ROOTFS_DIR/ -type c -exec rm -f {} \;
+        find "$ROOTFS_DIR/" -type c -exec rm -f {} \;
         ;;
     *)
         error "unknown update type: $update_type"
