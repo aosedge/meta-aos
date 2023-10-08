@@ -58,6 +58,33 @@ do_create_shared_links() {
 
 addtask create_shared_links after do_image_qa do_image_wic before do_image_complete
 
+# Create RW partitions
+
+AOS_VAR_PART_SIZE ?= "524288"
+AOS_HOME_PART_SIZE ?= ""
+
+mk_dir_fs() {
+    local dir="$1"
+    local size="$2"
+    local out_file="${DEPLOY_DIR_IMAGE}/${IMAGE_BASENAME}-${MACHINE}-${dir}.ext4"
+
+    dd if=/dev/zero of=${out_file} count=${size} bs=1024
+    mkfs.ext4 ${out_file} -d ${IMAGE_ROOTFS}/${dir}
+    fsck.ext4 -pvfD ${out_file} || [ $? -le 3 ]
+}
+
+fakeroot do_create_rw_parts() {
+    if [ ! -z "${AOS_VAR_PART_SIZE}" ]; then
+        mk_dir_fs "var" "${AOS_VAR_PART_SIZE}"
+    fi
+
+    if [ ! -z "${AOS_HOME_PART_SIZE}" ]; then
+        mk_dir_fs "home" "${AOS_HOME_PART_SIZE}"
+    fi
+}
+
+addtask create_rw_parts after do_image_qa do_image_wic before do_image_complete
+
 # Packages
 
 IMAGE_INSTALL:append = " \
