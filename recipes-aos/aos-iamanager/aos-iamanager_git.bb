@@ -79,7 +79,7 @@ do_prepare_ident_modules() {
     echo ')' >> ${file}
 }
 
-do_compile[vardeps] += "AOS_NODE_ID AOS_NODE_TYPE AOS_IAM_NODES AOS_IAM_HOSTNAMES"
+do_fetch[vardeps] += "AOS_NODE_ID AOS_NODE_TYPE AOS_IAM_NODES AOS_IAM_HOSTNAMES"
 
 python do_update_config() {
     import json

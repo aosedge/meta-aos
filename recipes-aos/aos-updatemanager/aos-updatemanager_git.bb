@@ -105,7 +105,7 @@ python do_update_config() {
         json.dump(data, f, indent=4)
 }
 
-do_compile[vardeps] += "AOS_UM_COMPONENT_PREFIX"
+do_fetch[vardeps] += "AOS_UM_COMPONENT_PREFIX"
 
 do_install:append() {
     install -d ${D}${sysconfdir}/aos
