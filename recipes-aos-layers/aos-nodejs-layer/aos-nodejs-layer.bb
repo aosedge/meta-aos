@@ -6,4 +6,4 @@ AOS_LAYER_FEATURES += " \
     nodejs \
 "
 
-AOS_LAYER_VERSION = "1"
+AOS_LAYER_VERSION = "1.0.0"

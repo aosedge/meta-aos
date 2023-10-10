@@ -14,4 +14,4 @@ AOS_LAYER_FEATURES += " \
     python3-requests \
 "
 
-AOS_LAYER_VERSION = "1"
+AOS_LAYER_VERSION = "1.0.0"
