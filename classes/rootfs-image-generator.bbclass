@@ -42,7 +42,8 @@ ostree_commit() {
 
 create_full_update() {
     mksquashfs ${AOS_ROOTFS_SOURCE_DIR}/ ${AOS_ROOTFS_IMAGE_FILE} \
-        -noappend -wildcards -all-root -e ${AOS_ROOTFS_EXCLUDE_ITEMS}
+        -noappend -wildcards -all-root \
+        ${@'' if not d.getVar('AOS_ROOTFS_EXCLUDE_ITEMS') else '-e '+ d.getVar('AOS_ROOTFS_EXCLUDE_ITEMS')}
 }
 
 create_incremental_update() {
@@ -72,7 +73,8 @@ create_incremental_update() {
     fi
 
     mksquashfs ${ROOTFS_DIFF_DIR} ${AOS_ROOTFS_IMAGE_FILE} \
-        -noappend -wildcards -all-root -e ${AOS_ROOTFS_EXCLUDE_ITEMS}
+        -noappend -wildcards -all-root \
+        ${@'' if not d.getVar('AOS_ROOTFS_EXCLUDE_ITEMS') else '-e '+ d.getVar('AOS_ROOTFS_EXCLUDE_ITEMS')}
 }
 
 set_selinux_context() {
