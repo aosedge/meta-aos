@@ -62,6 +62,7 @@ RRECOMMENDS:${PN} += " \
     kernel-module-xt-comment \
     kernel-module-xt-conntrack \
     kernel-module-xt-masquerade \
+    kernel-module-xt-tcpudp \
 "
 
 RDEPENDS:${PN}-dev += " bash make"
