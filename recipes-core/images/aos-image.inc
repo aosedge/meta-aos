@@ -5,6 +5,8 @@ LICENSE = "Apache-2.0"
 
 inherit ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'selinux-image', '', d)}
 
+DEPENDS += "e2fsprogs-native"
+
 # Enable RO rootfs
 IMAGE_FEATURES:append = " read-only-rootfs"
 
