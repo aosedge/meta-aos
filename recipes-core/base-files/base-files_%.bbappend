@@ -1,4 +1,5 @@
 hostname = "${AOS_NODE_HOSTNAME}"
+aos_disks_timeout = "30"
 
 do_install:append() {
     # add Aos related hosts
@@ -11,24 +12,26 @@ do_install:append() {
 
     # add Aos partitions
     echo "# Aos partitions">> ${D}${sysconfdir}/fstab
-    echo '/dev/aosvg/workdirs  /var/aos/workdirs   ext4 defaults,auto,nofail,noatime,x-systemd.device-timeout=10'\
+    echo '/dev/aosvg/workdirs  /var/aos/workdirs ext4 defaults,auto,nofail,noatime,'\
+'x-systemd.device-timeout=${aos_disks_timeout}'\
 ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ',context=system_u:object_r:aos_var_run_t:s0', '', d)} '0 0' \
    >> ${D}/${sysconfdir}/fstab
 }
 
 do_install:append:aos-main-node() {
     # add Aos partitions
-   echo '/dev/aosvg/downloads /var/aos/downloads ext4 defaults,auto,nofail,noatime,x-systemd.device-timeout=10'\
+   echo '/dev/aosvg/downloads /var/aos/downloads ext4 defaults,auto,nofail,'\
+'noatime,x-systemd.device-timeout=${aos_disks_timeout}'\
 ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ',context=system_u:object_r:aos_var_run_t:s0', '', d)} '0 0' \
    >> ${D}/${sysconfdir}/fstab
 
-   echo '/dev/aosvg/storages /var/aos/storages ext4 ' \
-'defaults,auto,nofail,noatime,x-systemd.device-timeout=10,usrjquota=aquota.user,jqfmt=vfsv0'\
+   echo '/dev/aosvg/storages /var/aos/storages ext4 defaults,auto,nofail,'\
+'noatime,x-systemd.device-timeout=${aos_disks_timeout},usrjquota=aquota.user,jqfmt=vfsv0'\
 ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ',context=system_u:object_r:aos_var_run_t:s0', '', d)} '0 0' \
    >> ${D}/${sysconfdir}/fstab
 
-    echo '/dev/aosvg/states /var/aos/states ext4 ' \
-'defaults,auto,nofail,noatime,x-systemd.device-timeout=10,usrjquota=aquota.user,jqfmt=vfsv0'\
+    echo '/dev/aosvg/states /var/aos/states ext4 defaults,auto,nofail,noatime,'\
+'x-systemd.device-timeout=${aos_disks_timeout},usrjquota=aquota.user,jqfmt=vfsv0'\
 ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ',context=system_u:object_r:aos_var_run_t:s0', '', d)} '0 0' \
    >> ${D}/${sysconfdir}/fstab
 }
