@@ -11,8 +11,8 @@ include recipes-security/refpolicy/refpolicy_common.inc
 
 PV = "2_20220106+git${SRCPV}"
 
-BRANCH = "develop"
-SRCREV = "${AUTOREV}"
+BRANCH = "master"
+SRCREV = "a070600428f7420a3053f311c34aef01cc636bff"
 
 SRC_URI = "git://github.com/aoscloud/refpolicy.git;branch=${BRANCH};protocol=https;name=refpolicy;destsuffix=refpolicy"
 
