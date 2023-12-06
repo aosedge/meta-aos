@@ -93,7 +93,7 @@ python do_create_metadata() {
 
     # Plarform info
 
-    platform_info = create_layer_platform_info(d.getVar("MACHINE_ARCH"), d.getVar("TARGET_OS"), d.getVar("DISTRO_VERSION"),
+    platform_info = create_layer_platform_info(d.getVar("TARGET_ARCH"), d.getVar("TARGET_OS"), d.getVar("DISTRO_VERSION"),
         d.getVar("AOS_LAYER_FEATURES").split())
 
     # Annotations
