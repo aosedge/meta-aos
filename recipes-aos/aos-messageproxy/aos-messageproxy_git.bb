@@ -13,15 +13,19 @@ SRC_URI = "git://${GO_IMPORT}.git;branch=${BRANCH};protocol=https"
 SRC_URI += " \
     file://aos_messageproxy.cfg \
     file://aos-messageproxy.service \
+    file://aos-messageproxy-provisioning.service \
     file://aos-target.conf \
     file://aos-cm-service.conf \
 "
+
 FILES:${PN} += " \
     ${sysconfdir} \
     ${systemd_system_unitdir} \
 "
 
-inherit go goarch
+inherit go goarch systemd
+
+SYSTEMD_SERVICE:${PN} = "aos-messageproxy.service aos-messageproxy-provisioning.service"
 
 DEPENDS = "xen-tools"
 RDEPENDS:${PN} = "xen-tools-libxenvchan"
@@ -66,6 +70,7 @@ do_install:append() {
 
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/aos-messageproxy.service ${D}${systemd_system_unitdir}
+    install -m 0644 ${WORKDIR}/aos-messageproxy-provisioning.service ${D}${systemd_system_unitdir}
 
     install -d ${D}${sysconfdir}/systemd/system/aos.target.d
     install -m 0644 ${WORKDIR}/aos-target.conf ${D}${sysconfdir}/systemd/system/aos.target.d/${PN}.conf
