@@ -117,7 +117,8 @@ python do_update_config() {
             if iam_nodes[i] == node_id:
                 continue
 
-            data["RemoteIams"].append({"NodeID": iam_nodes[i], "URL": iam_hostnames[i]+":8089"})
+            data["RemoteIams"].append({"NodeID": iam_nodes[i], "URL": iam_hostnames[i]+
+                (":8089" if ":" not in iam_hostnames[i] else "")})
 
     with open(file_name, "w") as f:
         json.dump(data, f, indent=4)
