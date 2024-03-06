@@ -1,10 +1,10 @@
 LIC_FILES_CHKSUM = "file://COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263"
 
-SRCREV_crun = "d2ff390d37ca163ebff2467382b3a6d6c77c5ca6"
-SRCREV_libocispec = "23aed835eed8d81d124977583551a81abe595a0c"
-SRCREV_ispec = "4df8887994e871a59f9e30e8dd811d060f6a39ef"
-SRCREV_rspec = "494a5a6aca782455c0fbfc35af8e12f04e98a55e"
-SRCREV_yajl = "f344d21280c3e4094919fd318bc5ce75da91fc06"
+SRCREV_crun = "1961d211ba98f532ea52d2e80f4c20359f241a98"
+SRCREV_libocispec = "19c05670c37a42c217caa7b141bcaada7867cc15"
+SRCREV_ispec = "0b40f0f367c396cc5a7d6a2e8c8842271d3d3844"
+SRCREV_rspec = "55ae2744e3a034668fa2c40687251095a69ed63e"
+SRCREV_yajl = "49923ccb2143e36850bcdeb781e2bcdf5ce22f15"
 
 SRC_URI = " \
     git://github.com/containers/crun.git;branch=main;name=crun;protocol=https \
