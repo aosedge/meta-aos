@@ -1,14 +1,10 @@
-DESCRIPTION = "AOS Identity and Access Manager"
-
-GO_IMPORT = "github.com/aoscloud/aos_iamanager"
-
+DESCRIPTION = "AOS Identity and Access Manager CPP"
 LICENSE = "Apache-2.0"
-LIC_FILES_CHKSUM = "file://src/${GO_IMPORT}/LICENSE;md5=3b83ef96387f14655fc854ddc3c6bd57"
+LIC_FILES_CHKSUM = "file://LICENSE;md5=3b83ef96387f14655fc854ddc3c6bd57"
 
 BRANCH = "develop"
 SRCREV = "${AUTOREV}"
-
-SRC_URI = "git://${GO_IMPORT}.git;branch=${BRANCH};protocol=https"
+SRC_URI = "git://github.com/aoscloud/aos_core_iam_cpp.git;protocol=https;branch=${BRANCH}"
 
 SRC_URI += " \
     file://aos_iamanager.cfg \
@@ -17,19 +13,17 @@ SRC_URI += " \
     file://aos-target.conf \
 "
 
-inherit go goarch systemd
+DEPENDS += "poco systemd grpc grpc-native protobuf-native protobuf openssl"
+
+OECMAKE_GENERATOR = "Unix Makefiles"
+EXTRA_OECMAKE += "-DFETCHCONTENT_FULLY_DISCONNECTED=OFF"
+
+inherit autotools pkgconfig cmake systemd
 
 SYSTEMD_SERVICE:${PN} = "aos-iamanager.service aos-iamanager-provisioning.service"
 
-AOS_IAM_CERT_MODULES ?= "certhandler/modules/swmodule"
-AOS_IAM_IDENT_MODULES ?= ""
-
-MIGRATION_SCRIPTS_PATH = "${base_prefix}/usr/share/aos/iam/migration"
-
 FILES:${PN} += " \
     ${sysconfdir} \
-    ${systemd_system_unitdir} \
-    ${MIGRATION_SCRIPTS_PATH} \
 "
 
 RDEPENDS:${PN} += " \
@@ -37,47 +31,10 @@ RDEPENDS:${PN} += " \
     aos-provfinish \
 "
 
-RDEPENDS:${PN}-dev += " bash make"
-RDEPENDS:${PN}-staticdev += " bash make"
+S = "${WORKDIR}/git"
 
-INSANE_SKIP:${PN} = "textrel"
-
-# embed version
-GO_LDFLAGS += '-ldflags="-X main.GitSummary=`git --git-dir=${S}/src/${GO_IMPORT}/.git describe --tags --always`"'
-
-# WA to support go install for v 1.18
-
-GO_LINKSHARED = ""
-
-do_compile:prepend() {
-    cd ${GOPATH}/src/${GO_IMPORT}/
-}
-
-do_prepare_cert_modules() {
-    file="${S}/src/${GO_IMPORT}/certhandler/modules/modules.go"
-
-    echo 'package certmodules' > ${file}
-    echo 'import (' >> ${file}
-
-    for module in ${AOS_IAM_CERT_MODULES}; do
-        echo "\t_ \"${GO_IMPORT}/${module}\"" >> ${file}
-    done
-
-    echo ')' >> ${file}
-}
-
-do_prepare_ident_modules() {
-    file="${S}/src/${GO_IMPORT}/identhandler/modules/modules.go"
-
-    echo 'package identmodules' > ${file}
-    echo 'import (' >> ${file}
-
-    for module in ${AOS_IAM_IDENT_MODULES}; do
-        echo "\t_ \"${GO_IMPORT}/${module}\"" >> ${file}
-    done
-
-    echo ')' >> ${file}
-}
+do_compile[network] = "1"
+do_configure[network] =  "1"
 
 do_fetch[vardeps] += "AOS_NODE_ID AOS_NODE_TYPE AOS_IAM_NODES AOS_IAM_HOSTNAMES"
 
@@ -90,7 +47,6 @@ python do_update_config() {
         data = json.load(f)
 
     # Set node ID and node type
-    
     node_info = {
         "NodeID": d.getVar("AOS_NODE_ID"),
         "NodeType" : d.getVar("AOS_NODE_TYPE")
@@ -134,14 +90,6 @@ do_install:append() {
 
     install -d ${D}${sysconfdir}/systemd/system/aos.target.d
     install -m 0644 ${WORKDIR}/aos-target.conf ${D}${sysconfdir}/systemd/system/aos.target.d/${PN}.conf
-
-    install -d ${D}${MIGRATION_SCRIPTS_PATH}
-    source_migration_path="/src/${GO_IMPORT}/database/migration"
-    if [ -d ${S}${source_migration_path} ]; then
-        install -m 0644 ${S}${source_migration_path}/* ${D}${MIGRATION_SCRIPTS_PATH}
-    fi
 }
 
-addtask prepare_cert_modules after do_unpack before do_compile
-addtask prepare_ident_modules after do_unpack before do_compile
 addtask update_config after do_install before do_package
