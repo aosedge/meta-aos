@@ -22,7 +22,7 @@ opendisk_enabled() {
 get_pkcs11_module() {
     case "$bootparam_opendisk_pkcs11" in
     optee)
-        echo "/usr/lib/libckteec.so.0.1"
+        echo "/usr/lib/libckteec.so.0"
         ;;
 
     *)
