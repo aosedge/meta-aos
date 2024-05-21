@@ -3,7 +3,7 @@ LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=3b83ef96387f14655fc854ddc3c6bd57"
 
 BRANCH = "main"
-SRCREV = "5d33a3d3d6c13bd4fb04468630f6a88c9c54e036"
+SRCREV = "b9faf4be3164c67b8c6072851923b75ab239d4fc"
 
 SRC_URI = "git://github.com/aoscloud/aos_core_iam_cpp.git;protocol=https;branch=${BRANCH}"
 
