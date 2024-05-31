@@ -41,6 +41,9 @@ class FotaBuilder:
 
     def create_bundle(self):
         """Create bundle from prepared files"""
+
+        self._prepare_dir(os.path.dirname(self._bundle_name))
+
         args = ["tar", "-cf", self._bundle_name, "-C", self._bundle_dir, "."]
 
         self._run_cmd(args)
