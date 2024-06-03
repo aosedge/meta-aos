@@ -103,3 +103,5 @@ IMAGE_INSTALL:append:aos-main-node = " \
     aos-provfirewall \
     aos-vis \
 "
+
+TOOLCHAIN_HOST_TASK:append = " nativesdk-protobuf nativesdk-protobuf-dev nativesdk-grpc nativesdk-grpc-compiler"
