@@ -42,7 +42,7 @@ class FotaBuilder:
     def create_bundle(self):
         """Create bundle from prepared files"""
 
-        self._prepare_dir(os.path.dirname(self._bundle_name))
+        self._mkdir(os.path.dirname(self._bundle_name))
 
         args = ["tar", "-cf", self._bundle_name, "-C", self._bundle_dir, "."]
 
@@ -103,18 +103,8 @@ class FotaBuilder:
 
         os.makedirs(wdir, exist_ok=True)
 
-    def _mkdir(self, root, new_dir):
-        if len(new_dir) == 0:
-            return
-
-        dirs = Path(new_dir).parts
-        path = root
-
-        for dir_component in dirs:
-            path = os.path.join(path, dir_component)
-
-            if not os.path.exists(path):
-                os.mkdir(path)
+    def _mkdir(self, new_dir):
+        Path(new_dir).mkdir(parents=True, exist_ok=True)
 
     def _update_metadata_var(self, conf, varname, metadata):
         var = conf.get(varname, None)
