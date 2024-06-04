@@ -2,8 +2,8 @@ DESCRIPTION = "AOS Identity and Access Manager CPP"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=3b83ef96387f14655fc854ddc3c6bd57"
 
-BRANCH = "develop"
-SRCREV = "${AUTOREV}"
+BRANCH = "main"
+SRCREV = "ecea89b794b610e598a5eb22e6b96889f601b617"
 
 SRC_URI = "git://github.com/aoscloud/aos_core_iam_cpp.git;protocol=https;branch=${BRANCH}"
 
