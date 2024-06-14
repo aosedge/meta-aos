@@ -37,7 +37,7 @@ S = "${WORKDIR}/git"
 do_compile[network] = "1"
 do_configure[network] =  "1"
 
-do_fetch[vardeps] += "AOS_NODE_ID AOS_NODE_TYPE AOS_IAM_NODES AOS_IAM_HOSTNAMES"
+do_fetch[vardeps] += "AOS_MAIN_NODE_HOSTNAME AOS_NODE_HOSTNAME AOS_NODE_TYPE"
 
 python do_update_config() {
     import json
@@ -47,35 +47,24 @@ python do_update_config() {
     with open(file_name) as f:
         data = json.load(f)
 
-    # Set node ID and node type
-    node_info = {
-        "NodeID": d.getVar("AOS_NODE_ID"),
-        "NodeType" : d.getVar("AOS_NODE_TYPE")
-    }
+    node_info = data.get("NodeInfo", {})
+    node_info["NodeType"] = d.getVar("AOS_NODE_TYPE")
 
-    data = {**node_info, **data}
+    data["NodeInfo"] = node_info
+
+    node_host_name = d.getVar("AOS_NODE_HOSTNAME")
+    main_node_host_name = d.getVar("AOS_MAIN_NODE_HOSTNAME")
+
+    # Set main IAM server URLs for secondary IAM nodes
+    if node_host_name != main_node_host_name:
+        data["MainIAMPublicServerURL"] = main_node_host_name+":8090"
+        data["MainIAMProtectedServerURL"] = main_node_host_name+":8089"
 
     # Set alternative names for server certificates
 
     for cert_module in data["CertModules"]:
         if "ExtendedKeyUsage" in cert_module and "serverAuth" in cert_module["ExtendedKeyUsage"]:
             cert_module["AlternativeNames"] = [d.getVar("AOS_NODE_HOSTNAME")]
-
-    # Add remote IAM's configuration
-
-    node_id = d.getVar("AOS_NODE_ID")
-    iam_nodes = d.getVar("AOS_IAM_NODES").split()
-    iam_hostnames = d.getVar("AOS_IAM_HOSTNAMES").split()
-
-    if len(iam_nodes) > 1 or (len(iam_nodes) == 1 and node_id not in iam_nodes):
-        data["RemoteIams"] = []
-
-        for i in range(len(iam_nodes)):
-            if iam_nodes[i] == node_id:
-                continue
-
-            data["RemoteIams"].append({"NodeID": iam_nodes[i], "URL": iam_hostnames[i]+
-                (":8089" if ":" not in iam_hostnames[i] else "")})
 
     with open(file_name, "w") as f:
         json.dump(data, f, indent=4)
