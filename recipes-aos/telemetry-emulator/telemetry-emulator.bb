@@ -5,7 +5,7 @@ DIR_TELEMETRY_EMULATOR = "${datadir}/telemetry_emulator"
 BRANCH = "main"
 SRCREV = "d9534bb269043be03c3557314db196013b27eec8"
 SRC_URI = " \
-    git://github.com/aoscloud/telemetry_emulator.git;protocol=https;branch=${BRANCH} \
+    git://github.com/aosedge/telemetry_emulator.git;protocol=https;branch=${BRANCH} \
     file://telemetry-emulator.service \
 "
 LICENSE = "MIT"

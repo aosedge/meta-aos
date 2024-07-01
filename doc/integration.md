@@ -84,7 +84,7 @@ well as `um` storage to be removed from `aos-iamanager` config. `aos-provfirewal
 provisioning ports after provisioning for security reason.
 
 Once flashed, the custom board is ready to be provisioned. See
-[Get started](https://docs.aoscloud.io/bin/view/Home/Cookbooks/Get%20started/) cookbook, to provision and work with Aos
+[Get started](https://docs.aosedge.tech/docs/quick-start/) cookbook, to provision and work with Aos
 Edge.
 
 ## Using secure keys and certificates modules
@@ -112,7 +112,7 @@ recommended to encrypt Aos dedicated partition. It can be done with any appropri
 systemd-cryptsetup, etc.
 
 However, `meta-aos` provide own implementation for disk encryption and disk opening. `meta-aos` uses
-[diskencryption](https://github.com/aoscloud/meta-aos/tree/main/recipes-crypto/diskencryption) script. This script is
+[diskencryption](https://github.com/aosedge/meta-aos/tree/main/recipes-crypto/diskencryption) script. This script is
 called by `aos-iamanager` during provisioning to encrypt disk and used by Aos `initramfs` to open the disk. Although
 the disk can be opened by the init manager, in Aos example products it is opened in Aos `initramfs` because it is
 required by Aos update reference implementation. See `aos-iamanager` and `initramfs` configurations in
@@ -286,8 +286,8 @@ images:
         size: 2048 MiB
 ```
 
-[aos-vm]: https://github.com/aoscloud/meta-aos-vm
-[aos-rcar-gen3]: https://github.com/aoscloud/meta-aos-rcar-gen3
-[aos-rcar-gen4]: https://github.com/aoscloud/meta-aos-rcar-gen4
-[refpolicy]: https://github.com/aoscloud/refpolicy
+[aos-vm]: https://github.com/aosedge/meta-aos-vm
+[aos-rcar-gen3]: https://github.com/aosedge/meta-aos-rcar-gen3
+[aos-rcar-gen4]: https://github.com/aosedge/meta-aos-rcar-gen4
+[refpolicy]: https://github.com/aosedge/refpolicy
 [moulin]: https://moulin.readthedocs.io/en/latest/
