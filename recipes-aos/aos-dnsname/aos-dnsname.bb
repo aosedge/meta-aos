@@ -5,8 +5,8 @@ GO_IMPORT = "github.com/aosedge/aos_cni_dns"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://src/${GO_IMPORT}/LICENSE;md5=3b83ef96387f14655fc854ddc3c6bd57"
 
-BRANCH = "main"
-SRCREV = "b8b509a9a723b47f53da2424c595057513324695"
+BRANCH = "develop"
+SRCREV = "${AUTOREV}"
 
 SRC_URI = "git://${GO_IMPORT}.git;branch=${BRANCH};protocol=https"
 
