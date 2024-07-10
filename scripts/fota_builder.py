@@ -36,7 +36,7 @@ class FotaBuilder:
         self._components = conf["components"]
         self._verbose = verbose
         self._bundle_name = conf["target_images"][0].as_str
-        self._metadata = {"formatVersion": 1, "components": []}
+        self._metadata = {"formatVersion": 2, "components": []}
         self._bundle_dir = os.path.join(self._work_dir, "bundle")
 
     def create_bundle(self):
@@ -51,7 +51,7 @@ class FotaBuilder:
     def process_component(self, component, conf):
         """Process component "component" """
         metadata = self._create_component_metadata(component, conf)
-        work_dir = os.path.join(self._work_dir, "components", metadata["id"])
+        work_dir = os.path.join(self._work_dir, "components", metadata["type"])
         method = conf["method"].as_str
 
         if method == "raw":
@@ -114,11 +114,11 @@ class FotaBuilder:
 
     def _create_component_metadata(self, component, conf):
         metadata = {
-            "id": conf.get("componentType", component).as_str,
-            "vendorVersion": conf["vendorVersion"].as_str,
+            "type": conf.get("componentType", component).as_str,
+            "version": conf["vendorVersion"].as_str,
         }
         metadata["fileName"] = conf.get(
-            "fileName", f'{metadata["id"]}-{metadata["vendorVersion"]}.img'
+            "fileName", f'{metadata["type"]}-{metadata["version"]}.img'
         ).as_str
 
         self._update_metadata_var(conf, "requiredVersion", metadata)
@@ -146,7 +146,7 @@ class FotaBuilder:
         os.system(f"gzip < {image_file} > {gz_image}")
 
     def _do_overlay_component(self, work_dir, metadata, conf):
-        component = metadata["id"]
+        component = metadata["type"]
         overlay_type = conf["type"].as_str
 
         self._prepare_dir(work_dir)
@@ -165,7 +165,7 @@ class FotaBuilder:
 
         bbake_conf = [
             ("AOS_ROOTFS_IMAGE_TYPE", overlay_type),
-            ("AOS_ROOTFS_IMAGE_VERSION", metadata["vendorVersion"]),
+            ("AOS_ROOTFS_IMAGE_VERSION", metadata["version"]),
             ("AOS_ROOTFS_REF_VERSION", metadata.get("requiredVersion", "")),
             ("AOS_ROOTFS_OSTREE_REPO", os.path.abspath(repo)),
             (
