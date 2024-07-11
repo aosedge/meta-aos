@@ -7,6 +7,7 @@ PartOf=aos.target
 
 [Service]
 Type=notify
+ExecStartPre=-/usr/bin/aos-clearhsm.sh
 ExecStart=/usr/bin/aos_iamanager -c /etc/aos/aos_iamanager.cfg -provisioning -v debug -j
 Restart=always
 RestartSec=10
