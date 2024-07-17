@@ -94,13 +94,13 @@ python do_update_config() {
 
     data["CMServerURL"] = main_node_hostname+":8091"
 
-    # Update component IDs
+    # Update component Types
 
     comp_prefix = d.getVar("AOS_UM_COMPONENT_PREFIX")
 
     for update_module in data["UpdateModules"]:
-        if not update_module["ID"].startswith(comp_prefix):
-            update_module["ID"] = comp_prefix+update_module["ID"]
+        if not update_module["Type"].startswith(comp_prefix):
+            update_module["Type"] = comp_prefix+update_module["Type"]
 
     with open(file_name, "w") as f:
         json.dump(data, f, indent=4)
