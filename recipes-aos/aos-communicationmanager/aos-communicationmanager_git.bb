@@ -82,12 +82,6 @@ python do_update_config() {
     if len(sm_nodes) > 1 or (len(sm_nodes) == 1 and node_id not in sm_nodes):
         sm_controller["FileServerURL"] = node_hostname+":8094" 
  
-    if len(sm_nodes) > 0:
-        sm_controller["NodeIDs"] = []
-
-    for sm in sm_nodes:
-        sm_controller["NodeIDs"].append(sm)
-
     # Update CM controller
 
     um_controller = data["UMController"]
