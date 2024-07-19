@@ -89,15 +89,6 @@ python do_update_config() {
     if len(um_nodes) > 1 or (len(um_nodes) == 1 and node_id not in um_nodes):
         um_controller["FileServerURL"] = node_hostname+":8092" 
 
-    if len(um_nodes) > 0:
-        um_controller["UMClients"] = []
-
-    for um in um_nodes:
-        if um == node_id:
-            um_controller["UMClients"].append({"UMID": um, "IsLocal": True, "Priority": 1})
-        else:
-            um_controller["UMClients"].append({"UMID": um})
-
     with open(file_name, "w") as f:
         json.dump(data, f, indent=4)
 }
