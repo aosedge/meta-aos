@@ -23,7 +23,6 @@ inherit go goarch systemd
 SYSTEMD_SERVICE:${PN} = "aos-servicemanager.service"
 
 MIGRATION_SCRIPTS_PATH = "${base_prefix}/usr/share/aos/sm/migration"
-AOS_RUNNER ??= "crun"
 
 FILES:${PN} += " \
     ${sysconfdir} \
