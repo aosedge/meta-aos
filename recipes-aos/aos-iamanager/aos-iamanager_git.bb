@@ -37,7 +37,7 @@ S = "${WORKDIR}/git"
 do_compile[network] = "1"
 do_configure[network] =  "1"
 
-do_fetch[vardeps] += "AOS_MAIN_NODE_HOSTNAME AOS_NODE_HOSTNAME AOS_NODE_TYPE"
+do_fetch[vardeps] += "AOS_MAIN_NODE_HOSTNAME AOS_NODE_HOSTNAME AOS_NODE_TYPE AOS_RUNNER"
 
 python do_update_config() {
     import json
@@ -49,6 +49,13 @@ python do_update_config() {
 
     node_info = data.get("NodeInfo", {})
     node_info["NodeType"] = d.getVar("AOS_NODE_TYPE")
+
+    # Set Node Attributes
+    aos_runner = d.getVar("AOS_RUNNER")
+    node_attributes = node_info.get("Attrs", {})
+    node_attributes["NodeRunners"] = aos_runner
+
+    node_info["Attrs"] = node_attributes
 
     data["NodeInfo"] = node_info
 
