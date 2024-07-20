@@ -33,17 +33,8 @@ DEPENDS = "systemd"
 
 RDEPENDS:${PN} += " \
     aos-rootca \
+    nfs-exports \
 "
-
-python __anonymous() {
-    node_id = d.getVar("AOS_NODE_ID")
-    sm_nodes = d.getVar("AOS_SM_NODES").split()
-
-    # if we have remote nodes, add nfs-exports
-
-    if len(sm_nodes) > 1 or (len(sm_nodes) == 1 and node_id not in sm_nodes):
-        d.appendVar("RDEPENDS:"+d.getVar('PN'), "nfs-exports")
-}
 
 RDEPENDS:${PN}-dev += " bash make"
 RDEPENDS:${PN}-staticdev += " bash make"
