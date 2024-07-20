@@ -65,29 +65,12 @@ python do_update_config() {
     with open(file_name) as f:
         data = json.load(f)
 
-    node_id = d.getVar("AOS_NODE_ID")
-    sm_nodes = d.getVar("AOS_SM_NODES").split()
-    um_nodes = d.getVar("AOS_UM_NODES").split()
     node_hostname = d.getVar("AOS_NODE_HOSTNAME")
  
     # Update IAM servers
     
     data["IAMProtectedServerURL"]= node_hostname+":8089"
     data["IAMPublicServerURL"] = node_hostname+":8090"
-
-    # Update SM controller
-
-    sm_controller = data["SMController"]
-
-    if len(sm_nodes) > 1 or (len(sm_nodes) == 1 and node_id not in sm_nodes):
-        sm_controller["FileServerURL"] = node_hostname+":8094" 
- 
-    # Update CM controller
-
-    um_controller = data["UMController"]
-
-    if len(um_nodes) > 1 or (len(um_nodes) == 1 and node_id not in um_nodes):
-        um_controller["FileServerURL"] = node_hostname+":8092" 
 
     with open(file_name, "w") as f:
         json.dump(data, f, indent=4)
