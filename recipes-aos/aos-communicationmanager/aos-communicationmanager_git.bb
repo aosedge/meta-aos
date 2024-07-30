@@ -63,6 +63,16 @@ python do_update_config() {
     data["IAMProtectedServerURL"]= node_hostname+":8089"
     data["IAMPublicServerURL"] = node_hostname+":8090"
 
+    main_node_hostname = d.getVar("AOS_MAIN_NODE_HOSTNAME")
+
+    # Update SM controller
+    sm_controller = data["SMController"]
+    sm_controller["FileServerURL"] = main_node_hostname+":8094"
+
+    # Update CM controller
+    um_controller = data["UMController"]
+    um_controller["FileServerURL"] = main_node_hostname+":8092"
+
     with open(file_name, "w") as f:
         json.dump(data, f, indent=4)
 }
