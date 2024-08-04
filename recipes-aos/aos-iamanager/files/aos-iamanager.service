@@ -10,6 +10,7 @@ Type=notify
 ExecStart=/usr/bin/aos_iamanager -c /etc/aos/aos_iamanager.cfg -v debug -j
 Restart=always
 RestartSec=10
+KillMode=process
 
 [Install]
 WantedBy=multi-user.target
