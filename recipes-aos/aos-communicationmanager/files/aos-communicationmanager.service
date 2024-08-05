@@ -2,7 +2,7 @@
 Description=AOS Communication Manager
 Wants=network-online.target aos-iamanager.service
 After=network-online.target aos-iamanager.service
-ConditionPathExists=!/var/aos/.unprovisioned
+ConditionPathExists=/var/aos/.provisionstate
 PartOf=aos.target
 
 [Service]

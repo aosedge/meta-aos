@@ -2,7 +2,7 @@
 Description=AOS Service Manager
 Wants=network-online.target dbus.service aos-iamanager.service
 After=network-online.target dbus.service aos-iamanager.service
-ConditionPathExists=!/var/aos/.unprovisioned
+ConditionPathExists=/var/aos/.provisionstate
 PartOf=aos.target
 
 [Service]

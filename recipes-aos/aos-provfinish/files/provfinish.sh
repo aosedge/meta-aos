@@ -1,8 +1,5 @@
 #!/bin/sh
 
-# remove unprovisioned flag
-rm -rf /var/aos/.unprovisioned
-
 sync
 
 # restart aos target

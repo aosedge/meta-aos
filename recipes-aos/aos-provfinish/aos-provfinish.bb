@@ -18,7 +18,6 @@ RDEPENDS:${PN} = "aos-target"
 
 do_install() {
     install -d ${D}${aos_var_dir}
-    touch ${D}${aos_var_dir}/.unprovisioned
 
     install -d ${D}${aos_opt_dir}
     install -m 0755 ${S}/provfinish.sh ${D}${aos_opt_dir}

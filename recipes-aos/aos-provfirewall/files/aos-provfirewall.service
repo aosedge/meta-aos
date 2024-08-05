@@ -3,7 +3,7 @@ Description=Provisioning firewall service
 Before=network-pre.target
 After=iptables.service
 Wants=network-pre.target
-ConditionPathExists=!/var/aos/.unprovisioned
+ConditionPathExists=/var/aos/.provisionstate
 PartOf=aos.target
 
 [Service]

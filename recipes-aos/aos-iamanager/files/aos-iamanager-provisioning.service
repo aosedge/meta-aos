@@ -2,7 +2,7 @@
 Description=AOS Identity and Access Manager
 Wants=network-online.target
 After=network-online.target
-ConditionPathExists=/var/aos/.unprovisioned
+ConditionPathExists=!/var/aos/.provisionstate
 PartOf=aos.target
 
 [Service]
