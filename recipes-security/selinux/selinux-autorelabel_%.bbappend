@@ -5,6 +5,8 @@ SRC_URI += " \
 "
 
 do_install:append() {
+    install -d ${D}${aos_var_dir}
+
     sed -i -e 's#/.autorelabel#/var/aos/.autorelabel#g' ${D}${bindir}/${SELINUX_SCRIPT_SRC}.sh
 
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
