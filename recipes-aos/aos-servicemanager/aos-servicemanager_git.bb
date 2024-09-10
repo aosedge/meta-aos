@@ -5,8 +5,8 @@ GO_IMPORT = "github.com/aosedge/aos_servicemanager"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://src/${GO_IMPORT}/LICENSE;md5=3b83ef96387f14655fc854ddc3c6bd57"
 
-BRANCH = "develop"
-SRCREV = "${AUTOREV}"
+BRANCH = "main"
+SRCREV = "03d9887a9e9a0e60c9beef2b7cfa1f6dd4ab99a1"
 
 SRC_URI = "git://${GO_IMPORT}.git;branch=${BRANCH};protocol=https"
 
