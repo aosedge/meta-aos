@@ -2,14 +2,16 @@ DESCRIPTION = "AOS Telemetry Emulator"
 
 DIR_TELEMETRY_EMULATOR = "${datadir}/telemetry_emulator"
 
+LICENSE = "MIT"
+LIC_FILES_CHKSUM = "file://${COREBASE}/meta/COPYING.MIT;md5=3da9cfbcb788c80a0384361b4de20420"
+
 BRANCH = "main"
-SRCREV = "d9534bb269043be03c3557314db196013b27eec8"
+SRCREV = "${AUTOREV}"
+
 SRC_URI = " \
     git://github.com/aosedge/telemetry_emulator.git;protocol=https;branch=${BRANCH} \
     file://telemetry-emulator.service \
 "
-LICENSE = "MIT"
-LIC_FILES_CHKSUM = "file://${COREBASE}/meta/COPYING.MIT;md5=3da9cfbcb788c80a0384361b4de20420"
 
 S = "${WORKDIR}/git"
 
