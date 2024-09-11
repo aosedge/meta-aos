@@ -7,6 +7,8 @@ inherit ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'selinux-image', '', 
 
 DEPENDS += "e2fsprogs-native"
 
+IMAGE_NAME_SUFFIX = ""
+
 # Enable RO rootfs
 IMAGE_FEATURES:append = " read-only-rootfs"
 

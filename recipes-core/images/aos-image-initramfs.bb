@@ -22,6 +22,8 @@ IMAGE_FEATURES = ""
 export IMAGE_BASENAME = "aos-image-initramfs"
 IMAGE_LINGUAS = ""
 
+IMAGE_NAME_SUFFIX = ""
+
 IMAGE_FSTYPES = "${INITRAMFS_FSTYPES}"
 inherit core-image
 
