@@ -38,7 +38,7 @@ S = "${WORKDIR}/git"
 do_compile[network] = "1"
 do_configure[network] =  "1"
 
-do_fetch[vardeps] += "AOS_MAIN_NODE_HOSTNAME AOS_NODE_HOSTNAME AOS_NODE_TYPE AOS_RUNNER"
+do_fetch[vardeps] += "AOS_MAIN_NODE AOS_MAIN_NODE_HOSTNAME AOS_NODE_HOSTNAME AOS_NODE_TYPE AOS_RUNNER"
 
 python do_update_config() {
     import json
@@ -60,11 +60,10 @@ python do_update_config() {
 
     data["NodeInfo"] = node_info
 
-    node_host_name = d.getVar("AOS_NODE_HOSTNAME")
     main_node_host_name = d.getVar("AOS_MAIN_NODE_HOSTNAME")
 
     # Set main IAM server URLs for secondary IAM nodes
-    if node_host_name != main_node_host_name:
+    if not d.getVar("AOS_MAIN_NODE") or d.getVar("AOS_MAIN_NODE") == "0":
         data["MainIAMPublicServerURL"] = main_node_host_name+":8090"
         data["MainIAMProtectedServerURL"] = main_node_host_name+":8089"
 
