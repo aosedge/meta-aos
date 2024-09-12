@@ -1,14 +1,11 @@
 DESCRIPTION = "AOS Message Proxy"
-
-GO_IMPORT = "github.com/aosedge/aos_message_proxy"
-
 LICENSE = "Apache-2.0"
-LIC_FILES_CHKSUM = "file://src/${GO_IMPORT}/LICENSE;md5=86d3f3a95c324c9479bd8986968f4327"
+LIC_FILES_CHKSUM = "file://LICENSE;md5=86d3f3a95c324c9479bd8986968f4327"
 
 BRANCH = "develop"
 SRCREV = "${AUTOREV}"
 
-SRC_URI = "git://${GO_IMPORT}.git;branch=${BRANCH};protocol=https"
+SRC_URI = "git://github.com/aosedge/aos_core_mp_cpp.git;protocol=https;branch=${BRANCH}"
 
 SRC_URI += " \
     file://aos_messageproxy.cfg \
@@ -18,51 +15,26 @@ SRC_URI += " \
     file://aos-cm-service.conf \
 "
 
-FILES:${PN} += " \
-    ${sysconfdir} \
-    ${systemd_system_unitdir} \
-"
+S = "${WORKDIR}/git"
 
-inherit go goarch systemd
+inherit autotools pkgconfig cmake systemd
+
+DEPENDS += "poco systemd grpc grpc-native protobuf-native protobuf curl"
+
+PACKAGECONFIG ??= "${@bb.utils.contains('DISTRO_FEATURES', 'xen', 'vchan', '', d)}"
+PACKAGECONFIG[vchan] = "-DWITH_VCHAN=ON,-DWITH_VCHAN=OFF,xen-tools,xen-tools-libxenvchan"
+
+OECMAKE_GENERATOR = "Unix Makefiles"
+EXTRA_OECMAKE += "-DFETCHCONTENT_FULLY_DISCONNECTED=OFF"
 
 SYSTEMD_SERVICE:${PN} = "aos-messageproxy.service aos-messageproxy-provisioning.service"
 
-DEPENDS = "xen-tools"
-RDEPENDS:${PN} = "xen-tools-libxenvchan"
+FILES:${PN} += " \
+    ${sysconfdir} \
+"
 
-# embed version
-GO_LDFLAGS += '-ldflags="-X main.GitSummary=`git --git-dir=${S}/src/${GO_IMPORT}/.git describe --tags --always`"'
-
-# WA to support go install for v 1.18
-
-GO_LINKSHARED = ""
-
-do_compile:prepend() {
-    cd ${GOPATH}/src/${GO_IMPORT}/
-}
-
-python do_update_config() {
-    import json
-
-    file_name = oe.path.join(d.getVar("D"), d.getVar("sysconfdir"), "aos", "aos_messageproxy.cfg")
-
-    with open(file_name) as f:
-        data = json.load(f)
-
-    node_hostname = d.getVar("AOS_NODE_HOSTNAME")
-    main_node_hostname = d.getVar("AOS_MAIN_NODE_HOSTNAME")
-
-    # Update IAM servers
-
-    data["IAMPublicServerURL"] = node_hostname+":8090"
-
-    # Update CM server
-
-    data["CMServerURL"] = main_node_hostname+":8093"
-
-    with open(file_name, "w") as f:
-        json.dump(data, f, indent=4)
-}
+do_compile[network] = "1"
+do_configure[network] =  "1"
 
 do_install:append() {
     install -d ${D}${sysconfdir}/aos
@@ -80,5 +52,3 @@ do_install:append:aos-main-node() {
     install -d ${D}${sysconfdir}/systemd/system/aos-messageproxy.service.d
     install -m 0644 ${WORKDIR}/aos-cm-service.conf ${D}${sysconfdir}/systemd/system/aos-messageproxy.service.d/10-aos-cm-service.conf
 }
-
-addtask update_config after do_install before do_package
