@@ -115,7 +115,7 @@ class FotaBuilder:
     def _create_component_metadata(self, component, conf):
         metadata = {
             "type": conf.get("componentType", component).as_str,
-            "version": conf["vendorVersion"].as_str,
+            "version": conf["version"].as_str,
         }
         metadata["fileName"] = conf.get(
             "fileName", f'{metadata["type"]}-{metadata["version"]}.img'
