@@ -48,6 +48,12 @@ GO_LDFLAGS += '-ldflags="-X main.GitSummary=`git --git-dir=${S}/src/${GO_IMPORT}
 
 GO_LINKSHARED = ""
 
+RRECOMMENDS:${PN} += " \
+    kernel-module-quota-v1 \
+    kernel-module-quota-v2 \
+    kernel-module-quota-tree \
+"
+
 python do_update_config() {
     import json
 
