@@ -107,4 +107,12 @@ IMAGE_INSTALL:append:aos-main-node = " \
     aos-vis \
 "
 
-TOOLCHAIN_HOST_TASK:append = " nativesdk-protobuf nativesdk-protobuf-dev nativesdk-grpc nativesdk-grpc-compiler"
+TOOLCHAIN_HOST_TASK:append = " \
+    nativesdk-protobuf \
+    nativesdk-protobuf-dev \
+    nativesdk-grpc \
+    nativesdk-grpc-dev \
+    nativesdk-grpc-compiler \
+"
+
+TOOLCHAIN_TARGET_TASK:append = " protobuf-staticdev"
