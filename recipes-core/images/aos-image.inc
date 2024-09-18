@@ -12,6 +12,8 @@ IMAGE_FEATURES:append = " read-only-rootfs"
 
 # Set rootfs version
 
+do_rootfs[vardeps] += "AOS_ROOTFS_IMAGE_VERSION AOS_BOOT_IMAGE_VERSION"
+
 ROOTFS_POSTPROCESS_COMMAND:append = "set_rootfs_version; create_boot_version;"
 
 set_rootfs_version() {
