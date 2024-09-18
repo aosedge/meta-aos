@@ -91,9 +91,6 @@ create_aos_disks() {
         mkdir -p "$(get_mount_point "/dev/$AOS_GROUP/$name")"
     done <"$CONFIG_FILE"
 
-    # wait all parts are mounted
-    mount -a
-
     while read -r name size enable_quota; do
         # skip comments
         if [[ $name = \#* ]]; then
@@ -101,12 +98,12 @@ create_aos_disks() {
         fi
 
         if [ "$enable_quota" -eq 1 ]; then
-            quotacheck -cum "/dev/$AOS_GROUP/$name"
+            tune2fs -O quota "/dev/$AOS_GROUP/$name"
         fi
     done <"$CONFIG_FILE"
 
-    # on quota
-    quotaon -aug
+    # wait all parts are mounted
+    mount -a
 }
 
 delete_aos_disks() {
