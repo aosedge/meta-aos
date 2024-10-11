@@ -72,14 +72,24 @@ create_incremental_update() {
         bbfatal "incremental roofs update is empty"
     fi
 
+    if ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'true', 'false', d)}; then
+        set_selinux_context "${ROOTFS_DIFF_DIR}" "${AOS_ROOTFS_SOURCE_DIR}"
+    fi
+
     mksquashfs ${ROOTFS_DIFF_DIR} ${AOS_ROOTFS_IMAGE_FILE} \
         -noappend -wildcards -all-root \
         ${@'' if not d.getVar('AOS_ROOTFS_EXCLUDE_ITEMS') else '-e '+ d.getVar('AOS_ROOTFS_EXCLUDE_ITEMS')}
 }
 
 set_selinux_context() {
-    ROOTFS_FULL_PATH=$(realpath ${AOS_ROOTFS_SOURCE_DIR})
-    setfiles -m -r ${ROOTFS_FULL_PATH} ${ROOTFS_FULL_PATH}/etc/selinux/aos/contexts/files/file_contexts ${ROOTFS_FULL_PATH}
+    target_dir="$1"
+    rootfs_dir="$2"
+
+    target_dir_full_path=$(realpath "$target_dir")
+    rootfs_full_path=$(realpath "$rootfs_dir")
+
+    setfiles -m -r "${target_dir_full_path}" \
+    "${rootfs_full_path}/etc/selinux/aos/contexts/files/file_contexts" "${target_dir_full_path}"
 }
 
 fakeroot do_create_rootfs_image() {
@@ -89,7 +99,7 @@ fakeroot do_create_rootfs_image() {
     fi
 
     if ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'true', 'false', d)}; then
-        set_selinux_context
+        set_selinux_context "${AOS_ROOTFS_SOURCE_DIR}" "${AOS_ROOTFS_SOURCE_DIR}"
     fi
 
     ostree_commit
