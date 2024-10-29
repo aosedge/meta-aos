@@ -52,19 +52,22 @@ create_incremental_update() {
 
     ostree --repo=${AOS_ROOTFS_OSTREE_REPO} diff ${AOS_ROOTFS_REF_VERSION} ${AOS_ROOTFS_IMAGE_VERSION} |
     while read -r item; do
-        action=${item%% *}
-        item=${item##* }
+        action="${item%% *}"
+        item="${item#* }"
+        item="${item#"${item%%[! ]*}"}"
+
+        bbnote "${action} ${item}"
 
         if [ ${action} = "A" ] || [ ${action} = "M" ]; then
-            if [ -d ${AOS_ROOTFS_SOURCE_DIR}${item} ]; then
-                mkdir -p ${ROOTFS_DIFF_DIR}${item}
+            if [ -d "${AOS_ROOTFS_SOURCE_DIR}${item}" ]; then
+                mkdir -p "${ROOTFS_DIFF_DIR}${item}"
             else
-                mkdir -p $(dirname ${ROOTFS_DIFF_DIR}${item})
-                cp -a ${AOS_ROOTFS_SOURCE_DIR}${item} ${ROOTFS_DIFF_DIR}${item}
+                mkdir -p $(dirname "${ROOTFS_DIFF_DIR}${item}")
+                cp -a "${AOS_ROOTFS_SOURCE_DIR}${item}" "${ROOTFS_DIFF_DIR}${item}"
             fi
         elif [ ${action} = "D" ]; then
-            mkdir -p $(dirname ${ROOTFS_DIFF_DIR}${item})
-            mknod ${ROOTFS_DIFF_DIR}${item} c 0 0 
+            mkdir -p $(dirname "${ROOTFS_DIFF_DIR}${item}")
+            mknod "${ROOTFS_DIFF_DIR}${item}" c 0 0 
         fi
     done
 
@@ -93,7 +96,6 @@ set_selinux_context() {
 }
 
 fakeroot do_create_rootfs_image() {
-
     if [ ! -d ${AOS_ROOTFS_OSTREE_REPO}/refs ]; then
         init_ostree_repo
     fi
