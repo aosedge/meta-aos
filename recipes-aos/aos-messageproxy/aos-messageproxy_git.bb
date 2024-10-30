@@ -5,7 +5,7 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=86d3f3a95c324c9479bd8986968f4327"
 BRANCH = "develop"
 SRCREV = "${AUTOREV}"
 
-SRC_URI = "git://github.com/aosedge/aos_core_mp_cpp.git;protocol=https;branch=${BRANCH}"
+SRC_URI = "gitsm://github.com/aosedge/aos_core_mp_cpp.git;protocol=https;branch=${BRANCH}"
 
 SRC_URI += " \
     file://aos_messageproxy.cfg \
