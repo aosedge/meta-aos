@@ -9,7 +9,7 @@ AOS_INITRAMFS_SCRIPTS ?= " \
     initramfs-module-vardir \
 "
 
-RRECOMMENDS${PN} = " \
+RRECOMMENDS:${PN} = " \
     kernel-module-overlay \
     kernel-module-squashfs \
 "
