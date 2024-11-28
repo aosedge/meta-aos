@@ -139,7 +139,7 @@ do_update() {
     msg "Start $update_type update..."
 
     if [ -z "$UPDATE_IMAGE" ]; then
-        error "update iamge not found"
+        error "update image not found"
     fi
 
     load_selinux_module
