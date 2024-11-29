@@ -1,3 +1,6 @@
+FILESEXTRAPATHS:prepend:aos-main-node := "${THISDIR}/files/main:"
+FILESEXTRAPATHS:prepend:aos-secondary-node := "${THISDIR}/files/secondary:"
+
 DESCRIPTION = "AOS Identity and Access Manager CPP"
 
 LICENSE = "Apache-2.0"
@@ -13,6 +16,7 @@ SRC_URI += " \
     file://aos-iamanager.service \
     file://aos-iamanager-provisioning.service \
     file://aos-target.conf \
+    file://aos-dirs-service.conf \
 "
 
 DEPENDS += "poco systemd grpc grpc-native protobuf-native protobuf openssl"
@@ -84,6 +88,9 @@ do_install:append() {
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/aos-iamanager.service ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/aos-iamanager-provisioning.service ${D}${systemd_system_unitdir}
+
+    install -d ${D}${sysconfdir}/systemd/system/aos-iamanager-provisioning.service.d
+    install -m 0644 ${WORKDIR}/aos-dirs-service.conf ${D}${sysconfdir}/systemd/system/aos-iamanager-provisioning.service.d/20-aos-dirs-service.conf
 
     install -d ${D}${sysconfdir}/systemd/system/aos.target.d
     install -m 0644 ${WORKDIR}/aos-target.conf ${D}${sysconfdir}/systemd/system/aos.target.d/${PN}.conf
