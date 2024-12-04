@@ -58,16 +58,21 @@ create_incremental_update() {
 
         bbnote "${action} ${item}"
 
+        src="${AOS_ROOTFS_SOURCE_DIR}${item}"
+        dst="${ROOTFS_DIFF_DIR}${item}"
+
         if [ ${action} = "A" ] || [ ${action} = "M" ]; then
-            if [ -d "${AOS_ROOTFS_SOURCE_DIR}${item}" ]; then
-                mkdir -p "${ROOTFS_DIFF_DIR}${item}"
+            if [ -L "${src}" ] && [ -d "${src}" ]; then
+                cp -a "${src}" "${dst}"
+            elif [ -d "${src}" ]; then
+                mkdir -p "${dst}"
             else
-                mkdir -p $(dirname "${ROOTFS_DIFF_DIR}${item}")
-                cp -a "${AOS_ROOTFS_SOURCE_DIR}${item}" "${ROOTFS_DIFF_DIR}${item}"
+                mkdir -p "$(dirname ${dst})"
+                cp -a "${src}" "${dst}"
             fi
         elif [ ${action} = "D" ]; then
-            mkdir -p $(dirname "${ROOTFS_DIFF_DIR}${item}")
-            mknod "${ROOTFS_DIFF_DIR}${item}" c 0 0 
+            mkdir -p "$(dirname ${dst})"
+            mknod "${dst}" c 0 0 
         fi
     done
 
