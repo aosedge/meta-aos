@@ -125,9 +125,10 @@ class FotaBuilder:
                 continue
 
             meta_dependency = {
-                "id": dependency["id"].as_str,
-                "requiredVersion": dependency["requiredVersion"].as_str,
-                "minVersion": dependency.get("minVersion", "").as_str
+                "type": dependency["componentType"].as_str,
+                "requiredVersion": dependency.get("requiredVersion", "").as_str,
+                "minVersion": dependency.get("minVersion", "").as_str,
+                "maxVersion": dependency.get("maxVersion", "").as_str,
             }
 
             # Add dependency with non-empty values only
