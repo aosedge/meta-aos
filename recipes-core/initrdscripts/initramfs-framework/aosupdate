@@ -198,7 +198,7 @@ do_apply() {
         ;;
 
     incremental)
-        rsync -av -A -X --ignore-times "$IMAGE_MOUNT/" "$ROOTFS_DIR/"
+        rsync -av -A -X --ignore-times --force "$IMAGE_MOUNT/" "$ROOTFS_DIR/"
 
         find "$ROOTFS_DIR/" -type c -exec rm -f {} \;
         ;;
