@@ -14,6 +14,9 @@ RRECOMMENDS:${PN} = " \
     kernel-module-squashfs \
 "
 
+# Don't allow the initramfs to contain a kernel
+PACKAGE_EXCLUDE = "kernel-image-*"
+
 PACKAGE_INSTALL = "${AOS_INITRAMFS_SCRIPTS} ${VIRTUAL-RUNTIME_base-utils} udev"
 
 # Do not pollute the initrd image with rootfs features
