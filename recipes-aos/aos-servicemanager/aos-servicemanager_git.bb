@@ -1,14 +1,12 @@
 DESCRIPTION = "AOS Service Manager"
 
-GO_IMPORT = "github.com/aosedge/aos_servicemanager"
-
 LICENSE = "Apache-2.0"
-LIC_FILES_CHKSUM = "file://src/${GO_IMPORT}/LICENSE;md5=3b83ef96387f14655fc854ddc3c6bd57"
+LIC_FILES_CHKSUM = "file://LICENSE;md5=86d3f3a95c324c9479bd8986968f4327"
 
 BRANCH = "develop"
 SRCREV = "${AUTOREV}"
 
-SRC_URI = "git://${GO_IMPORT}.git;branch=${BRANCH};protocol=https"
+SRC_URI = "gitsm://github.com/aosedge/aos_core_sm_cpp.git;protocol=https;branch=${BRANCH}"
 
 SRC_URI += " \
     file://aos_servicemanager.cfg \
@@ -18,7 +16,9 @@ SRC_URI += " \
     file://aos-cm-service.conf \
 "
 
-inherit go goarch systemd
+S = "${WORKDIR}/git"
+
+inherit cmake pkgconfig systemd
 
 SYSTEMD_SERVICE:${PN} = "aos-servicemanager.service"
 
@@ -30,7 +30,11 @@ FILES:${PN} += " \
     ${MIGRATION_SCRIPTS_PATH} \
 "
 
-DEPENDS = "systemd"
+DEPENDS = "grpc grpc-native poco protobuf-native systemd"
+
+do_configure[network] =  "1"
+
+EXTRA_OECMAKE += "-DFETCHCONTENT_FULLY_DISCONNECTED=OFF"
 
 VIRTUAL_RUNC = "${@bb.utils.contains('LAYERSERIES_CORENAMES', 'dunfell', 'virtual/runc', 'virtual-runc', d)}"
 
@@ -65,22 +69,6 @@ RRECOMMENDS:${PN} += " \
     kernel-module-sch-tbf \
 "
 
-RDEPENDS:${PN}-dev += " bash make"
-RDEPENDS:${PN}-staticdev += " bash make"
-
-INSANE_SKIP:${PN} = "textrel"
-
-# embed version
-GO_LDFLAGS += '-ldflags="-X main.GitSummary=`git --git-dir=${S}/src/${GO_IMPORT}/.git describe --tags --always`"'
-
-# WA to support go install for v 1.18
-
-GO_LINKSHARED = ""
-
-do_compile:prepend() {
-    cd ${GOPATH}/src/${GO_IMPORT}/
-}
-
 python do_update_config() {
     import json
 
@@ -111,8 +99,9 @@ do_install:append() {
 
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/aos-servicemanager.service ${D}${systemd_system_unitdir}
-    install -m 0644 ${S}/src/${GO_IMPORT}/runner/aos-service@.service ${D}${systemd_system_unitdir}
-    sed -i 's/runc/${AOS_RUNNER}/g' ${D}${systemd_system_unitdir}/aos-service@.service
+    
+    install -m 0644 ${S}/src/runner/aos-service@.service ${D}${systemd_system_unitdir}
+    sed -i 's/@RUNNER@/${AOS_RUNNER}/g' ${D}${systemd_system_unitdir}/aos-service@.service
 
     install -d ${D}${sysconfdir}/systemd/system/aos-servicemanager.service.d
     install -m 0644 ${WORKDIR}/aos-dirs-service.conf ${D}${sysconfdir}/systemd/system/aos-servicemanager.service.d/20-aos-dirs-service.conf
