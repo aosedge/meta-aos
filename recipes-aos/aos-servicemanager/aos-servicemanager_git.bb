@@ -30,7 +30,7 @@ FILES:${PN} += " \
     ${MIGRATION_SCRIPTS_PATH} \
 "
 
-DEPENDS = "grpc grpc-native poco protobuf-native systemd"
+DEPENDS = "grpc grpc-native poco protobuf-native systemd curl"
 
 do_configure[network] =  "1"
 
