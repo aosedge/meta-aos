@@ -19,7 +19,7 @@ SRC_URI += " \
     file://aos-dirs-service.conf \
 "
 
-DEPENDS += "poco systemd grpc grpc-native protobuf-native protobuf openssl"
+DEPENDS += "poco systemd grpc grpc-native protobuf-native protobuf openssl curl"
 
 OECMAKE_GENERATOR = "Unix Makefiles"
 EXTRA_OECMAKE += "-DFETCHCONTENT_FULLY_DISCONNECTED=OFF"
