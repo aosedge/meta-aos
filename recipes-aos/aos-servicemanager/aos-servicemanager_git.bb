@@ -116,6 +116,12 @@ do_install:append() {
     fi
 }
 
+# Remove conflicting with iam dev headers
+do_install:append() {
+    rm -rf ${D}${includedir}/aos/common
+    rm -rf ${D}${includedir}/utils/image.hpp
+}
+
 do_install:append:aos-main-node() {
     install -d ${D}${sysconfdir}/systemd/system/aos-servicemanager.service.d
     install -m 0644 ${WORKDIR}/aos-cm-service.conf ${D}${sysconfdir}/systemd/system/aos-servicemanager.service.d/10-aos-cm-service.conf
