@@ -45,7 +45,7 @@ S = "${WORKDIR}/git"
 do_compile[network] = "1"
 do_configure[network] =  "1"
 
-do_fetch[vardeps] += "AOS_MAIN_NODE AOS_MAIN_NODE_HOSTNAME AOS_NODE_HOSTNAME AOS_NODE_TYPE AOS_RUNNER"
+do_fetch[vardeps] += "AOS_MAIN_NODE AOS_MAIN_NODE_HOSTNAME AOS_NODE_HOSTNAME AOS_NODE_TYPE AOS_RUNNER AOS_IDENTIFIER_PLUGIN_NAME AOS_IDENTIFIER_PLUGIN_PARAMS"
 
 python do_update_config() {
     import json
@@ -79,6 +79,19 @@ python do_update_config() {
     for cert_module in data["CertModules"]:
         if "ExtendedKeyUsage" in cert_module and "serverAuth" in cert_module["ExtendedKeyUsage"]:
             cert_module["AlternativeNames"] = [d.getVar("AOS_NODE_HOSTNAME")]
+
+    if d.getVar("AOS_MAIN_NODE") and d.getVar("AOS_MAIN_NODE") == "1":
+        # Set identifier plugin
+        identifier = data.get("Identifier", {})
+        identifier["Plugin"] = d.getVar("AOS_IDENTIFIER_PLUGIN_NAME")
+        identifier["Params"] = {}
+
+        for param in d.getVar("AOS_IDENTIFIER_PLUGIN_PARAMS").split(";"):
+            key, value = param.split("=")
+            identifier["Params"][key] = value
+
+        data["Identifier"] = identifier
+
 
     with open(file_name, "w") as f:
         json.dump(data, f, indent=4)
