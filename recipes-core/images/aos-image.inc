@@ -94,6 +94,7 @@ IMAGE_INSTALL:append = " \
     aos-servicemanager \
     aos-updatemanager \
     aos-deprov \
+    aos-provfirewall \
     ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ' \
         packagegroup-selinux-minimal \
         packagegroup-selinux-policycoreutils \
@@ -103,7 +104,6 @@ IMAGE_INSTALL:append = " \
 
 IMAGE_INSTALL:append:aos-main-node = " \
     aos-communicationmanager \
-    aos-provfirewall \
 "
 
 TOOLCHAIN_HOST_TASK:append = " \
