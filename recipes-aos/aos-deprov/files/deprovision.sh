@@ -13,6 +13,18 @@ clear_disks() {
     sync
 }
 
+remove_firewall_rules() {
+    GATEWAY=$(ip route | grep default | awk '{print $3}' | head -n1)
+
+    if [ -z "$GATEWAY" ]; then
+        echo "No default gateway found"
+        return
+    fi
+
+    iptables -D INPUT -s ${GATEWAY}/32 -p tcp -m tcp --dport 22 -j ACCEPT
+    iptables -D INPUT -s ${GATEWAY}/32 -j DROP
+}
+
 deprovision_async() {
     {
         sleep 1
@@ -20,6 +32,8 @@ deprovision_async() {
         # use systemctl stop all aos.target services instead of systemctl stop aos.target, because this approach doesn't wait
         # all services really stopped.
         systemctl stop -- $(systemctl show -p Wants aos.target | cut -d= -f2)
+
+        remove_firewall_rules
 
         echo "Restore unprovisioned flag" | systemd-cat
         rm /var/aos/.provisionstate -f
