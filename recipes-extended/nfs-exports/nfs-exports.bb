@@ -6,8 +6,9 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/Apache-2.0;md5=89aea4e17d99a7ca
 do_install() {
     install -d ${D}${sysconfdir}
 
-    echo "/var/aos/storages *(rw,no_root_squash,sync,no_wdelay,no_subtree_check)" >> ${D}${sysconfdir}/exports
-    echo "/var/aos/states   *(rw,no_root_squash,sync,no_wdelay,no_subtree_check)" >> ${D}${sysconfdir}/exports
+    echo "/var/aos/ *(ro,no_root_squash,sync,no_wdelay,no_subtree_check,fsid=0)" >> ${D}${sysconfdir}/exports
+    echo "/var/aos/storages *(rw,no_root_squash,sync,no_wdelay,no_subtree_check,fsid=1)" >> ${D}${sysconfdir}/exports
+    echo "/var/aos/states   *(rw,no_root_squash,sync,no_wdelay,no_subtree_check,fsid=2)" >> ${D}${sysconfdir}/exports
 }
 
 RDEPENDS:${PN} = "packagegroup-core-nfs-server"
