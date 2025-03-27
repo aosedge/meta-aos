@@ -19,11 +19,28 @@ UPDATE_IMAGE=""
 UPDATE_DIR="${bootparam_aosupdate_disk:+${UPDATE_MOUNT}/}${bootparam_aosupdate_path:-update_rootfs}"
 UPDATE_EXT="*.squashfs"
 
+log() {
+    local level="$1"
+    shift
+    echo "<$level>(aos_update) $@" >/dev/kmsg
+}
+
+log_error() {
+    log 3 "$@"
+}
+
+log_info() {
+    log 6 "$@"
+}
+
+log_debug() {
+    log 7 "$@"
+}
+
+
 fail() {
     err="${1:-"unknown error"}"
-
-    # NOTE <3> is KERN_ERR loglevel, which cause alerts to be sent
-    echo "<3>Aos update failed: $err" >/dev/kmsg
+    log_error "Failed: $err"
 
     # Put to fail flag file if update mounted
     if [ -z "${bootparam_aosupdate_disk}" ] || grep -qs "$UPDATE_MOUNT" /proc/mounts; then
@@ -35,6 +52,7 @@ fail() {
 error() {
     (
         echo "$@" 1>&2
+        log_error "$@"
         exit 1
     )
 }
@@ -45,7 +63,7 @@ aosupdate_enabled() {
     fi
 
     if [ -n "${bootparam_aosupdate_disk}" ] && [ ! -e "${bootparam_aosupdate_disk}" ]; then
-        msg "Aos update disabled: device ${bootparam_aosupdate_disk} not exist."
+        log_info "Disabled: device ${bootparam_aosupdate_disk} not exist."
         return 1
     fi
 
@@ -53,7 +71,7 @@ aosupdate_enabled() {
 }
 
 mount_update_disk() {
-    msg "Mount update disk: $bootparam_aosupdate_disk"
+    log_info "Mount update disk: $bootparam_aosupdate_disk"
 
     mkdir -p "$UPDATE_MOUNT"
     mount "$bootparam_aosupdate_disk" "$UPDATE_MOUNT"
@@ -61,7 +79,7 @@ mount_update_disk() {
 
 umount_update_disk() {
     if grep -qs "$UPDATE_MOUNT" /proc/mounts && [ ! -f "$UPDATE_DIR/$UPDATED_FLAG" ]; then
-        msg "Umount update disk: $bootparam_aosupdate_disk"
+        log_info "Umount update disk: $bootparam_aosupdate_disk"
 
         umount "$UPDATE_MOUNT"
     fi
@@ -72,7 +90,7 @@ load_selinux_module() {
         return
     fi
 
-    msg "Loading selinux module: $bootparam_aosupdate_selinux_module"
+    log_info "Loading selinux module: $bootparam_aosupdate_selinux_module"
 
     if [ -n "${bootparam_aosupdate_disk}" ]; then
         umount "$UPDATE_MOUNT"
@@ -82,22 +100,21 @@ load_selinux_module() {
     semodule -i "$bootparam_aosupdate_selinux_module"
 
     if [ -n "${bootparam_aosupdate_disk}" ]; then
-        msg "Remount update disk: $bootparam_aosupdate_disk"
+        log_info "Remount update disk: $bootparam_aosupdate_disk"
 
         mount "$bootparam_aosupdate_disk" "$UPDATE_MOUNT" -o context="system_u:object_r:aos_var_run_t:s0"
     fi
 }
 
 mount_update_image() {
-    msg "Mount update image: $UPDATE_IMAGE"
-
+    log_info "Mount update image: $UPDATE_IMAGE"
     mkdir -p "$IMAGE_MOUNT"
     mount -t squashfs -o loop "$UPDATE_IMAGE" "$IMAGE_MOUNT"
 }
 
 umount_update_image() {
     if grep -qs "$IMAGE_MOUNT" /proc/mounts; then
-        msg "Umount update image: $UPDATE_IMAGE"
+        log_info "Umount update image: $UPDATE_IMAGE"
 
         umount "$IMAGE_MOUNT"
     fi
@@ -105,6 +122,8 @@ umount_update_image() {
 
 # Possible actions are: update, apply, revert
 get_action() {
+    log_debug "Update dir: $UPDATE_DIR"
+
     if [ -f "$UPDATE_DIR/$DO_APPLY_FLAG" ]; then
         echo "apply"
         return
@@ -136,10 +155,10 @@ do_update() {
 
     update_type="$(get_update_type)"
 
-    msg "Start $update_type update..."
+    log_info "Start $update_type update..."
 
     if [ -z "$UPDATE_IMAGE" ]; then
-        error "update image not found"
+        error "Update image not found"
     fi
 
     load_selinux_module
@@ -161,15 +180,15 @@ do_update() {
 
     touch "$UPDATE_DIR"/"$UPDATED_FLAG"
 
-    msg "Successfully updated!"
+    log_info  "Successfully updated!"
 }
 
 do_revert() {
-    msg "Revert update"
+    log_info "Revert update"
 
     clear_all_flags
 
-    error "update not confirmed"
+    error "Update not confirmed"
 }
 
 cleanup() {
@@ -186,7 +205,7 @@ do_apply() {
 
     update_type="$(get_update_type)"
 
-    msg "Start $update_type apply..."
+    log_info "Start $update_type apply..."
 
     load_selinux_module
     mount_update_image
@@ -210,21 +229,21 @@ do_apply() {
     cleanup
     clear_all_flags
 
-    msg "Successfully applied!"
+    log_info "Successfully applied!"
 }
 
 aosupdate_run() {
-    msg "======================================= Aos update ======================================="
+    log_info "======================================= Aos update ======================================="
 
     err=$(
         {
             set -e
 
-            if [ -n "${bootparam_aosupdate_disk}" ]; then
-                mount_update_disk
-            fi
+    if [ -n "${bootparam_aosupdate_disk}" ]; then
+        mount_update_disk
+    fi
 
-            case "$(get_action)" in
+    case "$(get_action)" in
             update)
                 do_update
                 ;;
@@ -238,9 +257,9 @@ aosupdate_run() {
                 ;;
 
             *)
-                msg "Aos update: no action selected"
+                log_info "Aos update: no action selected"
                 ;;
-            esac
+    esac
 
         } 2>&1 >/dev/null
     )
@@ -254,5 +273,5 @@ aosupdate_run() {
         umount_update_disk
     fi
 
-    msg "=========================================================================================="
+    log_info "=========================================================================================="
 }
