@@ -104,7 +104,6 @@ IMAGE_INSTALL:append = " \
 IMAGE_INSTALL:append:aos-main-node = " \
     aos-communicationmanager \
     aos-provfirewall \
-    aos-vis \
 "
 
 TOOLCHAIN_HOST_TASK:append = " \
