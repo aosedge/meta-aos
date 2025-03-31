@@ -67,6 +67,8 @@ RRECOMMENDS:${PN} += " \
     kernel-module-xt-masquerade \
     kernel-module-xt-tcpudp \
     kernel-module-sch-tbf \
+    kernel-module-sch-ingress \
+    kernel-module-act-mirred \
 "
 
 python do_update_config() {
