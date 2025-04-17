@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-""" Create fota archive """
+"""Create fota archive"""
 import argparse
 import json
 import os
@@ -245,7 +245,7 @@ class FotaBuilder:
 
 def main():
     """main procedure"""
-    parser = argparse.ArgumentParser(description="fota")
+    parser = argparse.ArgumentParser(description="FOTA builder")
 
     parser.add_argument(
         "conf", metavar="conf.yaml", type=str, help="YAML file with configuration"
