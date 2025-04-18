@@ -1,4 +1,4 @@
-# This class containes functions to generate update bundle
+# This class contains functions to generate update bundle
 
 AOS_BUNDLE_DIR ??= "${DEPLOY_DIR_IMAGE}/update"
 AOS_BUNDLE_FILE ??= "${IMAGE_BASENAME}-${MACHINE}-${PV}.bundle.tar"
