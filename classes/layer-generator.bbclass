@@ -5,7 +5,7 @@
 AOS_BASE_IMAGE ??= "aos-image"
 AOS_PARENT_LAYER ??= "${AOS_BASE_IMAGE}"
 AOS_LAYER_FEATURES ??= ""
-AOS_LAYER_VERSION ??= "1"
+AOS_LAYER_VERSION ??= "1.0.0"
 AOS_LAYER_DIGEST_TYPE ??= "sha256"
 AOS_LAYER_DEPLOY_DIR ??= "${DEPLOY_DIR_IMAGE}/layers"
 
@@ -124,7 +124,7 @@ python do_create_metadata() {
 }
 
 do_pack_layer() {
-    ${IMAGE_CMD_TAR} --numeric-owner -czf ${AOS_LAYER_DEPLOY_DIR}/${PN}-${AOS_LAYER_VERSION}-${MACHINE}.tar.gz -C ${LAYER_WORK_DIR} .
+    ${IMAGE_CMD_TAR} --numeric-owner -czf ${AOS_LAYER_DEPLOY_DIR}/${PN}-${MACHINE}-${AOS_LAYER_VERSION}.tar.gz -C ${LAYER_WORK_DIR} .
 }
 
 do_create_layer[nostamp] = "1"
