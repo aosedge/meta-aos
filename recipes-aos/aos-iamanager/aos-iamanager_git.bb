@@ -105,4 +105,10 @@ do_install:append() {
     fi
 }
 
+# Do not install headers files
+# This is temporary solution and should be removed when switching to new repo approach
+do_install:append() {
+    rm -rf ${D}${includedir}
+}
+
 addtask update_config after do_install before do_package
