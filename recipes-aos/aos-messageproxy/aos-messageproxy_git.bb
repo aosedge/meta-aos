@@ -52,3 +52,9 @@ do_install:append:aos-main-node() {
     install -d ${D}${sysconfdir}/systemd/system/aos-messageproxy.service.d
     install -m 0644 ${WORKDIR}/aos-cm-service.conf ${D}${sysconfdir}/systemd/system/aos-messageproxy.service.d/10-aos-cm-service.conf
 }
+
+# Do not install headers files
+# This is temporary solution and should be removed when switching to new repo approach
+do_install:append() {
+    rm -rf ${D}${includedir}
+}
