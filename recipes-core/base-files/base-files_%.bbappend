@@ -12,7 +12,7 @@ do_install:append() {
 
     # add Aos partitions
     echo "# Aos partitions">> ${D}${sysconfdir}/fstab
-    echo '/dev/aosvg/workdirs /var/aos/workdirs ext4 defaults,auto,nofail,noatime,'\
+    echo '/dev/aosvg/workdirs /var/aos/workdirs ext4 defaults,auto,sync,nofail,noatime,'\
 'x-systemd.device-timeout=${aos_disks_timeout}'\
 ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ',context=system_u:object_r:aos_var_run_t:s0', '', d)} '0 0' \
    >> ${D}/${sysconfdir}/fstab
@@ -20,17 +20,17 @@ ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ',context=system_u:object_r:a
 
 do_install:append:aos-main-node() {
     # add Aos partitions
-   echo '/dev/aosvg/downloads /var/aos/downloads ext4 defaults,auto,nofail,'\
+   echo '/dev/aosvg/downloads /var/aos/downloads ext4 defaults,auto,sync,nofail,'\
 'noatime,x-systemd.device-timeout=${aos_disks_timeout}'\
 ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ',context=system_u:object_r:aos_var_run_t:s0', '', d)} '0 0' \
    >> ${D}/${sysconfdir}/fstab
 
-   echo '/dev/aosvg/storages /var/aos/storages ext4 defaults,auto,nofail,noatime,usrquota,grpquota,'\
+   echo '/dev/aosvg/storages /var/aos/storages ext4 defaults,auto,sync,nofail,noatime,usrquota,grpquota,'\
 'noatime,x-systemd.device-timeout=${aos_disks_timeout}'\
 ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ',context=system_u:object_r:aos_var_run_t:s0', '', d)} '0 0' \
    >> ${D}/${sysconfdir}/fstab
 
-    echo '/dev/aosvg/states /var/aos/states ext4 defaults,auto,nofail,noatime,usrquota,grpquota,'\
+    echo '/dev/aosvg/states /var/aos/states ext4 defaults,auto,sync,nofail,noatime,usrquota,grpquota,'\
 'x-systemd.device-timeout=${aos_disks_timeout}'\
 ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ',context=system_u:object_r:aos_var_run_t:s0', '', d)} '0 0' \
    >> ${D}/${sysconfdir}/fstab
@@ -38,12 +38,12 @@ ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ',context=system_u:object_r:a
 
 do_install:append:aos-secondary-node() {
     # add Aos partitions
-   echo '${AOS_MAIN_NODE_HOSTNAME}:/storages /var/aos/storages nfs4 defaults,auto,nofail,noatime,'\
+   echo '${AOS_MAIN_NODE_HOSTNAME}:/storages /var/aos/storages nfs4 defaults,auto,sync,nofail,noatime,'\
 'retrans=0,timeo=100,x-systemd.device-timeout=90'\
 ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ',context=system_u:object_r:aos_var_run_t:s0', '', d)} '0 0' \
    >> ${D}/${sysconfdir}/fstab
 
-    echo '${AOS_MAIN_NODE_HOSTNAME}:/states /var/aos/states nfs4 defaults,auto,nofail,noatime,'\
+    echo '${AOS_MAIN_NODE_HOSTNAME}:/states /var/aos/states nfs4 defaults,auto,sync,nofail,noatime,'\
 'retrans=0,timeo=100,x-systemd.device-timeout=90'\
 ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ',context=system_u:object_r:aos_var_run_t:s0', '', d)} '0 0' \
    >> ${D}/${sysconfdir}/fstab
