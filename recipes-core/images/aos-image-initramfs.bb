@@ -4,6 +4,7 @@ LICENSE = "Apache-2.0"
 
 AOS_INITRAMFS_SCRIPTS ?= " \
     initramfs-module-aosupdate \
+    initramfs-module-kmsglog \
     initramfs-module-machineid \
     initramfs-module-udev \
     initramfs-module-vardir \
