@@ -22,7 +22,7 @@ SRC_URI += " \
 DEPENDS += "poco systemd grpc grpc-native protobuf-native protobuf openssl curl libnl"
 
 OECMAKE_GENERATOR = "Unix Makefiles"
-EXTRA_OECMAKE += "-DFETCHCONTENT_FULLY_DISCONNECTED=OFF"
+EXTRA_OECMAKE += "-DFETCHCONTENT_FULLY_DISCONNECTED=OFF -DWITH_MBEDTLS=OFF -DWITH_OPENSSL=ON"
 
 inherit autotools pkgconfig cmake systemd
 
