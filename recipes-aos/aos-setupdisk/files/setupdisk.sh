@@ -117,6 +117,7 @@ delete_aos_disks() {
 
         if mountpoint -q "$mountdir"; then
             umount "$mountdir"
+            rm -rf "$mountdir"
         fi
 
     done <"$CONFIG_FILE"
