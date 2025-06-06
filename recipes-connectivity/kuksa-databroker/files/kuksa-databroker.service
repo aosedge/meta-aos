@@ -1,0 +1,11 @@
+[Unit]
+Description=Eclipse KUKSA.val databroker
+After=network.target
+
+[Service]
+EnvironmentFile=-/etc/default/kuksa-databroker
+ExecStart=/usr/bin/databroker $EXTRA_ARGS
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
