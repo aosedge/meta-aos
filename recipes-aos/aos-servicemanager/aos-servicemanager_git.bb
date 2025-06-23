@@ -30,11 +30,11 @@ FILES:${PN} += " \
     ${MIGRATION_SCRIPTS_PATH} \
 "
 
-DEPENDS = "grpc grpc-native poco protobuf-native systemd curl"
+DEPENDS = "grpc grpc-native poco protobuf-native systemd curl libnl"
 
 do_configure[network] =  "1"
 
-EXTRA_OECMAKE += "-DFETCHCONTENT_FULLY_DISCONNECTED=OFF"
+EXTRA_OECMAKE += "-DFETCHCONTENT_FULLY_DISCONNECTED=OFF -DWITH_MBEDTLS=OFF -DWITH_OPENSSL=ON"
 
 VIRTUAL_RUNC = "${@bb.utils.contains('LAYERSERIES_CORENAMES', 'dunfell', 'virtual/runc', 'virtual-runc', d)}"
 
@@ -67,6 +67,8 @@ RRECOMMENDS:${PN} += " \
     kernel-module-xt-masquerade \
     kernel-module-xt-tcpudp \
     kernel-module-sch-tbf \
+    kernel-module-sch-ingress \
+    kernel-module-act-mirred \
 "
 
 python do_update_config() {
@@ -125,6 +127,18 @@ do_install:append() {
 do_install:append:aos-main-node() {
     install -d ${D}${sysconfdir}/systemd/system/aos-servicemanager.service.d
     install -m 0644 ${WORKDIR}/aos-cm-service.conf ${D}${sysconfdir}/systemd/system/aos-servicemanager.service.d/10-aos-cm-service.conf
+}
+
+# Do not install headers files
+# This is temporary solution and should be removed when switching to new repo approach
+do_install:append() {
+    rm -rf ${D}${includedir}
+}
+
+# Do not install headers files
+# This is temporary solution and should be removed when switching to new repo approach
+do_install:append() {
+    rm -rf ${D}${includedir}
 }
 
 addtask update_config after do_install before do_package

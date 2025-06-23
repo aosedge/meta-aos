@@ -94,17 +94,19 @@ IMAGE_INSTALL:append = " \
     aos-servicemanager \
     aos-updatemanager \
     aos-deprov \
+    aos-provfirewall \
     ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ' \
         packagegroup-selinux-minimal \
         packagegroup-selinux-policycoreutils \
         selinux-autorelabel \
+        auditd \
         ', '', d)} \
 "
 
 IMAGE_INSTALL:append:aos-main-node = " \
     aos-communicationmanager \
-    aos-provfirewall \
-    aos-vis \
+    kuksa-databroker \
+    kuksa-client \
 "
 
 TOOLCHAIN_HOST_TASK:append = " \

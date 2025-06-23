@@ -2,6 +2,7 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/initramfs-framework:"
 
 SRC_URI += " \
     file://aosupdate \
+    file://kmsglog \
     file://machineid \
     file://opendisk \
     file://rundir \
@@ -10,6 +11,7 @@ SRC_URI += " \
 
 PACKAGES += " \
     initramfs-module-aosupdate \
+    initramfs-module-kmsglog \
     initramfs-module-machineid \
     initramfs-module-opendisk \
     initramfs-module-rundir \
@@ -30,6 +32,10 @@ RRECOMMENDS:initramfs-module-aosupdate = " \
     ', '', d)} \
 "
 
+SUMMARY:initramfs-module-kmsglog = "redirect log messages to kmsg"
+RDEPENDS:initramfs-module-kmsglog = "${PN}-base"
+FILES:initramfs-module-kmsglog = "/init.d/00-kmsglog"
+
 SUMMARY:initramfs-module-machineid = "bind /etc/machine-id to /var/machine-id"
 RDEPENDS:initramfs-module-machineid = "${PN}-base initramfs-module-vardir"
 FILES:initramfs-module-machineid = "/init.d/96-machineid"
@@ -49,6 +55,9 @@ FILES:initramfs-module-vardir = "/init.d/02-vardir"
 do_install:append() {
     # aosupdate
     install -m 0755 ${WORKDIR}/aosupdate ${D}/init.d/95-aosupdate
+
+    # kmsglog
+    install -m 0755 ${WORKDIR}/kmsglog ${D}/init.d/00-kmsglog
 
     # machineid
     install -m 0755 ${WORKDIR}/machineid ${D}/init.d/96-machineid

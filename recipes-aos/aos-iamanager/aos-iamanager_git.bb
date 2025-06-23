@@ -19,10 +19,10 @@ SRC_URI += " \
     file://aos-dirs-service.conf \
 "
 
-DEPENDS += "poco systemd grpc grpc-native protobuf-native protobuf openssl curl"
+DEPENDS += "poco systemd grpc grpc-native protobuf-native protobuf openssl curl libnl"
 
 OECMAKE_GENERATOR = "Unix Makefiles"
-EXTRA_OECMAKE += "-DFETCHCONTENT_FULLY_DISCONNECTED=OFF"
+EXTRA_OECMAKE += "-DFETCHCONTENT_FULLY_DISCONNECTED=OFF -DWITH_MBEDTLS=OFF -DWITH_OPENSSL=ON"
 
 inherit autotools pkgconfig cmake systemd
 
@@ -103,6 +103,12 @@ do_install:append() {
     if [ -d ${S}${source_migration_path} ]; then
         install -m 0644 ${S}${source_migration_path}/* ${D}${MIGRATION_SCRIPTS_PATH}
     fi
+}
+
+# Do not install headers files
+# This is temporary solution and should be removed when switching to new repo approach
+do_install:append() {
+    rm -rf ${D}${includedir}
 }
 
 addtask update_config after do_install before do_package
