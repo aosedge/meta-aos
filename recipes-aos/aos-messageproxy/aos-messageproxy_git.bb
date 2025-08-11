@@ -36,6 +36,30 @@ FILES:${PN} += " \
 do_compile[network] = "1"
 do_configure[network] =  "1"
 
+do_fetch[vardeps] += "AOS_MAIN_NODE_HOSTNAME"
+
+python do_update_config() {
+    import json
+
+    file_name = oe.path.join(d.getVar("D"), d.getVar("sysconfdir"), "aos", "aos_messageproxy.cfg")
+
+    with open(file_name) as f:
+        data = json.load(f)
+
+    iamConfig = data.get("IAMConfig", {})
+    iamConfig["IAMPublicServerURL"] = d.getVar("AOS_MAIN_NODE_HOSTNAME") + ":8090"
+    iamConfig["IAMProtectedServerURL"] = d.getVar("AOS_MAIN_NODE_HOSTNAME") + ":8089"
+
+    cmConfig = data.get("CMConfig", {})
+    cmConfig["CMServerURL"] = d.getVar("AOS_MAIN_NODE_HOSTNAME") + ":8093"
+
+    data["IAMConfig"] = iamConfig
+    data["CMConfig"] = cmConfig
+
+    with open(file_name, "w") as f:
+        json.dump(data, f, indent=4)
+}
+
 do_install:append() {
     install -d ${D}${sysconfdir}/aos
     install -m 0644 ${WORKDIR}/aos_messageproxy.cfg ${D}${sysconfdir}/aos
@@ -58,3 +82,5 @@ do_install:append:aos-main-node() {
 do_install:append() {
     rm -rf ${D}${includedir}
 }
+
+addtask update_config after do_install before do_package
