@@ -36,7 +36,7 @@ FILES:${PN} += " \
 do_compile[network] = "1"
 do_configure[network] =  "1"
 
-do_fetch[vardeps] += "AOS_MAIN_NODE_HOSTNAME"
+do_fetch[vardeps] += "AOS_MAIN_NODE_HOSTNAME AOS_NODE_HOSTNAME"
 
 python do_update_config() {
     import json
@@ -47,8 +47,9 @@ python do_update_config() {
         data = json.load(f)
 
     iamConfig = data.get("IAMConfig", {})
-    iamConfig["IAMPublicServerURL"] = d.getVar("AOS_MAIN_NODE_HOSTNAME") + ":8090"
-    iamConfig["IAMProtectedServerURL"] = d.getVar("AOS_MAIN_NODE_HOSTNAME") + ":8089"
+    iamConfig["IAMPublicServerURL"] = d.getVar("AOS_NODE_HOSTNAME") + ":8090"
+    iamConfig["IAMMainPublicServerURL"] = d.getVar("AOS_MAIN_NODE_HOSTNAME") + ":8090"
+    iamConfig["IAMMainProtectedServerURL"] = d.getVar("AOS_MAIN_NODE_HOSTNAME") + ":8089"
 
     cmConfig = data.get("CMConfig", {})
     cmConfig["CMServerURL"] = d.getVar("AOS_MAIN_NODE_HOSTNAME") + ":8093"
