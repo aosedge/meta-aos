@@ -4,12 +4,12 @@ FILESEXTRAPATHS:prepend:aos-secondary-node := "${THISDIR}/files/secondary:"
 DESCRIPTION = "AOS Identity and Access Manager CPP"
 
 LICENSE = "Apache-2.0"
-LIC_FILES_CHKSUM = "file://LICENSE;md5=3b83ef96387f14655fc854ddc3c6bd57"
+LIC_FILES_CHKSUM = "file://LICENSE;md5=86d3f3a95c324c9479bd8986968f4327"
 
 BRANCH = "develop"
 SRCREV = "${AUTOREV}"
 
-SRC_URI = "gitsm://github.com/aosedge/aos_core_iam_cpp.git;protocol=https;branch=${BRANCH}"
+SRC_URI = "gitsm://github.com/aosedge/aos_core_cpp.git;protocol=https;branch=${BRANCH}"
 
 SRC_URI += " \
     file://aos_iamanager.cfg \
@@ -21,8 +21,19 @@ SRC_URI += " \
 
 DEPENDS += "poco systemd grpc grpc-native protobuf-native protobuf openssl curl libnl"
 
+EXTRA_OECMAKE += " \
+    -DFETCHCONTENT_FULLY_DISCONNECTED=OFF \
+    -DWITH_CM=OFF \
+    -DWITH_IAM=ON \
+    -DWITH_MP=OFF \
+    -DWITH_SM=OFF \
+"
 OECMAKE_GENERATOR = "Unix Makefiles"
-EXTRA_OECMAKE += "-DFETCHCONTENT_FULLY_DISCONNECTED=OFF -DWITH_MBEDTLS=OFF -DWITH_OPENSSL=ON"
+
+PACKAGECONFIG ??= "openssl"
+
+PACKAGECONFIG[openssl] = "-DWITH_OPENSSL=ON,-DWITH_OPENSSL=OFF,openssl,"
+PACKAGECONFIG[mbedtls] = "-DWITH_MBEDTLS=ON,-DWITH_MBEDTLS=OFF,,"
 
 inherit autotools pkgconfig cmake systemd
 
@@ -99,16 +110,10 @@ do_install:append() {
     install -m 0644 ${WORKDIR}/aos-target.conf ${D}${sysconfdir}/systemd/system/aos.target.d/${PN}.conf
 
     install -d ${D}${MIGRATION_SCRIPTS_PATH}
-    source_migration_path="/src/database/migration"
+    source_migration_path="/src/iam/database/migration"
     if [ -d ${S}${source_migration_path} ]; then
         install -m 0644 ${S}${source_migration_path}/* ${D}${MIGRATION_SCRIPTS_PATH}
     fi
-}
-
-# Do not install headers files
-# This is temporary solution and should be removed when switching to new repo approach
-do_install:append() {
-    rm -rf ${D}${includedir}
 }
 
 addtask update_config after do_install before do_package
