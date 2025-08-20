@@ -1,13 +1,13 @@
 [Unit]
 Description=AOS Message Proxy
-Wants=network-online.target aos-iamanager.service
-After=network-online.target aos-iamanager.service
+Wants=network-online.target aos-iam.service
+After=network-online.target aos-iam.service
 ConditionPathExists=/var/aos/.provisionstate
 PartOf=aos.target
 
 [Service]
 Type=notify
-ExecStart=/usr/bin/aos_messageproxy -c /etc/aos/aos_messageproxy.cfg -v debug -j
+ExecStart=/usr/bin/aos_mp_app -c /etc/aos/aos_mp.cfg -v debug -j
 Restart=always
 RestartSec=10
 
