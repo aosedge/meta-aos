@@ -1,13 +1,13 @@
 [Unit]
 Description=AOS Communication Manager
-Wants=network-online.target aos-iamanager.service
-After=network-online.target aos-iamanager.service
+Wants=network-online.target aos-iam.service
+After=network-online.target aos-iam.service
 ConditionPathExists=/var/aos/.provisionstate
 PartOf=aos.target
 
 [Service]
 Type=notify
-ExecStart=/usr/bin/aos_communicationmanager -c /etc/aos/aos_communicationmanager.cfg -v debug -j
+ExecStart=/usr/bin/aos_cm_app -c /etc/aos/aos_cm.cfg -v debug -j
 Restart=always
 RestartSec=10
 
