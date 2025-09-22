@@ -1,0 +1,30 @@
+From 68fb6dec3e25be3aa0c2b339a3951911e93230ac Mon Sep 17 00:00:00 2001
+From: Scott Murray <scott.murray@konsulko.com>
+Date: Thu, 5 Jun 2025 16:04:44 -0400
+Subject: [PATCH 3/3] Fix AIO version of gRPC subscribe_target_values
+
+The AIO version of subscribe_target_values was still setting the
+try_v2 flag when calling subscribe, which fails since that is
+not supported with VAL v2.  Update it to match the non-AIO version
+and restore working behavior.
+
+Upstream-Status: Pending
+Signed-off-by: Scott Murray <scott.murray@konsulko.com>
+---
+ kuksa-client/kuksa_client/grpc/aio.py | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/kuksa-client/kuksa_client/grpc/aio.py b/kuksa-client/kuksa_client/grpc/aio.py
+index 2571b2c..02b9e48 100644
+--- a/kuksa-client/kuksa_client/grpc/aio.py
++++ b/kuksa-client/kuksa_client/grpc/aio.py
+@@ -327,7 +327,6 @@ class VSSClient(BaseVSSClient):
+                 SubscribeEntry(path, View.TARGET_VALUE, (Field.ACTUATOR_TARGET,))
+                 for path in paths
+             ),
+-            try_v2=True,
+             **rpc_kwargs,
+         ):
+             yield {
+-- 
+2.49.0
