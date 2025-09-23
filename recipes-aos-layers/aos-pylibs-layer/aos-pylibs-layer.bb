@@ -14,6 +14,7 @@ AOS_LAYER_FEATURES += " \
     python3-socketio \
     python3-threading \
     python3-websocket-client \
+    kuksa-client \
 "
 
 AOS_LAYER_VERSION = "1.0.0"

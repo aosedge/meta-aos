@@ -106,7 +106,6 @@ IMAGE_INSTALL:append = " \
 IMAGE_INSTALL:append:aos-main-node = " \
     aos-communicationmanager \
     kuksa-databroker \
-    kuksa-client \
 "
 
 TOOLCHAIN_HOST_TASK:append = " \
