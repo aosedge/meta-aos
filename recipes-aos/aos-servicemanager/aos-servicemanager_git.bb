@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=86d3f3a95c324c9479bd8986968f4327"
 BRANCH = "develop"
 SRCREV = "${AUTOREV}"
 
-SRC_URI = "gitsm://github.com/aosedge/aos_core_cpp.git;protocol=https;branch=${BRANCH}"
+SRC_URI = "gitsm://github.com/aosedge/aos_core_sm_cpp.git;protocol=https;branch=${BRANCH}"
 
 SRC_URI += " \
     file://aos_servicemanager.cfg \
@@ -34,19 +34,7 @@ DEPENDS = "grpc grpc-native poco protobuf-native systemd curl libnl"
 
 do_configure[network] =  "1"
 
-EXTRA_OECMAKE += " \
-    -DFETCHCONTENT_FULLY_DISCONNECTED=OFF \
-    -DWITH_CM=OFF \
-    -DWITH_IAM=OFF \
-    -DWITH_MP=OFF \
-    -DWITH_SM=ON \
-"
-OECMAKE_GENERATOR = "Unix Makefiles"
-
-PACKAGECONFIG ??= "openssl"
-
-PACKAGECONFIG[openssl] = "-DWITH_OPENSSL=ON,-DWITH_OPENSSL=OFF,openssl,"
-PACKAGECONFIG[mbedtls] = "-DWITH_MBEDTLS=ON,-DWITH_MBEDTLS=OFF,,"
+EXTRA_OECMAKE += "-DFETCHCONTENT_FULLY_DISCONNECTED=OFF -DWITH_MBEDTLS=OFF -DWITH_OPENSSL=ON"
 
 VIRTUAL_RUNC = "${@bb.utils.contains('LAYERSERIES_CORENAMES', 'dunfell', 'virtual/runc', 'virtual-runc', d)}"
 
@@ -114,7 +102,7 @@ do_install:append() {
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/aos-servicemanager.service ${D}${systemd_system_unitdir}
     
-    install -m 0644 ${S}/src/sm/runner/aos-service@.service ${D}${systemd_system_unitdir}
+    install -m 0644 ${S}/src/runner/aos-service@.service ${D}${systemd_system_unitdir}
     sed -i 's/@RUNNER@/${AOS_RUNNER}/g' ${D}${systemd_system_unitdir}/aos-service@.service
 
     install -d ${D}${sysconfdir}/systemd/system/aos-servicemanager.service.d
@@ -124,7 +112,7 @@ do_install:append() {
     install -m 0644 ${WORKDIR}/aos-target.conf ${D}${sysconfdir}/systemd/system/aos.target.d/${PN}.conf
 
     install -d ${D}${MIGRATION_SCRIPTS_PATH}
-    source_migration_path="/src/sm/database/migration"
+    source_migration_path="/src/${GO_IMPORT}/database/migration"
     if [ -d ${S}${source_migration_path} ]; then
         install -m 0644 ${S}${source_migration_path}/* ${D}${MIGRATION_SCRIPTS_PATH}
     fi
@@ -139,6 +127,18 @@ do_install:append() {
 do_install:append:aos-main-node() {
     install -d ${D}${sysconfdir}/systemd/system/aos-servicemanager.service.d
     install -m 0644 ${WORKDIR}/aos-cm-service.conf ${D}${sysconfdir}/systemd/system/aos-servicemanager.service.d/10-aos-cm-service.conf
+}
+
+# Do not install headers files
+# This is temporary solution and should be removed when switching to new repo approach
+do_install:append() {
+    rm -rf ${D}${includedir}
+}
+
+# Do not install headers files
+# This is temporary solution and should be removed when switching to new repo approach
+do_install:append() {
+    rm -rf ${D}${includedir}
 }
 
 addtask update_config after do_install before do_package
