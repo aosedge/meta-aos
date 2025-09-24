@@ -1,12 +1,14 @@
 DESCRIPTION = "AOS Communication Manager"
 
+GO_IMPORT = "github.com/aosedge/aos_communicationmanager"
+
 LICENSE = "Apache-2.0"
-LIC_FILES_CHKSUM = "file://LICENSE;md5=86d3f3a95c324c9479bd8986968f4327"
+LIC_FILES_CHKSUM = "file://src/${GO_IMPORT}/LICENSE;md5=3b83ef96387f14655fc854ddc3c6bd57"
 
 BRANCH = "develop"
 SRCREV = "${AUTOREV}"
 
-SRC_URI = "gitsm://github.com/aosedge/aos_core_cpp.git;protocol=https;branch=${BRANCH}"
+SRC_URI = "git://${GO_IMPORT}.git;branch=${BRANCH};protocol=https"
 
 SRC_URI += " \
     file://aos_communicationmanager.cfg \
@@ -15,9 +17,7 @@ SRC_URI += " \
     file://aos-dirs-service.conf \
 "
 
-S = "${WORKDIR}/git"
-
-inherit cmake pkgconfig systemd
+inherit go goarch systemd
 
 SYSTEMD_SERVICE:${PN} = "aos-communicationmanager.service"
 
@@ -29,28 +29,24 @@ FILES:${PN} += " \
     ${MIGRATION_SCRIPTS_PATH} \
 "
 
-DEPENDS = "grpc grpc-native poco protobuf-native systemd curl libnl"
-
-do_configure[network] =  "1"
-
-EXTRA_OECMAKE += " \
-    -DFETCHCONTENT_FULLY_DISCONNECTED=OFF \
-    -DWITH_CM=ON \
-    -DWITH_IAM=OFF \
-    -DWITH_MP=OFF \
-    -DWITH_SM=OFF \
-"
-OECMAKE_GENERATOR = "Unix Makefiles"
-
-PACKAGECONFIG ??= "openssl"
-
-PACKAGECONFIG[openssl] = "-DWITH_OPENSSL=ON,-DWITH_OPENSSL=OFF,openssl,"
-PACKAGECONFIG[mbedtls] = "-DWITH_MBEDTLS=ON,-DWITH_MBEDTLS=OFF,,"
+DEPENDS = "systemd"
 
 RDEPENDS:${PN} += " \
     aos-rootca \
     nfs-exports \
 "
+
+RDEPENDS:${PN}-dev += " bash make"
+RDEPENDS:${PN}-staticdev += " bash make"
+
+INSANE_SKIP:${PN} = "textrel"
+
+# embed version
+GO_LDFLAGS += '-ldflags="-X main.GitSummary=`git --git-dir=${S}/src/${GO_IMPORT}/.git describe --tags --always`"'
+
+# WA to support go install for v 1.18
+
+GO_LINKSHARED = ""
 
 RRECOMMENDS:${PN} += " \
     kernel-module-quota-v1 \
@@ -93,6 +89,10 @@ python do_update_config() {
         json.dump(data, f, indent=4)
 }
 
+do_compile:prepend() {
+    cd ${GOPATH}/src/${GO_IMPORT}/
+}
+
 do_install:append() {
     install -d ${D}${sysconfdir}/aos
     install -m 0644 ${WORKDIR}/aos_communicationmanager.cfg ${D}${sysconfdir}/aos
@@ -107,7 +107,7 @@ do_install:append() {
     install -m 0644 ${WORKDIR}/aos-dirs-service.conf ${D}${sysconfdir}/systemd/system/aos-communicationmanager.service.d/10-aos-dirs-service.conf
 
     install -d ${D}${MIGRATION_SCRIPTS_PATH}
-    source_migration_path="/src/cm/database/migration"
+    source_migration_path="/src/${GO_IMPORT}/database/migration"
     if [ -d ${S}${source_migration_path} ]; then
         install -m 0644 ${S}${source_migration_path}/* ${D}${MIGRATION_SCRIPTS_PATH}
     fi
