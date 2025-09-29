@@ -5,7 +5,6 @@ This meta layer contains recipes for Aos components such as:
 * aos-communicationmanager - Aos communication manager;
 * aos-iamanager - Aos identity and access manager;
 * aos-servicemanager - Aos service manager;
-* aos-updatemanager - Aos update manager;
 * aos-vis - Aos vehicle information service;
 * Aos CNI plugins;
 * other tools and utility for AosEdge core part.
