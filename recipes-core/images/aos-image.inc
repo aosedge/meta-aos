@@ -92,7 +92,6 @@ addtask create_rw_parts after do_image_qa do_image_wic before do_image_complete
 IMAGE_INSTALL:append = " \
     aos-iamanager \
     aos-servicemanager \
-    aos-updatemanager \
     aos-deprov \
     aos-provfirewall \
     ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ' \
