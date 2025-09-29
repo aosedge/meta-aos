@@ -74,12 +74,11 @@ WKS_FILE = "custom.wks.in"
 Aos main components should be added into the target image by appending `IMAGE_INSTALL` variable in `local.conf`:
 
 ```bash
-IMAGE_INSTALL:append = " aos-iamanager aos-provfirewall aos-communicationmanager aos-servicemanager aos-updatemanager"
+IMAGE_INSTALL:append = " aos-iamanager aos-provfirewall aos-communicationmanager aos-servicemanager"
 ```
 
-`aos-iamanager`, `aos-communicationmanager`, `aos-servicemanager` are core Aos components. `aos-updatemanager` is
-responsible for Aos OTA updates. If OTA system components update is not needed, `aos-updatemanager` may be removed from
-the target image. It also required `umController` section to be removed from `aos-communicationmanager` config as
+`aos-iamanager`, `aos-communicationmanager`, `aos-servicemanager` are core Aos components.
+It also required `umController` section to be removed from `aos-communicationmanager` config as
 well as `um` storage to be removed from `aos-iamanager` config. `aos-provfirewall` is helper service that closes
 provisioning ports after provisioning for security reason.
 
@@ -177,33 +176,7 @@ by other layer recipes. See [aos-vm][aos-vm] layers as example.
 
 ## Integrate Aos FOTA update
 
-`aos-updatemanager` performs Aos OTA update of different system components with dedicated plugins. `aos-updatemanager`
-has an example implementation of updating disk partitions using dual partition (A/B) approach as well as using overlay
-approach. Aos overlay OTA update supports incremental update (delta update) whereas dual partition update supports only
-full partition update.
-
-See reference Aos products as example of boot and roofs partitions update. At these products, rootfs is updated using
-overlay approach, boot partition is updated using A/B approach. In [aos-vm][aos-vm] switching between A/B partition is
-done by using `efi` boot manager at same time in [aos-rcar-gen3][aos-rcar-gen3] and [aos-rcar-gen4][aos-rcar-gen4]
-switching A/B partition is done by using U-Boot environment variables.
-
-For a custom component update, the appropriate `aos-updatemanager` shall be implemented and integrated.
-
-Reference Aos FOTA implementation requires readonly rootfs. It can be enabled by setting the following variable in
-`local.conf`:
-
-```bash
-IMAGE_FEATURES:append = " read-only-rootfs"
-```
-
-`meta-aos` provides base Aos image recipe with RO rootfs and generating required for FOTA versioning files. You can
-simple use it as your image file or include it in your own image file:
-
-```bash
-require recipes-core/images/aos-image.inc
-```
-
-See [aos-vm][aos-vm] for reference.
+*TBD*
 
 ## Integration using moulin meta build system
 
@@ -238,7 +211,7 @@ components:
         - [DISTRO_FEATURES:append, " virtualization security"]
         # selinux is optional
         - [DISTRO_FEATURES:append, " acl xattr pam selinux"]
-        - [IMAGE_INSTALL:append, " aos-iamanager aos-provfirewall aos-communicationmanager aos-servicemanager aos-updatemanager"]
+        - [IMAGE_INSTALL:append, " aos-iamanager aos-provfirewall aos-communicationmanager aos-servicemanager"]
         # AOS VIS is optional
         - [IMAGE_INSTALL:append, " aos-vis"]
         # AOS FOTA specific option
