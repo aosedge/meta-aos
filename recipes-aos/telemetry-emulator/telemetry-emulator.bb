@@ -6,7 +6,7 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/COPYING.MIT;md5=3da9cfbcb788c80a0384361b4de20420"
 
 BRANCH = "main"
-SRCREV = "${AUTOREV}"
+SRCREV = "d9534bb269043be03c3557314db196013b27eec8"
 
 SRC_URI = " \
     git://github.com/aosedge/telemetry_emulator.git;protocol=https;branch=${BRANCH} \
