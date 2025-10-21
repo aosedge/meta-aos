@@ -1,14 +1,14 @@
-# Aos meta layer
+# AosCore meta layer
 
-This meta layer contains recipes for Aos components such as:
+This meta layer contains recipes for AosCore components such as:
 
-* aos-communicationmanager - Aos communication manager;
-* aos-iamanager - Aos identity and access manager;
-* aos-servicemanager - Aos service manager;
-* aos-updatemanager - Aos update manager;
-* aos-vis - Aos vehicle information service;
-* Aos CNI plugins;
-* other tools and utility for AosEdge core part.
+* aos-communicationmanager - AosCore communication manager;
+* aos-iamanager - AosCore identity and access manager;
+* aos-servicemanager - AosCore service manager;
+* aos-updatemanager - AosCore update manager;
+* aos-vis - AosCore vehicle information service;
+* CNI plugins;
+* other tools and utility for AosCore operation.
 
 ## How to integrate Aos meta layer to custom product
 
