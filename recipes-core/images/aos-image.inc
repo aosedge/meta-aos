@@ -37,13 +37,20 @@ create_boot_version() {
 AOS_UNIT_MODEL ?= "aos-unit"
 AOS_UNIT_VERSION ?= "1.0"
 
-ROOTFS_POSTPROCESS_COMMAND:append:aos-main-node = "set_unit_model;"
+ROOTFS_POSTPROCESS_COMMAND:append:aos-main-node = "set_unit_model; set_unit_version;"
 
 set_unit_model() {
     install -d ${IMAGE_ROOTFS}/etc/aos
 
-    echo "${AOS_UNIT_MODEL};${AOS_UNIT_VERSION}" > ${IMAGE_ROOTFS}/etc/aos/unit_model
+    echo "${AOS_UNIT_MODEL}" > ${IMAGE_ROOTFS}/etc/aos/unit_model
 }
+
+set_unit_version() {
+    install -d ${IMAGE_ROOTFS}/etc/aos
+
+    echo "${AOS_UNIT_VERSION}" > ${IMAGE_ROOTFS}/etc/aos/unit_version
+}
+
 
 # Shared links
 
