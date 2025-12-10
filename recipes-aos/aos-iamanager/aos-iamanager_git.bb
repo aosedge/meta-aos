@@ -14,7 +14,7 @@ SRC_URI = "gitsm://github.com/aosedge/aos_core_cpp.git;protocol=https;branch=${B
 SRC_URI += " \
     file://aos_iam.cfg \
     file://aos-iam.service \
-    file://aos-iam-provisioning.service \
+    file://aos-iam-prov.service \
     file://aos-target.conf \
     file://aos-dirs-service.conf \
 "
@@ -37,7 +37,7 @@ PACKAGECONFIG[mbedtls] = "-DWITH_MBEDTLS=ON,-DWITH_MBEDTLS=OFF,,"
 
 inherit autotools pkgconfig cmake systemd
 
-SYSTEMD_SERVICE:${PN} = "aos-iam.service aos-iam-provisioning.service"
+SYSTEMD_SERVICE:${PN} = "aos-iam.service aos-iam-prov.service"
 
 MIGRATION_SCRIPTS_PATH = "${base_prefix}/usr/share/aos/iam/migration"
 
@@ -101,10 +101,10 @@ do_install:append() {
 
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/aos-iam.service ${D}${systemd_system_unitdir}
-    install -m 0644 ${WORKDIR}/aos-iam-provisioning.service ${D}${systemd_system_unitdir}
+    install -m 0644 ${WORKDIR}/aos-iam-prov.service ${D}${systemd_system_unitdir}
 
-    install -d ${D}${sysconfdir}/systemd/system/aos-iam-provisioning.service.d
-    install -m 0644 ${WORKDIR}/aos-dirs-service.conf ${D}${sysconfdir}/systemd/system/aos-iam-provisioning.service.d/20-aos-dirs-service.conf
+    install -d ${D}${sysconfdir}/systemd/system/aos-iam-prov.service.d
+    install -m 0644 ${WORKDIR}/aos-dirs-service.conf ${D}${sysconfdir}/systemd/system/aos-iam-prov.service.d/20-aos-dirs-service.conf
 
     install -d ${D}${sysconfdir}/systemd/system/aos.target.d
     install -m 0644 ${WORKDIR}/aos-target.conf ${D}${sysconfdir}/systemd/system/aos.target.d/${PN}.conf
