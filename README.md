@@ -17,5 +17,3 @@ see [Aos Core integration](doc/integration.md) document.
 ## Misc
 
 * Set PREFERRED_PROVIDER_virtual/runc = "runc-opencontainers" to build runc from opencontainers.
-* Set AOS_RUNNER to define which runner will be used to run Aos services. Currently supported: runc and crun.
-Default is crun.
