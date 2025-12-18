@@ -57,7 +57,6 @@ RDEPENDS:${PN} += " \
     cni \
     aos-firewall \
     aos-dnsname \
-    ${@bb.utils.contains("AOS_RUNNER", "runc", "${VIRTUAL_RUNC}", "${AOS_RUNNER}", d)} \
 "
 
 RDEPENDS:${PN}:append:aos-secondary-node = " \
@@ -115,7 +114,6 @@ do_install:append() {
     install -m 0644 ${WORKDIR}/aos-sm.service ${D}${systemd_system_unitdir}
     
     install -m 0644 ${S}/src/sm/runner/aos-service@.service ${D}${systemd_system_unitdir}
-    sed -i 's/@RUNNER@/${AOS_RUNNER}/g' ${D}${systemd_system_unitdir}/aos-service@.service
 
     install -d ${D}${sysconfdir}/systemd/system/aos-sm.service.d
     install -m 0644 ${WORKDIR}/aos-dirs-service.conf ${D}${sysconfdir}/systemd/system/aos-sm.service.d/20-aos-dirs-service.conf
