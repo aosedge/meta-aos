@@ -73,6 +73,10 @@ python do_update_config() {
     data["IAMProtectedServerURL"]= node_hostname+":8089"
     data["IAMPublicServerURL"] = node_hostname+":8090"
 
+    # Update CM server
+
+    data["CMServerURL"] = node_hostname+":8093"
+
     # Update DNS IP
 
     dns_ip = d.getVar("AOS_DNS_IP")
