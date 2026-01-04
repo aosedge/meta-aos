@@ -6,10 +6,10 @@ DESCRIPTION = "AOS Identity and Access Manager CPP"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=86d3f3a95c324c9479bd8986968f4327"
 
-BRANCH = "feature_unification"
+BRANCH = "integration"
 SRCREV = "${AUTOREV}"
 
-SRC_URI = "gitsm://github.com/aosedge/aos_core_cpp.git;protocol=https;branch=${BRANCH}"
+SRC_URI = "gitsm://github.com/al1img/aos_core_cpp.git;protocol=https;branch=${BRANCH}"
 
 SRC_URI += " \
     file://aos_iam.cfg \
@@ -75,40 +75,35 @@ python do_update_config() {
     with open(file_name) as f:
         data = json.load(f)
 
-    node_info = data.get("NodeInfo", {})
-    node_info["NodeType"] = d.getVar("AOS_NODE_TYPE")
+    node_info = data.get("nodeInfo", {})
+    node_info["nodeType"] = d.getVar("AOS_NODE_TYPE")
 
     if d.getVar("AOS_ARCHITECTURE"):
-        node_info["Architecture"] = d.getVar("AOS_ARCHITECTURE")
+        node_info["architecture"] = d.getVar("AOS_ARCHITECTURE")
 
     if d.getVar("AOS_ARCHITECTURE_VARIANT"):
-        node_info["ArchitectureVariant"] = d.getVar("AOS_ARCHITECTURE_VARIANT")
+        node_info["architectureVariant"] = d.getVar("AOS_ARCHITECTURE_VARIANT")
 
     if d.getVar("AOS_OS"):
-        node_info["OS"] = d.getVar("AOS_OS")
+        node_info["os"] = d.getVar("AOS_OS")
 
     if d.getVar("AOS_OS_VERSION"):
-        node_info["OSVersion"] = d.getVar("AOS_OS_VERSION")
+        node_info["osVersion"] = d.getVar("AOS_OS_VERSION")
 
-    # Set Node Attributes
-    node_attributes = node_info.get("Attrs", {})
-
-    node_info["Attrs"] = node_attributes
-
-    data["NodeInfo"] = node_info
+    data["nodeInfo"] = node_info
 
     main_node_host_name = d.getVar("AOS_MAIN_NODE_HOSTNAME")
 
     # Set main IAM server URLs for secondary IAM nodes
     if not d.getVar("AOS_MAIN_NODE") or d.getVar("AOS_MAIN_NODE") == "0":
-        data["MainIAMPublicServerURL"] = main_node_host_name+":8090"
-        data["MainIAMProtectedServerURL"] = main_node_host_name+":8089"
+        data["mainIamPublicServerUrl"] = main_node_host_name + ":8090"
+        data["mainIamProtectedServerUrl"] = main_node_host_name + ":8089"
 
     # Set alternative names for server certificates
 
-    for cert_module in data["CertModules"]:
-        if "ExtendedKeyUsage" in cert_module and "serverAuth" in cert_module["ExtendedKeyUsage"]:
-            cert_module["AlternativeNames"] = [d.getVar("AOS_NODE_HOSTNAME")]
+    for cert_module in data["certModules"]:
+        if "extendedKeyUsage" in cert_module and "serverAuth" in cert_module["extendedKeyUsage"]:
+            cert_module["alternativeNames"] = [d.getVar("AOS_NODE_HOSTNAME")]
 
     with open(file_name, "w") as f:
         json.dump(data, f, indent=4)
