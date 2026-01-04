@@ -82,6 +82,10 @@ RRECOMMENDS:${PN} += " \
     kernel-module-act-mirred \
 "
 
+do_fetch[vardeps] += " \
+    AOS_COMPONENT_RUNTIME_PREFIX \
+"
+
 python do_update_config() {
     import json
 
@@ -95,12 +99,22 @@ python do_update_config() {
 
     # Update IAM servers
 
-    data["IAMProtectedServerURL"] = node_hostname+":8089"
-    data["IAMPublicServerURL"] = node_hostname+":8090"
+    data["iamProtectedServerUrl"] = node_hostname + ":8089"
+    data["iamPublicServerUrl"] = node_hostname + ":8090"
 
     # Update CM server
 
-    data["CMServerURL"] = main_node_hostname+":8093"
+    data["cmServerUrl"] = main_node_hostname + ":8093"
+
+    # Update component prefixes
+
+    comp_prefix = d.getVar("AOS_COMPONENT_RUNTIME_PREFIX")
+
+    for runtime in data["runtimes"]:
+        isComponent = runtime.get("isComponent", False)
+
+        if isComponent and not runtime["type"].startswith(comp_prefix):
+            runtime["type"] = comp_prefix + runtime["type"]
 
     with open(file_name, "w") as f:
         json.dump(data, f, indent=4)
@@ -112,8 +126,6 @@ do_install:append() {
 
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/aos-sm.service ${D}${systemd_system_unitdir}
-    
-    install -m 0644 ${S}/src/sm/runner/aos-service@.service ${D}${systemd_system_unitdir}
 
     install -d ${D}${sysconfdir}/systemd/system/aos-sm.service.d
     install -m 0644 ${WORKDIR}/aos-dirs-service.conf ${D}${sysconfdir}/systemd/system/aos-sm.service.d/20-aos-dirs-service.conf
