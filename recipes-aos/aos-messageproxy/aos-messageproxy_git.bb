@@ -55,16 +55,16 @@ python do_update_config() {
     with open(file_name) as f:
         data = json.load(f)
 
-    iamConfig = data.get("IAMConfig", {})
-    iamConfig["IAMPublicServerURL"] = d.getVar("AOS_NODE_HOSTNAME") + ":8090"
-    iamConfig["IAMMainPublicServerURL"] = d.getVar("AOS_MAIN_NODE_HOSTNAME") + ":8090"
-    iamConfig["IAMMainProtectedServerURL"] = d.getVar("AOS_MAIN_NODE_HOSTNAME") + ":8089"
+    iamConfig = data.get("iamConfig", {})
+    iamConfig["iamPublicServerUrl"] = d.getVar("AOS_NODE_HOSTNAME") + ":8090"
+    iamConfig["iamMainPublicServerUrl"] = d.getVar("AOS_MAIN_NODE_HOSTNAME") + ":8090"
+    iamConfig["iamMainProtectedServerUrl"] = d.getVar("AOS_MAIN_NODE_HOSTNAME") + ":8089"
 
-    cmConfig = data.get("CMConfig", {})
-    cmConfig["CMServerURL"] = d.getVar("AOS_MAIN_NODE_HOSTNAME") + ":8093"
+    cmConfig = data.get("cmConfig", {})
+    cmConfig["cmServerUrl"] = d.getVar("AOS_MAIN_NODE_HOSTNAME") + ":8093"
 
-    data["IAMConfig"] = iamConfig
-    data["CMConfig"] = cmConfig
+    data["iamConfig"] = iamConfig
+    data["cmConfig"] = cmConfig
 
     with open(file_name, "w") as f:
         json.dump(data, f, indent=4)
