@@ -69,25 +69,25 @@ python do_update_config() {
     node_hostname = d.getVar("AOS_NODE_HOSTNAME")
  
     # Update IAM servers
-    
-    data["IAMProtectedServerURL"]= node_hostname+":8089"
-    data["IAMPublicServerURL"] = node_hostname+":8090"
+
+    data["iamProtectedServerUrl"]= node_hostname + ":8089"
+    data["iamPublicServerUrl"] = node_hostname + ":8090"
 
     # Update CM server
 
-    data["CMServerURL"] = node_hostname+":8093"
+    data["cmServerUrl"] = node_hostname + ":8093"
 
     # Update DNS IP
 
     dns_ip = d.getVar("AOS_DNS_IP")
     if dns_ip:
-        data["DNSIP"] = dns_ip
+        data["dnsIp"] = dns_ip
 
     main_node_hostname = d.getVar("AOS_MAIN_NODE_HOSTNAME")
 
     # Update File Server URL
 
-    data["FileServerURL"] = main_node_hostname+":8094"
+    data["fileServerUrl"] = main_node_hostname + ":8094"
 
     with open(file_name, "w") as f:
         json.dump(data, f, indent=4)
