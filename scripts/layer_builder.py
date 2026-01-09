@@ -1,54 +1,89 @@
 #!/usr/bin/env python3
-"""Script for building Aos layers"""
+"""Script for building AOS layers with unified metadata generation."""
+
 import argparse
-import os
 import sys
 
 import yaml
 from bitbake import call_bitbake
+from metadata import BundleBuilder
+from moulin import rouge
+
+
+def build_layer(
+    layers_conf: rouge.YamlValue, layer_conf: rouge.YamlValue, output_dir: str
+) -> int:
+    """Build a single layer using bitbake."""
+
+    bbake_conf = [
+        ("AOS_BASE_IMAGE", layers_conf["base_image"].as_str),
+        ("AOS_LAYER_DEPLOY_DIR", output_dir),
+    ]
+
+    version = layer_conf.get("version", None)
+    if version:
+        bbake_conf.append(("AOS_LAYER_VERSION", version.as_str))
+
+    return call_bitbake(
+        layers_conf.get("work_dir", "workdir").as_str,
+        layers_conf.get("yocto_dir", "yocto").as_str,
+        layers_conf.get("build_dir", "build").as_str,
+        layer_conf["target"].as_str,
+        bbake_conf,
+    )
 
 
 def main():
-    """Main function"""
-    ret = 0
+    """Main function."""
 
-    parser = argparse.ArgumentParser(description="Layer builder")
-
+    parser = argparse.ArgumentParser(description="AOS Layer builder")
     parser.add_argument(
         "conf", metavar="conf.yaml", type=str, help="YAML file with configuration"
     )
-
     args = parser.parse_args()
 
-    with open(args.conf, "r", encoding="utf-8") as conf_file:
-        conf = yaml.load(conf_file, Loader=yaml.CLoader)
+    with open(args.conf, "r", encoding="utf-8") as f:
+        conf = rouge.YamlValue(yaml.compose(f))
 
-    layers_conf = conf["layers"]
+    layers_conf = conf.get("layers", conf)
 
-    for layer in layers_conf["items"]:
-        layer_conf = layers_conf["items"][layer]
+    bundle_conf = layers_conf.get("bundle", None)
+    if not bundle_conf:
+        print("Error: 'bundle' section not found in config")
 
-        bbake_conf = [
-            ("AOS_BASE_IMAGE", layers_conf["base_image"]),
-            (
-                "AOS_LAYER_DEPLOY_DIR",
-                os.path.abspath(layers_conf.get("output_dir", "../output/layers")),
-            ),
-        ]
+        return 1
 
-        if layer_conf.get("enabled", True):
-            result = call_bitbake(
-                conf.get("work_dir", "workdir"),
-                layers_conf.get("yocto_dir", "yocto"),
-                layers_conf.get("build_dir", "build"),
-                layer_conf["target"],
-                bbake_conf,
-            )
+    builder = BundleBuilder(bundle_conf, "layer")
+    builder.prepare()
 
-            if result != 0:
-                ret = result
+    ret = 0
+    items = layers_conf["items"]
 
-    return ret
+    for name in items.keys():
+        item_conf = items[name]
+
+        if not item_conf.get("enabled", True).as_bool:
+            continue
+
+        print(f"Building layer: {name}")
+
+        result = build_layer(layers_conf, item_conf, builder._output_dir)
+
+        if result != 0:
+            print(f"Failed to build layer: {name}")
+
+            ret = result
+        else:
+            builder.add_item_from_conf(name, item_conf)
+
+    if ret != 0:
+        print("Some layers failed to build")
+
+        return ret
+
+    builder.build()
+
+    return 0
 
 
 if __name__ == "__main__":
