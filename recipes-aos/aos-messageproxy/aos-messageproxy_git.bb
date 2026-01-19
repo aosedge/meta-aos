@@ -8,7 +8,7 @@ SRCREV = "${AUTOREV}"
 SRC_URI = "git://github.com/aosedge/aos_core_cpp.git;protocol=https;branch=${BRANCH}"
 
 SRC_URI += " \
-    file://aos_mp.cfg \
+    file://mp.cfg \
     file://aos-mp.service \
     file://aos-mp-provisioning.service \
     file://aos-target.conf \
@@ -50,7 +50,7 @@ do_fetch[vardeps] += "AOS_MAIN_NODE_HOSTNAME AOS_NODE_HOSTNAME"
 python do_update_config() {
     import json
 
-    file_name = oe.path.join(d.getVar("D"), d.getVar("sysconfdir"), "aos", "aos_mp.cfg")
+    file_name = oe.path.join(d.getVar("D"), d.getVar("sysconfdir"), "aos", "mp.cfg")
 
     with open(file_name) as f:
         data = json.load(f)
@@ -72,7 +72,7 @@ python do_update_config() {
 
 do_install:append() {
     install -d ${D}${sysconfdir}/aos
-    install -m 0644 ${WORKDIR}/aos_mp.cfg ${D}${sysconfdir}/aos
+    install -m 0644 ${WORKDIR}/mp.cfg ${D}${sysconfdir}/aos
 
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/aos-mp.service ${D}${systemd_system_unitdir}

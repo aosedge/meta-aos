@@ -7,7 +7,7 @@ PartOf=aos.target
 
 [Service]
 Type=notify
-ExecStart=/usr/bin/aos_mp_app -c /etc/aos/aos_mp.cfg -provisioning -v debug -j
+ExecStart=/usr/bin/aos_mp_app -c /etc/aos/mp.cfg -provisioning -v debug -j
 Restart=always
 RestartSec=10
 
