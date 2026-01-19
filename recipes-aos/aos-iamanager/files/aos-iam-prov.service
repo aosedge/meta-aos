@@ -8,7 +8,7 @@ PartOf=aos.target
 [Service]
 Type=notify
 ExecStartPre=-/opt/aos/deprovision.sh
-ExecStart=/usr/bin/aos_iam_app -c /etc/aos/aos_iam.cfg -provisioning -v debug -j
+ExecStart=/usr/bin/aos_iam_app -c /etc/aos/iam.cfg -provisioning -v debug -j
 Restart=always
 RestartSec=10
 
