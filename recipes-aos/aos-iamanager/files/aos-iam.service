@@ -7,7 +7,7 @@ PartOf=aos.target
 
 [Service]
 Type=notify
-ExecStart=/usr/bin/aos_iam_app -c /etc/aos/aos_iam.cfg -v debug -j
+ExecStart=/usr/bin/aos_iam_app -c /etc/aos/iam.cfg -v debug -j
 Restart=always
 RestartSec=10
 KillMode=process
