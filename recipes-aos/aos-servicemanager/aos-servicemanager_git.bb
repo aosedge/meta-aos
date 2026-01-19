@@ -57,6 +57,7 @@ RDEPENDS:${PN} += " \
     cni \
     aos-firewall \
     aos-dnsname \
+    ${@bb.utils.contains("AOS_CONTAINER_RUNNER", "runc", "${VIRTUAL_RUNC}", "${AOS_CONTAINER_RUNNER}", d)} \
 "
 
 RDEPENDS:${PN}:append:aos-secondary-node = " \
@@ -84,6 +85,7 @@ RRECOMMENDS:${PN} += " \
 
 do_fetch[vardeps] += " \
     AOS_COMPONENT_RUNTIME_PREFIX \
+    AOS_CONTAINER_RUNNER \
 "
 
 python do_update_config() {
@@ -106,11 +108,15 @@ python do_update_config() {
 
     data["cmServerUrl"] = main_node_hostname + ":8093"
 
-    # Update component prefixes
+    # Update component prefixes and set container runner
 
     comp_prefix = d.getVar("AOS_COMPONENT_RUNTIME_PREFIX")
+    container_runner = d.getVar("AOS_CONTAINER_RUNNER")
 
     for runtime in data["runtimes"]:
+        if runtime["plugin"] == "container":
+            runtime["type"] = container_runner
+
         isComponent = runtime.get("isComponent", False)
 
         if isComponent and not runtime["type"].startswith(comp_prefix):
@@ -132,6 +138,9 @@ do_install:append() {
 
     install -d ${D}${sysconfdir}/systemd/system/aos.target.d
     install -m 0644 ${WORKDIR}/aos-target.conf ${D}${sysconfdir}/systemd/system/aos.target.d/${PN}.conf
+
+    install -m 0644 ${S}/src/sm/launcher/runtimes/container/aos-service@.service ${D}${systemd_system_unitdir}
+    sed -i 's/@RUNNER@/${AOS_CONTAINER_RUNNER}/g' ${D}${systemd_system_unitdir}/aos-service@.service
 
     install -d ${D}${MIGRATION_SCRIPTS_PATH}
     source_migration_path="/src/sm/database/migration"
