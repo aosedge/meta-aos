@@ -115,4 +115,4 @@ TOOLCHAIN_HOST_TASK:append = " \
     nativesdk-grpc-compiler \
 "
 
-TOOLCHAIN_TARGET_TASK:append = " protobuf-staticdev"
+TOOLCHAIN_TARGET_TASK:append = " protobuf-staticdev util-linux-dev efivar"
