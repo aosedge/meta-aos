@@ -87,4 +87,10 @@ do_install:append:aos-main-node() {
     install -m 0644 ${WORKDIR}/aos-cm-service.conf ${D}${sysconfdir}/systemd/system/aos-mp.service.d/10-aos-cm-service.conf
 }
 
+do_install:append() {
+    # Do not install headers files to prevent SDK build conflicts
+    rm -rf ${D}${includedir}
+}
+
+
 addtask update_config after do_install before do_package
