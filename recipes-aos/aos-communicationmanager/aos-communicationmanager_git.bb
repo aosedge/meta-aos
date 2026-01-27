@@ -113,4 +113,10 @@ do_install:append() {
     fi
 }
 
+do_install:append() {
+    # Do not install headers files to prevent SDK build conflicts
+    rm -rf ${D}${includedir}
+}
+
+
 addtask update_config after do_install before do_package
