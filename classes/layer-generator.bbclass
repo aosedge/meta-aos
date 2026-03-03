@@ -9,10 +9,6 @@ AOS_LAYER_VERSION ??= "1.0.0"
 AOS_LAYER_DIGEST_TYPE ??= "sha256"
 AOS_LAYER_DEPLOY_DIR ??= "${DEPLOY_DIR_IMAGE}/layers"
 
-# Inherit
-
-inherit metadata-generator
-
 # Dependencies
 
 DEPENDS:append = " rsync-native"
@@ -88,41 +84,6 @@ python do_create_whiteouts() {
 
 }
 
-python do_create_metadata() {
-    import os
-
-    # Plarform info
-
-    platform_info = create_layer_platform_info(d.getVar("TARGET_ARCH"), d.getVar("TARGET_OS"), d.getVar("DISTRO_VERSION"),
-        d.getVar("AOS_LAYER_FEATURES").split())
-
-    # Annotations
-
-    parent_id = ""
-    parent_digest = ""
-
-    if d.getVar("AOS_PARENT_LAYER") != d.getVar("AOS_BASE_IMAGE"):
-        f = open(os.path.join(d.getVar("SHARED_DIGEST_DIR"),
-            "{}.{}".format(d.getVar("AOS_PARENT_LAYER"), d.getVar("AOS_LAYER_DIGEST_TYPE"))), "r")
-
-        data = f.read().split()
-        parent_id = "{}:{}".format(d.getVar("AOS_PARENT_LAYER"), data[1])
-        parent_digest = "{}:{}".format(d.getVar("AOS_LAYER_DIGEST_TYPE"), data[0])
-
-    annotations = create_layer_annotations("{}:{}".format(d.getVar("PN"), d.getVar("AOS_LAYER_VERSION")), parent_id, parent_digest)
-
-    # Write metadata
-
-    f = open(os.path.join(d.getVar("SHARED_DIGEST_DIR"),
-        "{}.{}".format(d.getVar("PN"), d.getVar("AOS_LAYER_DIGEST_TYPE"))), "r")
-
-    data = f.read().split()
-    digest = "{}:{}".format(d.getVar("AOS_LAYER_DIGEST_TYPE"), data[0])
-
-    write_layer_metadata(d.getVar("LAYER_WORK_DIR"), d.getVar("LAYER_MEDIA_TYPE"), digest,
-        os.path.getsize(os.path.join(d.getVar("LAYER_WORK_DIR"), data[0])), platform_info, annotations)
-}
-
 do_pack_layer() {
     ${IMAGE_CMD_TAR} --numeric-owner -czf ${AOS_LAYER_DEPLOY_DIR}/${PN}-${MACHINE}-${AOS_LAYER_VERSION}.tar.gz -C ${LAYER_WORK_DIR} .
 }
@@ -132,7 +93,6 @@ do_create_layer[nostamp] = "1"
 fakeroot python do_create_layer() {
     bb.build.exec_func("do_create_whiteouts", d)
     bb.build.exec_func("do_create_rootfs_archive", d)
-    bb.build.exec_func("do_create_metadata", d)
     bb.build.exec_func("do_pack_layer", d)
 }
 
