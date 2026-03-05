@@ -3,7 +3,7 @@ Description=Remote quota server
 Documentation=man:rpc.rquotad(8)
 Requires=rpcbind.service
 PartOf=rpcbind.service
-After=rpcbind.service
+After=rpcbind.service network-online.target
 
 [Service]
 Type=forking
