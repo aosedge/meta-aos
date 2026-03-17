@@ -18,5 +18,4 @@ module = @LEGACY_PROVIDER_PATH@
 module = @PKCS11_PROVIDER_PATH@
 pkcs11-module-path = @HSM_MODULE_PATH@
 pkcs11-module-cache-keys = false
-pkcs11-module-token-pin = @PKCS11_PIN_PATH@
 activate = 1
