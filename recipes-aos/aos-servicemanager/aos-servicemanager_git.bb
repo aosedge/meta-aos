@@ -51,7 +51,6 @@ PACKAGECONFIG[mbedtls] = "-DWITH_MBEDTLS=ON,-DWITH_MBEDTLS=OFF,,"
 VIRTUAL_RUNC = "${@bb.utils.contains('LAYERSERIES_CORENAMES', 'dunfell', 'virtual/runc', 'virtual-runc', d)}"
 
 RDEPENDS:${PN} += " \
-    aos-rootca \
     iptables \
     quota \
     cni \

@@ -47,7 +47,6 @@ FILES:${PN} += " \
 "
 
 RDEPENDS:${PN} += " \
-    aos-rootca \
     aos-provfinish \
 "
 

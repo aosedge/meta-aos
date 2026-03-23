@@ -44,7 +44,6 @@ FILES:${PN} += " \
 "
 
 RDEPENDS:${PN} += " \
-    aos-rootca \
     ${@bb.utils.contains('AOS_VIS_DATA_PROVIDER', 'telemetryemulatoradapter', 'telemetry-emulator', '', d)} \
 "
 
