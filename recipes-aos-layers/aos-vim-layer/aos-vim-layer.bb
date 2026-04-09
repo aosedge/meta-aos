@@ -12,5 +12,3 @@ AOS_LAYER_WHITEOUTS += " \
     /usr/share/applications/gvim.desktop \
     /usr/share/applications/vim.desktop \
 "
-
-AOS_LAYER_VERSION = "1.0.0"
