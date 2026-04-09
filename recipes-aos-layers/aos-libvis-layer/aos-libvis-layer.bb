@@ -7,5 +7,3 @@ require recipes-aos-layers/aos-pylibs-layer/aos-pylibs-layer.bb
 AOS_LAYER_FEATURES += " \
     libvis \
 "
-
-AOS_LAYER_VERSION = "1.0.0"

@@ -15,5 +15,3 @@ AOS_LAYER_FEATURES += " \
     python3-threading \
     python3-websocket-client \
 "
-
-AOS_LAYER_VERSION = "1.0.0"
