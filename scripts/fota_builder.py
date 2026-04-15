@@ -193,28 +193,18 @@ def create_update_item(
     )
 
     dependencies = None
-    runtime_deps = comp_conf.get("dependencies", [])
-    if runtime_deps:
-        dependencies = []
-        for dep in runtime_deps:
-            if isinstance(dep, rouge.YamlValue):
-                dep_codename = dep["codename"].as_str
-                dep_type = dep.get("type", "component").as_str
-                dep_versions = dep["versions"].as_str
-            else:
-                dep_codename = dep["codename"]
-                dep_type = dep.get("type", "component")
-                dep_versions = dep["versions"]
-
-            dependencies.append(
-                AosDependency(
-                    identity=AosDependencyIdentity(
-                        codename=dep_codename,
-                        type=dep_type,
-                    ),
-                    versions=dep_versions,
-                )
+    deps_conf = comp_conf.get("dependencies", None)
+    if deps_conf:
+        dependencies = [
+            AosDependency(
+                identity=AosDependencyIdentity(
+                    codename=dep["item"].as_str,
+                    type="component",
+                ),
+                versions=dep["versions"].as_str,
             )
+            for dep in deps_conf
+        ]
 
     title = None
     description = None
