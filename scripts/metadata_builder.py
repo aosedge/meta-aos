@@ -240,25 +240,30 @@ class BundleBuilder:
     def _create_dependencies(
         self, item_conf: rouge.YamlValue
     ) -> Optional[List[AosDependency]]:
-        """Create dependencies list from config."""
+        """Create dependencies list from a singular `dependency` entry.
 
-        deps_conf = item_conf.get("dependencies", None)
-        if not deps_conf:
+        Expected YAML form:
+            dependency:
+              item: <codename>
+              versions: <semver constraint>
+
+        `item` becomes the codename and the dependency type is the
+        builder's own item_type (layer or component).
+        """
+
+        dep_conf = item_conf.get("dependency", None)
+        if not dep_conf:
             return None
 
-        dependencies = []
-        for dep in deps_conf:
-            dependencies.append(
-                AosDependency(
-                    identity=AosDependencyIdentity(
-                        codename=dep["codename"].as_str,
-                        type=dep.get("type", "component").as_str,
-                    ),
-                    versions=dep["versions"].as_str,
-                )
+        return [
+            AosDependency(
+                identity=AosDependencyIdentity(
+                    codename=dep_conf["item"].as_str,
+                    type=self._item_type,
+                ),
+                versions=dep_conf["versions"].as_str,
             )
-
-        return dependencies if dependencies else None
+        ]
 
     def build(self) -> None:
         """Write config.yaml to output_dir/."""

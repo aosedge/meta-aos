@@ -5,6 +5,7 @@ import argparse
 import os
 import shutil
 import sys
+from typing import Dict, List, Optional
 
 import yaml
 from bitbake import call_bitbake
@@ -12,10 +13,77 @@ from metadata_builder import BundleBuilder
 from moulin import rouge
 
 
+def resolve_parent_target(
+    name: str,
+    item_conf: rouge.YamlValue,
+    items: rouge.YamlValue,
+) -> Optional[str]:
+    """Return parent layer bitbake target based on item's dependency, or None."""
+
+    dep_conf = item_conf.get("dependency", None)
+    if not dep_conf:
+        return None
+
+    parent_name = dep_conf["item"].as_str
+
+    if parent_name not in items.keys():
+        raise ValueError(
+            f"Layer '{name}' depends on unknown item '{parent_name}'"
+        )
+
+    return items[parent_name]["target"].as_str
+
+
+def order_items(items: rouge.YamlValue) -> List[str]:
+    """Topologically sort items so every parent is built before its children."""
+
+    graph: Dict[str, Optional[str]] = {}
+    for name in items.keys():
+        item_conf = items[name]
+        dep_conf = item_conf.get("dependency", None)
+        parent = dep_conf["item"].as_str if dep_conf else None
+
+        if parent is not None and parent not in items.keys():
+            raise ValueError(
+                f"Layer '{name}' depends on unknown item '{parent}'"
+            )
+
+        graph[name] = parent
+
+    ordered: List[str] = []
+    visiting: set = set()
+    visited: set = set()
+
+    def visit(node: str) -> None:
+        if node in visited:
+            return
+
+        if node in visiting:
+            raise ValueError(
+                f"Cyclic layer dependency detected involving '{node}'"
+            )
+
+        visiting.add(node)
+        parent = graph[node]
+
+        if parent is not None:
+            visit(parent)
+
+        visiting.remove(node)
+        visited.add(node)
+        ordered.append(node)
+
+    for name in graph:
+        visit(name)
+
+    return ordered
+
+
 def build_layer(
     layers_conf: rouge.YamlValue,
     layer_conf: rouge.YamlValue,
     layer_dir: str,
+    parent_target: Optional[str] = None,
 ) -> int:
     """Build a single layer using bitbake into its own subdirectory."""
 
@@ -27,6 +95,13 @@ def build_layer(
         ("AOS_BASE_IMAGE", layers_conf["base_image"].as_str),
         ("AOS_LAYER_DEPLOY_DIR", layer_dir),
     ]
+
+    if parent_target:
+        # Scope to this recipe only; otherwise the parent layer (also
+        # parsed in the same bitbake invocation) would inherit the same
+        # AOS_PARENT_LAYER and create a self-dependency loop.
+        target = layer_conf["target"].as_str
+        bbake_conf.append((f"AOS_PARENT_LAYER:pn-{target}", parent_target))
 
     version = layer_conf.get("version", None)
     if version:
@@ -60,17 +135,20 @@ def main():
 
     ret = 0
     items = layers_conf["items"]
+    build_order = order_items(items)
 
-    for name in items.keys():
+    for name in build_order:
         item_conf = items[name]
 
         if not item_conf.get("enabled", True).as_bool:
             continue
 
+        parent_target = resolve_parent_target(name, item_conf, items)
+
         print(f"Building layer: {name}")
 
         layer_dir = os.path.join(builder._output_dir, name)
-        result = build_layer(layers_conf, item_conf, layer_dir)
+        result = build_layer(layers_conf, item_conf, layer_dir, parent_target)
 
         if result != 0:
             print(f"Failed to build layer: {name}")
