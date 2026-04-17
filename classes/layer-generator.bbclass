@@ -70,7 +70,7 @@ fakeroot python do_create_whiteouts() {
 }
 
 do_pack_layer() {
-    ${IMAGE_CMD_TAR} --numeric-owner -czf ${AOS_LAYER_DEPLOY_DIR}/${AOS_LAYER_OS}-${AOS_LAYER_ARCH}-${AOS_LAYER_VERSION}.tar.gz -C ${ROOTFS_DIFF_DIR} .
+    ${IMAGE_CMD_TAR} -numeric-owner -cf - -C ${ROOTFS_DIFF_DIR} . | gzip -n > ${AOS_LAYER_DEPLOY_DIR}/${AOS_LAYER_OS}-${AOS_LAYER_ARCH}-${AOS_LAYER_VERSION}.tar.gz
 }
 
 do_create_layer[nostamp] = "1"
