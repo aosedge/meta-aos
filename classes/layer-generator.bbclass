@@ -35,12 +35,12 @@ do_image_complete[noexec] = "1"
 
 # Tasks
 
-do_create_rootfs_archive() {
+fakeroot do_create_rootfs_archive() {
     rsync -HXlrvcm --append --progress --delete --compare-dest=${PARENT_LAYER_ROOTFS}/ ${IMAGE_ROOTFS}/* ${ROOTFS_DIFF_DIR}
     find ${ROOTFS_DIFF_DIR} -type d -empty -delete
 }
 
-python do_create_whiteouts() {
+fakeroot python do_create_whiteouts() {
     import os
 
     whiteoutPrefix = ".wh."
@@ -75,7 +75,7 @@ do_pack_layer() {
 
 do_create_layer[nostamp] = "1"
 
-fakeroot python do_create_layer() {
+python do_create_layer() {
     bb.build.exec_func("do_create_whiteouts", d)
     bb.build.exec_func("do_create_rootfs_archive", d)
     bb.build.exec_func("do_pack_layer", d)
