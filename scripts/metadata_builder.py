@@ -12,7 +12,7 @@ LAYER_MEDIA_TYPE = "application/vnd.oci.image.layer.v1.tar+gzip"
 COMPONENT_FULL_MEDIA_TYPE = "vnd.aos.image.component.full.v1+gzip"
 COMPONENT_INC_MEDIA_TYPE = "vnd.aos.image.component.inc.v1+gzip"
 
-ItemType = Literal["layer", "component", "service"]
+ItemType = Literal["layer", "component", "service", "runtime"]
 
 
 class AosArchInfo(BaseModel):
@@ -51,6 +51,11 @@ class AosImage(BaseModel):
     class Config:
         populate_by_name = True
 
+class AosUpdateItemConfiguration(BaseModel):
+    """Configuration for an update item"""
+
+    runtimes: list[AosIdentity]
+
 
 class AosDependencyIdentity(BaseModel):
     """Identity for dependency reference."""
@@ -72,6 +77,7 @@ class AosUpdateItem(BaseModel):
     identity: AosIdentity
     version: str
     images: List[AosImage]
+    configuration: Optional[AosUpdateItemConfiguration] = None
     dependencies: Optional[List[AosDependency]] = None
 
 

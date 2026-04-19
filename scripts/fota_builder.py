@@ -17,6 +17,7 @@ from metadata_builder import (
     AosDependencyIdentity,
     AosIdentity,
     AosImage,
+    AosUpdateItemConfiguration,
     AosOsInfo,
     AosUpdateItem,
     BundleBuilder,
@@ -181,6 +182,13 @@ def create_update_item(
     comp_type = comp_conf.get("componentType", name).as_str
     version = comp_conf["version"].as_str
 
+    configuration = AosUpdateItemConfiguration(runtimes=[
+        AosIdentity(
+            codename=comp_type,
+            type="runtime",
+        )
+    ])
+
     media_type = (
         COMPONENT_INC_MEDIA_TYPE if is_incremental else COMPONENT_FULL_MEDIA_TYPE
     )
@@ -233,6 +241,7 @@ def create_update_item(
         version=version,
         images=[image],
         dependencies=dependencies if dependencies else None,
+        configuration=configuration if configuration else None,
     )
 
 
