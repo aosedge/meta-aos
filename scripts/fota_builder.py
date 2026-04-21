@@ -195,7 +195,7 @@ def create_update_item(
 
     image = AosImage(
         mediaType=media_type,
-        path=filename,
+        path=os.path.basename(filename),
         archInfo=AosArchInfo(architecture=architecture),
         osInfo=AosOsInfo(os=os_name),
     )
@@ -239,6 +239,7 @@ def create_update_item(
             description=description,
         ),
         version=version,
+        sourceFolder=os.path.dirname(filename),
         images=[image],
         dependencies=dependencies if dependencies else None,
         configuration=configuration if configuration else None,

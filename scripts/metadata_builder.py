@@ -76,6 +76,7 @@ class AosUpdateItem(BaseModel):
 
     identity: AosIdentity
     version: str
+    source_folder: Optional[str] = Field(default=None, alias="sourceFolder")
     images: List[AosImage]
     configuration: Optional[AosUpdateItemConfiguration] = None
     dependencies: Optional[List[AosDependency]] = None
