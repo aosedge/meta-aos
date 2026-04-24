@@ -17,9 +17,9 @@ from metadata_builder import (
     AosDependencyIdentity,
     AosIdentity,
     AosImage,
-    AosUpdateItemConfiguration,
     AosOsInfo,
     AosUpdateItem,
+    AosUpdateItemConfiguration,
     BundleBuilder,
 )
 from moulin import rouge
@@ -182,12 +182,14 @@ def create_update_item(
     comp_type = comp_conf.get("componentType", name).as_str
     version = comp_conf["version"].as_str
 
-    configuration = AosUpdateItemConfiguration(runtimes=[
-        AosIdentity(
-            codename=comp_type,
-            type="runtime",
-        )
-    ])
+    configuration = AosUpdateItemConfiguration(
+        runtimes=[
+            AosIdentity(
+                codename=comp_type,
+                type="runtime",
+            )
+        ]
+    )
 
     media_type = (
         COMPONENT_INC_MEDIA_TYPE if is_incremental else COMPONENT_FULL_MEDIA_TYPE
@@ -253,7 +255,10 @@ def main():
     bundle_builder = BundleBuilder(components_conf, "component")
     bundle_builder.prepare()
 
-    comp_builder = ComponentBuilder(components_conf, bundle_builder._output_dir)
+    if os.path.exists(bundle_builder.output_dir):
+        shutil.rmtree(bundle_builder.output_dir)
+
+    comp_builder = ComponentBuilder(components_conf, bundle_builder.output_dir)
 
     items = components_conf["items"]
     ret = 0
@@ -271,9 +276,7 @@ def main():
             filename = comp_builder.build_component(name, comp_conf)
 
             comp_type_conf = comp_conf.get("type", None)
-            is_incremental = (
-                comp_type_conf and comp_type_conf.as_str == "incremental"
-            )
+            is_incremental = comp_type_conf and comp_type_conf.as_str == "incremental"
 
             item = create_update_item(
                 name,
