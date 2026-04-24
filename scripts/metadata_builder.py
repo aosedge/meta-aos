@@ -51,6 +51,7 @@ class AosImage(BaseModel):
     class Config:
         populate_by_name = True
 
+
 class AosUpdateItemConfiguration(BaseModel):
     """Configuration for an update item"""
 
@@ -132,9 +133,7 @@ class BundleBuilder:
         self._machine = conf.get("machine", "genericx86-64").as_str
         self._architecture = conf.get("architecture", "amd64").as_str
         self._os = conf.get("os", "linux").as_str
-        self._output_dir = os.path.abspath(
-            conf.get("output_dir", "../output").as_str
-        )
+        self._output_dir = os.path.abspath(conf.get("output_dir", "../output").as_str)
 
         publisher_conf = conf.get("publisher", None)
         self._publisher = None
@@ -203,9 +202,31 @@ class BundleBuilder:
 
         return True
 
-    def _find_archive(
-        self, name: str, item_conf: rouge.YamlValue
-    ) -> Optional[str]:
+    def build(self) -> None:
+        """Write config.yaml to output_dir/."""
+
+        if not self._items:
+            print("No items to bundle")
+
+            return
+
+        config = AosUploadMetaConfig(
+            items=self._items,
+            publisher=self._publisher,
+            publish=self._publish,
+        )
+        config_path = os.path.join(self._output_dir, "config.yaml")
+        write_config_yaml(config, config_path)
+
+        print(f"Created: {config_path}")
+
+    @property
+    def output_dir(self) -> str:
+        """Return output directory path."""
+
+        return self._output_dir
+
+    def _find_archive(self, name: str, item_conf: rouge.YamlValue) -> Optional[str]:
         """Find built archive in item subdirectory."""
 
         version = item_conf.get("version", "1.0.0").as_str
@@ -271,20 +292,3 @@ class BundleBuilder:
                 versions=dep_conf["versions"].as_str,
             )
         ]
-
-    def build(self) -> None:
-        """Write config.yaml to output_dir/."""
-
-        if not self._items:
-            print("No items to bundle")
-
-            return
-
-        config = AosUploadMetaConfig(
-            items=self._items,
-            publisher=self._publisher,
-            publish=self._publish,
-        )
-        config_path = os.path.join(self._output_dir, "config.yaml")
-        write_config_yaml(config, config_path)
-        print(f"Created: {config_path}")
