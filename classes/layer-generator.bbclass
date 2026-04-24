@@ -35,12 +35,12 @@ do_image_complete[noexec] = "1"
 
 # Tasks
 
-fakeroot do_create_rootfs_archive() {
+do_create_rootfs_archive() {
     rsync -HXlrvcm --append --progress --delete --compare-dest=${PARENT_LAYER_ROOTFS}/ ${IMAGE_ROOTFS}/* ${ROOTFS_DIFF_DIR}
     find ${ROOTFS_DIFF_DIR} -type d -empty -delete
 }
 
-fakeroot python do_create_whiteouts() {
+python do_create_whiteouts() {
     import os
 
     whiteoutPrefix = ".wh."
@@ -70,12 +70,12 @@ fakeroot python do_create_whiteouts() {
 }
 
 do_pack_layer() {
-    ${IMAGE_CMD_TAR} -numeric-owner -cf - -C ${ROOTFS_DIFF_DIR} . | gzip -n > ${AOS_LAYER_DEPLOY_DIR}/${AOS_LAYER_OS}-${AOS_LAYER_ARCH}-${AOS_LAYER_VERSION}.tar.gz
+    ${IMAGE_CMD_TAR} --numeric-owner -cf - -C ${ROOTFS_DIFF_DIR} . | gzip -n > ${AOS_LAYER_DEPLOY_DIR}/${AOS_LAYER_OS}-${AOS_LAYER_ARCH}-${AOS_LAYER_VERSION}.tar.gz
 }
 
 do_create_layer[nostamp] = "1"
 
-python do_create_layer() {
+fakeroot python do_create_layer() {
     bb.build.exec_func("do_create_whiteouts", d)
     bb.build.exec_func("do_create_rootfs_archive", d)
     bb.build.exec_func("do_pack_layer", d)
