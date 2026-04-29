@@ -1,0 +1,10 @@
+[Unit]
+Description=AOS Reboot service
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/systemctl reboot
+
+[Install]
+WantedBy=multi-user.target
