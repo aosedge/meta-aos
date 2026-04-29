@@ -10,8 +10,7 @@ import sys
 import yaml
 from bitbake import call_bitbake
 from metadata_builder import (
-    COMPONENT_FULL_MEDIA_TYPE,
-    COMPONENT_INC_MEDIA_TYPE,
+    LAYER_MEDIA_TYPE,
     AosArchInfo,
     AosDependency,
     AosDependencyIdentity,
@@ -175,7 +174,7 @@ def create_update_item(
     filename: str,
     architecture: str,
     os_name: str,
-    is_incremental: bool,
+    media_type: str,
 ) -> AosUpdateItem:
     """Create AosUpdateItem from component config."""
 
@@ -189,10 +188,6 @@ def create_update_item(
                 type="runtime",
             )
         ]
-    )
-
-    media_type = (
-        COMPONENT_INC_MEDIA_TYPE if is_incremental else COMPONENT_FULL_MEDIA_TYPE
     )
 
     image = AosImage(
@@ -275,16 +270,13 @@ def main():
         try:
             filename = comp_builder.build_component(name, comp_conf)
 
-            comp_type_conf = comp_conf.get("type", None)
-            is_incremental = comp_type_conf and comp_type_conf.as_str == "incremental"
-
             item = create_update_item(
                 name,
                 comp_conf,
                 filename,
                 bundle_builder._architecture,
                 bundle_builder._os,
-                is_incremental,
+                comp_conf.get("mediaType", LAYER_MEDIA_TYPE ).as_str,
             )
             bundle_builder.add_item(item)
 

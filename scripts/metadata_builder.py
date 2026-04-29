@@ -9,8 +9,6 @@ from moulin import rouge
 from pydantic import BaseModel, Field
 
 LAYER_MEDIA_TYPE = "application/vnd.oci.image.layer.v1.tar+gzip"
-COMPONENT_FULL_MEDIA_TYPE = "vnd.aos.image.component.full.v1+gzip"
-COMPONENT_INC_MEDIA_TYPE = "vnd.aos.image.component.inc.v1+gzip"
 
 ItemType = Literal["layer", "component", "service", "runtime"]
 
@@ -181,8 +179,12 @@ class BundleBuilder:
 
             return False
 
-        rel_path = os.path.relpath(archive_path, self._output_dir)
-        image = self._create_image(rel_path, architecture, os_name)
+        image = AosImage(
+            mediaType=item_conf.get("mediaType", LAYER_MEDIA_TYPE).as_str,
+            path=os.path.relpath(archive_path, self._output_dir),
+            archInfo=AosArchInfo(architecture=architecture),
+            osInfo=AosOsInfo(os=os_name),
+        )
 
         title = item_conf.get("title", None)
         description = item_conf.get("description", None)
@@ -249,21 +251,6 @@ class BundleBuilder:
                 return os.path.join(item_dir, fname)
 
         return None
-
-    def _create_image(self, path: str, architecture: str, os_name: str) -> AosImage:
-        """Create AosImage based on item type."""
-
-        if self._item_type == "layer":
-            media_type = LAYER_MEDIA_TYPE
-        else:
-            media_type = COMPONENT_FULL_MEDIA_TYPE
-
-        return AosImage(
-            mediaType=media_type,
-            path=path,
-            archInfo=AosArchInfo(architecture=architecture),
-            osInfo=AosOsInfo(os=os_name),
-        )
 
     def _create_dependencies(
         self, item_conf: rouge.YamlValue
