@@ -14,6 +14,7 @@ SRC_URI += " \
     file://aos-target.conf \
     file://aos-dirs-service.conf \
     file://aos-cm-service.conf \
+    file://aos-reboot.service \
 "
 
 S = "${WORKDIR}/git"
@@ -146,6 +147,8 @@ do_install:append() {
     if [ -d ${S}${source_migration_path} ]; then
         install -m 0644 ${S}${source_migration_path}/* ${D}${MIGRATION_SCRIPTS_PATH}
     fi
+
+    install -m 0644 ${WORKDIR}/aos-reboot.service ${D}${systemd_system_unitdir}
 }
 
 do_install:append:aos-main-node() {
