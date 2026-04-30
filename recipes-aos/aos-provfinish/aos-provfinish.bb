@@ -1,3 +1,6 @@
+FILESEXTRAPATHS:prepend:aos-main-node := "${THISDIR}/files/main:"
+FILESEXTRAPATHS:prepend:aos-secondary-node := "${THISDIR}/files/secondary:"
+
 DESCRIPTION = "Aos provisioning finish script"
 
 LICENSE = "Apache-2.0"
