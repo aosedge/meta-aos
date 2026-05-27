@@ -6,7 +6,6 @@ This meta layer contains recipes for Aos components such as:
 * aos-iamanager - Aos identity and access manager;
 * aos-servicemanager - Aos service manager;
 * aos-vis - Aos vehicle information service;
-* Aos CNI plugins;
 * other tools and utility for AosEdge core part.
 
 ## How to integrate Aos meta layer to custom product
