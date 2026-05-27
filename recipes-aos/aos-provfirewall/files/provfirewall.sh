@@ -7,6 +7,16 @@ if [ -z "$GATEWAY" ]; then
     exit 1
 fi
 
-iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
-iptables -A INPUT -s ${GATEWAY}/32 -p tcp -m tcp --dport 22 -j ACCEPT
-iptables -A INPUT -s ${GATEWAY}/32 -j DROP
+# Recreate the table from scratch so re-runs stay idempotent.
+nft delete table inet aos-provfw 2>/dev/null
+
+nft -f - <<EOF
+table inet aos-provfw {
+    chain input {
+        type filter hook input priority 0; policy accept;
+        ct state established,related accept
+        ip saddr ${GATEWAY} tcp dport 22 accept
+        ip saddr ${GATEWAY} drop
+    }
+}
+EOF
