@@ -1,3 +1,0 @@
-*filter
-:FORWARD DROP [0:0]
-COMMIT
