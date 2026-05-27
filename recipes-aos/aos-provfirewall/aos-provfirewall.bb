@@ -22,11 +22,12 @@ FILES:${PN} = " \
 "
 
 RDEPENDS:${PN} += " \
-    iptables \
+    nftables \
 "
 
 RRECOMMENDS:${PN} += " \
-    kernel-module-xt-tcpudp \
+    kernel-module-nf-conntrack \
+    kernel-module-nft-ct \
 "
 
 do_install() {

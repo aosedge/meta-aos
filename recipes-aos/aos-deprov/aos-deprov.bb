@@ -14,7 +14,7 @@ FILES:${PN} = " \
     ${aos_opt_dir} \
 "
 
-RDEPENDS:${PN} += "aos-setupdisk"
+RDEPENDS:${PN} += "aos-setupdisk nftables"
 
 do_install() {
     install -d ${D}${aos_opt_dir}
