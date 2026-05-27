@@ -19,7 +19,7 @@ S = "${WORKDIR}/git"
 
 inherit autotools pkgconfig cmake systemd
 
-DEPENDS += "poco systemd grpc grpc-native protobuf-native protobuf curl libnl"
+DEPENDS += "poco systemd grpc grpc-native protobuf-native protobuf curl libnl nftables"
 
 PACKAGECONFIG ??= "openssl ${@bb.utils.contains('DISTRO_FEATURES', 'xen', 'vchan', '', d)}"
 PACKAGECONFIG[vchan] = "-DWITH_VCHAN=ON,-DWITH_VCHAN=OFF,xen-tools,xen-tools-libxenvchan"
