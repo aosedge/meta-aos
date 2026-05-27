@@ -31,7 +31,7 @@ FILES:${PN} += " \
     ${MIGRATION_SCRIPTS_PATH} \
 "
 
-DEPENDS = "grpc grpc-native poco protobuf-native systemd curl libnl crun"
+DEPENDS = "grpc grpc-native poco protobuf-native systemd curl libnl nftables crun"
 
 do_configure[network] =  "1"
 
@@ -52,11 +52,9 @@ PACKAGECONFIG[mbedtls] = "-DWITH_MBEDTLS=ON,-DWITH_MBEDTLS=OFF,,"
 VIRTUAL_RUNC = "${@bb.utils.contains('LAYERSERIES_CORENAMES', 'dunfell', 'virtual/runc', 'virtual-runc', d)}"
 
 RDEPENDS:${PN} += " \
-    iptables \
     quota \
-    cni \
-    aos-firewall \
-    aos-dnsname \
+    nftables \
+    dnsmasq \
     crun \
 "
 
@@ -66,21 +64,22 @@ RDEPENDS:${PN}:append:aos-secondary-node = " \
 
 RRECOMMENDS:${PN} += " \
     kernel-module-8021q \
+    kernel-module-act-mirred \
     kernel-module-bridge \
+    kernel-module-cls-matchall \
     kernel-module-ifb \
-    kernel-module-nf-conncount \
+    kernel-module-nf-conntrack \
+    kernel-module-nf-nat \
     kernel-module-nfnetlink \
+    kernel-module-nft-chain-nat \
+    kernel-module-nft-ct \
+    kernel-module-nft-masq \
+    kernel-module-nft-nat \
     kernel-module-overlay \
+    kernel-module-sch-ingress \
+    kernel-module-sch-tbf \
     kernel-module-veth \
     kernel-module-vxlan \
-    kernel-module-xt-addrtype \
-    kernel-module-xt-comment \
-    kernel-module-xt-conntrack \
-    kernel-module-xt-masquerade \
-    kernel-module-xt-tcpudp \
-    kernel-module-sch-tbf \
-    kernel-module-sch-ingress \
-    kernel-module-act-mirred \
 "
 
 do_fetch[vardeps] += " \

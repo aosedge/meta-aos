@@ -7,7 +7,6 @@ This meta layer contains recipes for AosCore components such as:
 * aos-servicemanager - AosCore service manager;
 * aos-updatemanager - AosCore update manager;
 * aos-vis - AosCore vehicle information service;
-* CNI plugins;
 * other tools and utility for AosCore operation.
 
 ## How to integrate Aos meta layer to custom product
