@@ -2,8 +2,8 @@ DESCRIPTION = "AOS Message Proxy"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=86d3f3a95c324c9479bd8986968f4327"
 
-BRANCH = "develop"
-SRCREV = "${AUTOREV}"
+BRANCH = "main"
+SRCREV = "88a6b7cc5f20b44376516abba63bd851f73f3798"
 
 SRC_URI = "git://github.com/aosedge/aos_core_cpp.git;protocol=https;branch=${BRANCH}"
 
