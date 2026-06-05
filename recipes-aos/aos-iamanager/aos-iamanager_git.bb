@@ -4,29 +4,40 @@ FILESEXTRAPATHS:prepend:aos-secondary-node := "${THISDIR}/files/secondary:"
 DESCRIPTION = "AOS Identity and Access Manager CPP"
 
 LICENSE = "Apache-2.0"
-LIC_FILES_CHKSUM = "file://LICENSE;md5=3b83ef96387f14655fc854ddc3c6bd57"
+LIC_FILES_CHKSUM = "file://LICENSE;md5=86d3f3a95c324c9479bd8986968f4327"
 
-BRANCH = "main"
-SRCREV = "491b0dfb347568ab584c84a6e2c49a0d66d792a8"
+BRANCH = "develop"
+SRCREV = "${AUTOREV}"
 
-SRC_URI = "gitsm://github.com/aosedge/aos_core_iam_cpp.git;protocol=https;branch=${BRANCH}"
+SRC_URI = "git://github.com/aosedge/aos_core_cpp.git;protocol=https;branch=${BRANCH}"
 
 SRC_URI += " \
-    file://aos_iamanager.cfg \
-    file://aos-iamanager.service \
-    file://aos-iamanager-provisioning.service \
+    file://iam.cfg \
+    file://aos-iam.service \
+    file://aos-iam-prov.service \
     file://aos-target.conf \
     file://aos-dirs-service.conf \
 "
 
 DEPENDS += "poco systemd grpc grpc-native protobuf-native protobuf openssl curl libnl"
 
+EXTRA_OECMAKE += " \
+    -DFETCHCONTENT_FULLY_DISCONNECTED=OFF \
+    -DWITH_CM=OFF \
+    -DWITH_IAM=ON \
+    -DWITH_MP=OFF \
+    -DWITH_SM=OFF \
+"
 OECMAKE_GENERATOR = "Unix Makefiles"
-EXTRA_OECMAKE += "-DFETCHCONTENT_FULLY_DISCONNECTED=OFF -DWITH_MBEDTLS=OFF -DWITH_OPENSSL=ON"
+
+PACKAGECONFIG ??= "openssl"
+
+PACKAGECONFIG[openssl] = "-DWITH_OPENSSL=ON,-DWITH_OPENSSL=OFF,openssl,"
+PACKAGECONFIG[mbedtls] = "-DWITH_MBEDTLS=ON,-DWITH_MBEDTLS=OFF,,"
 
 inherit autotools pkgconfig cmake systemd
 
-SYSTEMD_SERVICE:${PN} = "aos-iamanager.service aos-iamanager-provisioning.service"
+SYSTEMD_SERVICE:${PN} = "aos-iam.service aos-iam-prov.service"
 
 MIGRATION_SCRIPTS_PATH = "${base_prefix}/usr/share/aos/iam/migration"
 
@@ -36,7 +47,6 @@ FILES:${PN} += " \
 "
 
 RDEPENDS:${PN} += " \
-    aos-rootca \
     aos-provfinish \
 "
 
@@ -45,40 +55,54 @@ S = "${WORKDIR}/git"
 do_compile[network] = "1"
 do_configure[network] =  "1"
 
-do_fetch[vardeps] += "AOS_MAIN_NODE AOS_MAIN_NODE_HOSTNAME AOS_NODE_HOSTNAME AOS_NODE_TYPE AOS_RUNNER"
+do_fetch[vardeps] += " \
+    AOS_MAIN_NODE \
+    AOS_MAIN_NODE_HOSTNAME \
+    AOS_NODE_HOSTNAME \
+    AOS_NODE_TYPE \
+    AOS_ARCHITECTURE \
+    AOS_ARCHITECTURE_VARIANT \
+    AOS_OS \
+    AOS_OS_VERSION \
+"
 
 python do_update_config() {
     import json
 
-    file_name = oe.path.join(d.getVar("D"), d.getVar("sysconfdir"), "aos", "aos_iamanager.cfg")
+    file_name = oe.path.join(d.getVar("D"), d.getVar("sysconfdir"), "aos", "iam.cfg")
 
     with open(file_name) as f:
         data = json.load(f)
 
-    node_info = data.get("NodeInfo", {})
-    node_info["NodeType"] = d.getVar("AOS_NODE_TYPE")
+    node_info = data.get("nodeInfo", {})
+    node_info["nodeType"] = d.getVar("AOS_NODE_TYPE")
 
-    # Set Node Attributes
-    aos_runner = d.getVar("AOS_RUNNER")
-    node_attributes = node_info.get("Attrs", {})
-    node_attributes["NodeRunners"] = aos_runner
+    if d.getVar("AOS_ARCHITECTURE"):
+        node_info["architecture"] = d.getVar("AOS_ARCHITECTURE")
 
-    node_info["Attrs"] = node_attributes
+    if d.getVar("AOS_ARCHITECTURE_VARIANT"):
+        node_info["architectureVariant"] = d.getVar("AOS_ARCHITECTURE_VARIANT")
 
-    data["NodeInfo"] = node_info
+    if d.getVar("AOS_OS"):
+        node_info["os"] = d.getVar("AOS_OS")
+
+    if d.getVar("AOS_OS_VERSION"):
+        node_info["osVersion"] = d.getVar("AOS_OS_VERSION")
+
+    data["nodeInfo"] = node_info
 
     main_node_host_name = d.getVar("AOS_MAIN_NODE_HOSTNAME")
 
     # Set main IAM server URLs for secondary IAM nodes
     if not d.getVar("AOS_MAIN_NODE") or d.getVar("AOS_MAIN_NODE") == "0":
-        data["MainIAMPublicServerURL"] = main_node_host_name+":8090"
-        data["MainIAMProtectedServerURL"] = main_node_host_name+":8089"
+        data["mainIamPublicServerUrl"] = main_node_host_name + ":8090"
+        data["mainIamProtectedServerUrl"] = main_node_host_name + ":8089"
 
     # Set alternative names for server certificates
 
-    for cert_module in data["CertModules"]:
-        if "ExtendedKeyUsage" in cert_module and "serverAuth" in cert_module["ExtendedKeyUsage"]:
-            cert_module["AlternativeNames"] = [d.getVar("AOS_NODE_HOSTNAME")]
+    for cert_module in data["certModules"]:
+        if "extendedKeyUsage" in cert_module and "serverAuth" in cert_module["extendedKeyUsage"]:
+            cert_module["alternativeNames"] = [d.getVar("AOS_NODE_HOSTNAME")]
 
     with open(file_name, "w") as f:
         json.dump(data, f, indent=4)
@@ -86,29 +110,23 @@ python do_update_config() {
 
 do_install:append() {
     install -d ${D}${sysconfdir}/aos
-    install -m 0644 ${WORKDIR}/aos_iamanager.cfg ${D}${sysconfdir}/aos
+    install -m 0644 ${WORKDIR}/iam.cfg ${D}${sysconfdir}/aos
 
     install -d ${D}${systemd_system_unitdir}
-    install -m 0644 ${WORKDIR}/aos-iamanager.service ${D}${systemd_system_unitdir}
-    install -m 0644 ${WORKDIR}/aos-iamanager-provisioning.service ${D}${systemd_system_unitdir}
+    install -m 0644 ${WORKDIR}/aos-iam.service ${D}${systemd_system_unitdir}
+    install -m 0644 ${WORKDIR}/aos-iam-prov.service ${D}${systemd_system_unitdir}
 
-    install -d ${D}${sysconfdir}/systemd/system/aos-iamanager-provisioning.service.d
-    install -m 0644 ${WORKDIR}/aos-dirs-service.conf ${D}${sysconfdir}/systemd/system/aos-iamanager-provisioning.service.d/20-aos-dirs-service.conf
+    install -d ${D}${sysconfdir}/systemd/system/aos-iam-prov.service.d
+    install -m 0644 ${WORKDIR}/aos-dirs-service.conf ${D}${sysconfdir}/systemd/system/aos-iam-prov.service.d/20-aos-dirs-service.conf
 
     install -d ${D}${sysconfdir}/systemd/system/aos.target.d
     install -m 0644 ${WORKDIR}/aos-target.conf ${D}${sysconfdir}/systemd/system/aos.target.d/${PN}.conf
 
     install -d ${D}${MIGRATION_SCRIPTS_PATH}
-    source_migration_path="/src/database/migration"
+    source_migration_path="/src/iam/database/migration"
     if [ -d ${S}${source_migration_path} ]; then
         install -m 0644 ${S}${source_migration_path}/* ${D}${MIGRATION_SCRIPTS_PATH}
     fi
-}
-
-# Do not install headers files
-# This is temporary solution and should be removed when switching to new repo approach
-do_install:append() {
-    rm -rf ${D}${includedir}
 }
 
 addtask update_config after do_install before do_package

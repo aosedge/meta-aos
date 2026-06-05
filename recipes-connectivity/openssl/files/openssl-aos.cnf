@@ -17,4 +17,5 @@ module = @LEGACY_PROVIDER_PATH@
 [pkcs11_sect]
 module = @PKCS11_PROVIDER_PATH@
 pkcs11-module-path = @HSM_MODULE_PATH@
+pkcs11-module-cache-keys = false
 activate = 1
