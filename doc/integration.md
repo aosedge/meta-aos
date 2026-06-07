@@ -6,8 +6,8 @@
 * required additional meta layers: meta-virtualization, meta-security;
 * init manager: systemd;
 * required distro features: virtualization, seccomp;
-* kernel options (modules or builtin): bridge, nf_conncount, nfnetlink, overlay, squashfs, veth, xt_addrtype,
-xt_comment, xt_conntrack, xt_masquerade
+* kernel options (modules or builtin): bridge, veth, vxlan, 8021q, ifb, overlay, squashfs, nfnetlink, nf_tables,
+nf_conntrack, nf_nat, nft_ct, nft_nat, nft_chain_nat, nft_masq, sch_tbf, sch_ingress, act_mirred, cls_matchall
 * dedicated RW partition to store Aos services, layers and OTA update artifacts.
 
 ## Main components integration
