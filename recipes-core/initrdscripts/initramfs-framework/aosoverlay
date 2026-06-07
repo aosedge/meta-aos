@@ -1,0 +1,46 @@
+#!/bin/sh
+
+# This module overlays a source over the rootfs:
+#     aosoverlay.path - specifies overlay source: a squashfs image file or a directory.
+#                       If a file (or symlink to a file), it is loop-mounted to /mnt/overlay
+#                       before being overlaid. If a directory (or symlink to a directory),
+#                       it is used directly.
+
+OVERLAY_MOUNT="/mnt/overlay"
+
+aosoverlay_enabled() {
+    if [ -z "${bootparam_aosoverlay_path}" ]; then
+        msg "Aos overlay disabled: boot parameter aosoverlay.path is not set."
+        return 1
+    fi
+
+    if [ ! -e "${bootparam_aosoverlay_path}" ]; then
+        msg "Aos overlay disabled: ${bootparam_aosoverlay_path} does not exist."
+        return 1
+    fi
+
+    return 0
+}
+
+aosoverlay_run() {
+    msg "Aos overlay: applying ${bootparam_aosoverlay_path} over rootfs"
+
+    real_src=$(readlink -f "$bootparam_aosoverlay_path")
+
+    if [ -f "$real_src" ]; then
+        msg "Aos overlay: mounting image ${real_src} to ${OVERLAY_MOUNT}"
+
+        mkdir -p "$OVERLAY_MOUNT"
+        mount -t squashfs -o loop "$real_src" "$OVERLAY_MOUNT"
+
+        overlay_dir="$OVERLAY_MOUNT"
+    elif [ -d "$real_src" ]; then
+        overlay_dir="$real_src"
+    else
+        fatal "Aos overlay: ${real_src} is not a regular file or directory"
+    fi
+
+    msg "Aos overlay: mounting ${overlay_dir} over ${ROOTFS_DIR}"
+
+    mount -t overlay overlay -o lowerdir="${overlay_dir}":"${ROOTFS_DIR}" "$ROOTFS_DIR"
+}
