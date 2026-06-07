@@ -4,8 +4,8 @@ SUMMARY = "KUKSA.val databroker, the KUKSA Vehicle Abstraction Layer"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=86d3f3a95c324c9479bd8986968f4327"
 
-BRANCH = "main"
-SRCREV = "30e5c13abc496d0b39aaa6c25acebb088b9902e3"
+BRANCH = "release/0.6.1"
+SRCREV = "dd9cb5d1c2da2543dd3b3aa7e5fb350d07412c66"
 
 SRC_URI = "git://github.com/eclipse-kuksa/kuksa-databroker.git;protocol=https;branch=${BRANCH}"
 
