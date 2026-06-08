@@ -1,10 +1,10 @@
 #!/bin/sh
 
-# This module overlays a source over the rootfs:
-#     aosoverlay.path - specifies overlay source: a squashfs image file or a directory.
-#                       If a file (or symlink to a file), it is loop-mounted to /mnt/overlay
-#                       before being overlaid. If a directory (or symlink to a directory),
-#                       it is used directly.
+# This module overlays multiple sources over the rootfs:
+#     aosoverlay.path - specifies a directory containing squashfs image files and
+#                       subdirectories. Each squashfs file is loop-mounted first, then
+#                       all mounted images and subdirectories are stacked over ROOTFS_DIR
+#                       using overlayfs (files take priority over directories).
 
 OVERLAY_MOUNT="/mnt/overlay"
 
@@ -14,7 +14,7 @@ aosoverlay_enabled() {
         return 1
     fi
 
-    if [ ! -e "${bootparam_aosoverlay_path}" ]; then
+    if [ ! -d "${bootparam_aosoverlay_path}" ]; then
         msg "Aos overlay disabled: ${bootparam_aosoverlay_path} does not exist."
         return 1
     fi
@@ -25,22 +25,33 @@ aosoverlay_enabled() {
 aosoverlay_run() {
     msg "Aos overlay: applying ${bootparam_aosoverlay_path} over rootfs"
 
-    real_src=$(readlink -f "$bootparam_aosoverlay_path")
+    lower_dirs=""
 
-    if [ -f "$real_src" ]; then
-        msg "Aos overlay: mounting image ${real_src} to ${OVERLAY_MOUNT}"
+    # Mount squashfs files first
+    for img in "$bootparam_aosoverlay_path"/*; do
+        [ -f "$img" ] || continue
+        name=$(basename "$img")
+        mnt="${OVERLAY_MOUNT}/${name}"
 
-        mkdir -p "$OVERLAY_MOUNT"
-        mount -t squashfs -o loop "$real_src" "$OVERLAY_MOUNT"
+        msg "Aos overlay: mounting ${img} to ${mnt}"
 
-        overlay_dir="$OVERLAY_MOUNT"
-    elif [ -d "$real_src" ]; then
-        overlay_dir="$real_src"
-    else
-        fatal "Aos overlay: ${real_src} is not a regular file or directory"
+        mkdir -p "$mnt"
+        mount -t squashfs -o loop "$img" "$mnt"
+
+        lower_dirs="${lower_dirs}${lower_dirs:+:}${mnt}"
+    done
+
+    # Add subdirectories
+    for dir in "$bootparam_aosoverlay_path"/*; do
+        [ -d "$dir" ] || continue
+        lower_dirs="${lower_dirs}${lower_dirs:+:}${dir}"
+    done
+
+    if [ -z "$lower_dirs" ]; then
+        fatal "Aos overlay: no squashfs files or directories found in ${bootparam_aosoverlay_path}"
     fi
 
-    msg "Aos overlay: mounting ${overlay_dir} over ${ROOTFS_DIR}"
+    msg "Aos overlay: mounting ${lower_dirs} over ${ROOTFS_DIR}"
 
-    mount -t overlay overlay -o lowerdir="${overlay_dir}":"${ROOTFS_DIR}" "$ROOTFS_DIR"
+    mount -t overlay overlay -o lowerdir="${lower_dirs}:${ROOTFS_DIR}" "$ROOTFS_DIR"
 }
