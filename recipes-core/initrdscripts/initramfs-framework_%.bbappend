@@ -5,11 +5,13 @@ SRC_URI += " \
     file://kmsglog \
     file://machineid \
     file://opendisk \
+    file://aosoverlay \
     file://rundir \
     file://vardir \
 "
 
 PACKAGES += " \
+    initramfs-module-aosoverlay \
     initramfs-module-aosupdate \
     initramfs-module-kmsglog \
     initramfs-module-machineid \
@@ -30,6 +32,16 @@ RRECOMMENDS:initramfs-module-aosupdate = " \
         policycoreutils-hll \
         policycoreutils-loadpolicy \
     ', '', d)} \
+"
+
+
+SUMMARY:initramfs-module-aosoverlay = "initramfs support for overlaying a source over rootfs"
+RDEPENDS:initramfs-module-aosoverlay = "${PN}-base"
+FILES:initramfs-module-aosoverlay = "/init.d/97-aosoverlay"
+RRECOMMENDS:initramfs-module-aosoverlay = " \
+    kernel-module-loop \
+    kernel-module-overlay \
+    kernel-module-squashfs \
 "
 
 SUMMARY:initramfs-module-kmsglog = "redirect log messages to kmsg"
@@ -53,6 +65,9 @@ RDEPENDS:initramfs-module-vardir = "${PN}-base"
 FILES:initramfs-module-vardir = "/init.d/02-vardir"
 
 do_install:append() {
+    # aosoverlay
+    install -m 0755 ${WORKDIR}/aosoverlay ${D}/init.d/97-aosoverlay
+
     # aosupdate
     install -m 0755 ${WORKDIR}/aosupdate ${D}/init.d/95-aosupdate
 
