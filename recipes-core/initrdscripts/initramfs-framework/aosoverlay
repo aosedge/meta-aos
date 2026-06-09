@@ -1,10 +1,12 @@
 #!/bin/sh
 
 # This module overlays multiple sources over the rootfs:
-#     aosoverlay.path - specifies a directory containing squashfs image files and
-#                       subdirectories. Each squashfs file is loop-mounted first, then
-#                       all mounted images and subdirectories are stacked over ROOTFS_DIR
-#                       using overlayfs (files take priority over directories).
+#     aosoverlay.path     - specifies a directory containing squashfs image files and
+#                           subdirectories. Each squashfs file is loop-mounted first, then
+#                           all mounted images and subdirectories are stacked over ROOTFS_DIR
+#                           using overlayfs (files take priority over directories).
+#     aosoverlay.upperdir - (optional) upperdir for the overlay mount, making ROOTFS_DIR writable.
+#     aosoverlay.workdir  - (optional) workdir for the overlay mount; required when upperdir is set.
 
 OVERLAY_MOUNT="/mnt/overlay"
 
@@ -24,6 +26,10 @@ aosoverlay_enabled() {
 
 aosoverlay_run() {
     msg "Aos overlay: applying ${bootparam_aosoverlay_path} over rootfs"
+
+    if [ -n "${bootparam_aosoverlay_upperdir}" ] && [ -z "${bootparam_aosoverlay_workdir}" ]; then
+        fatal "Aos overlay: aosoverlay.workdir is required when aosoverlay.upperdir is set"
+    fi
 
     lower_dirs=""
 
@@ -48,10 +54,18 @@ aosoverlay_run() {
     done
 
     if [ -z "$lower_dirs" ]; then
-        fatal "Aos overlay: no squashfs files or directories found in ${bootparam_aosoverlay_path}"
+        msg "Aos overlay: no squashfs files or directories found in ${bootparam_aosoverlay_path}, skipping"
+        return
     fi
 
     msg "Aos overlay: mounting ${lower_dirs} over ${ROOTFS_DIR}"
 
-    mount -t overlay overlay -o lowerdir="${lower_dirs}:${ROOTFS_DIR}" "$ROOTFS_DIR"
+    if [ -n "${bootparam_aosoverlay_upperdir}" ] && [ -n "${bootparam_aosoverlay_workdir}" ]; then
+        mkdir -p "${bootparam_aosoverlay_upperdir}" "${bootparam_aosoverlay_workdir}"
+        mount -t overlay overlay \
+            -o lowerdir="${lower_dirs}:${ROOTFS_DIR}",upperdir="${bootparam_aosoverlay_upperdir}",workdir="${bootparam_aosoverlay_workdir}" \
+            "$ROOTFS_DIR"
+    else
+        mount -t overlay overlay -o lowerdir="${lower_dirs}:${ROOTFS_DIR}" "$ROOTFS_DIR"
+    fi
 }
