@@ -13,12 +13,7 @@ SRC_URI += " \
     file://0001-Remove-protobuf-src-usage.patch \
     file://kuksa-databroker.service \
     file://kuksa-databroker.env \
-    file://CA.pem \
-    file://Client.key \
-    file://Client.pem \
-    file://Server.key \
-    file://Server.pem \
-    file://jwt.key.pub \
+    file://vss_release_5.1.json \
 "
 
 S = "${WORKDIR}/git"
@@ -37,6 +32,7 @@ SYSTEMD_SERVICE:${PN} = "kuksa-databroker.service"
 FILES:${PN} += " \
     ${sysconfdir} \
     ${systemd_system_unitdir} \
+    ${datadir}/vss/vss.json \
 "
 
 require kuksa-databroker-crates.inc
@@ -57,11 +53,12 @@ do_install:append() {
     install -m 0644 ${WORKDIR}/jwt.key.pub ${D}${sysconfdir}/kuksa-val
     install -m 0644 ${WORKDIR}/Client.key ${D}${sysconfdir}/kuksa-val
     install -m 0644 ${WORKDIR}/Client.pem ${D}${sysconfdir}/kuksa-val
+
+    install -d ${D}${datadir}/vss/
+    install -m 0644 ${WORKDIR}/vss_release_5.1.json ${D}${datadir}/vss/vss.json
 }
 
 # The upstream Cargo.toml builds optimized and stripped binaries, for
 # now disable the QA check as opposed to tweaking the configuration.
 INSANE_SKIP:${PN} = "already-stripped"
 INSANE_SKIP:${PN}-cli = "already-stripped"
-
-RDEPENDS:${PN} += "vss"
