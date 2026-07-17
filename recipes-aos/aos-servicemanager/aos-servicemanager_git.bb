@@ -3,8 +3,8 @@ DESCRIPTION = "AOS Service Manager"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=86d3f3a95c324c9479bd8986968f4327"
 
-BRANCH = "main"
-SRCREV = "9eecb80c4994937b5c8cbe0464970f81e8ad4c2d"
+BRANCH = "develop"
+SRCREV = "0f12724a328ca5ba70598e9dcdea2c223e5f955e"
 
 SRC_URI = "git://github.com/aosedge/aos_core_cpp.git;protocol=https;branch=${BRANCH}"
 
