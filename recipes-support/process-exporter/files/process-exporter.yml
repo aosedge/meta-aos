@@ -1,0 +1,28 @@
+# Config for process-exporter (github.com/ncabatoff/process-exporter), consumed via
+# -config.path. Groups matched processes into named metric series - one group per AosCore
+# component.
+#
+# App instances are NOT covered here: they run as crun containers, whose workload process cmdline
+# carries no instance ID (confirmed on a real target - a "load-test" instance's process cmdline is
+# just "/load-test"), so no process-exporter cmdline regex can identify them. Their CPU/memory are
+# collected separately by cgroup_exporter.py (see scrape.yml), which reads their cgroup
+# accounting files directly.
+#
+# Deploy this same file unchanged to every node - main (CM/SM/IAM) and secondary (SM/IAM only): a
+# group with no matching process (e.g. "component:cm" on a secondary node, which never runs
+# aos_cm_app) simply produces no series for that group, so there's nothing node-specific to edit
+# here. See promscrape.yml for how each node's process-exporter gets tagged with a "node" label so
+# Grafana can tell them apart.
+
+process_names:
+  - name: "component:cm"
+    exe:
+      - aos_cm_app
+
+  - name: "component:sm"
+    exe:
+      - aos_sm_app
+
+  - name: "component:iam"
+    exe:
+      - aos_iam_app
