@@ -5,6 +5,7 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/Apache-2.0;md5=89aea4e17d99a7ca
 
 SRC_URI = " \
     file://provfirewall.sh \
+    file://provfirewall-benchmark.sh \
     file://aos-provfirewall.service \
     file://aos-target.conf \
 "
@@ -32,7 +33,7 @@ RRECOMMENDS:${PN} += " \
 
 do_install() {
     install -d ${D}${aos_opt_dir}
-    install -m 0755 ${S}/provfirewall.sh ${D}${aos_opt_dir}
+    install -m 0755 ${S}/${@bb.utils.contains('DISTRO_FEATURES', 'benchmark', 'provfirewall-benchmark.sh', 'provfirewall.sh', d)} ${D}${aos_opt_dir}/provfirewall.sh
 
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${S}/aos-provfirewall.service ${D}${systemd_system_unitdir}
