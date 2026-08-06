@@ -1,6 +1,6 @@
 DESCRIPTION = "Aos base image"
 
-SUMMARY = "An image which contains AOS components"
+SUMMARY = "An image which contains AosCore components"
 LICENSE = "Apache-2.0"
 
 inherit ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'selinux-image', '', d)}
