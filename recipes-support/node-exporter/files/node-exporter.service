@@ -1,0 +1,26 @@
+[Unit]
+Description=Prometheus Node Exporter
+Documentation=https://github.com/prometheus/node_exporter
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Only the cpu/meminfo collectors are enabled: this is a benchmarking sidecar, so it should cost
+# AosCore's host as little CPU/syscall overhead as possible, and the dashboard only ever charts
+# CPU% and MemTotal/MemAvailable (see aos-benchmark.json) - the ~150 other default collectors
+# (disk, filesystem, network, thermal, entropy, etc.) would be pure overhead. See also scrape.yml's
+# metric_relabel_configs, which further narrows what's actually stored to just the series used.
+# --web.disable-exporter-metrics drops the Go client library's own self-instrumentation
+# (go_*/process_*/promhttp_*), which would otherwise still be computed and served on every scrape
+# regardless of --collector.disable-defaults - same reasoning, one more source of overhead cut.
+ExecStart=/usr/bin/node_exporter \
+    --web.listen-address=0.0.0.0:9100 \
+    --collector.disable-defaults \
+    --collector.cpu \
+    --collector.meminfo \
+    --web.disable-exporter-metrics
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
