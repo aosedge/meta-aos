@@ -101,11 +101,20 @@ IMAGE_INSTALL:append = " \
         selinux-autorelabel \
         auditd \
         ', '', d)} \
+    ${@bb.utils.contains('DISTRO_FEATURES', 'benchmark', ' \
+        node-exporter \
+        process-exporter \
+        cgroup-exporter \
+        event-exporter \
+        ', '', d)} \
 "
 
 IMAGE_INSTALL:append:aos-main-node = " \
     aos-communicationmanager \
     kuksa-databroker \
+    ${@bb.utils.contains('DISTRO_FEATURES', 'benchmark', ' \
+        victoria-metrics \
+        ', '', d)} \
 "
 
 TOOLCHAIN_HOST_TASK:append = " \
