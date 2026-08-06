@@ -1,0 +1,21 @@
+[Unit]
+Description=event-exporter (AosCore benchmarking)
+# victoria-metrics.service only exists on the main node (see aos-image.inc); this ordering is a
+# no-op on secondary nodes, where events are pushed to the main node over the network instead.
+After=network.target victoria-metrics.service
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/default/event-exporter
+# UNIT_ARGS is deliberately unbraced ($UNIT_ARGS, not ${UNIT_ARGS}): per systemd.service(5),
+# ${FOO} always expands to exactly one argument regardless of embedded whitespace, while $FOO gets
+# word-split - UNIT_ARGS holds multiple "--unit X" pairs and needs that splitting to work at all.
+ExecStart=/usr/bin/python3 /usr/libexec/event-exporter/event_exporter.py \
+    --victoria-url ${VICTORIA_URL} \
+    --config /etc/event-exporter/patterns.yml \
+    --node ${NODE} \
+    $UNIT_ARGS
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
