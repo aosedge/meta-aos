@@ -1,0 +1,11 @@
+# Checkpoint regexes for event_exporter.py, consumed via --config. Each journald log line is
+# tried against these patterns in order; the first capture group of the first pattern that matches
+# becomes the "event" label pushed to VictoriaMetrics. A line that matches no pattern is ignored.
+#
+# The default pattern below matches AosCore's own "[profiling] <text>" checkpoint lines (e.g.
+# "[profiling] Start instance begin"), but nothing about event_exporter.py is AosCore-specific -
+# add more patterns here to also capture checkpoints from other services' own log conventions.
+
+patterns:
+  - '\[profiling\]\s*(.*)'
+  - '^((?:Starting|Started|Stopping|Stopped) AosCore.*)'
