@@ -1,0 +1,84 @@
+# Scrape config for the main node's VictoriaMetrics instance (see victoriametrics.service),
+# consumed via -promscrape.config, which accepts the same format as a Prometheus scrape_configs
+# file.
+#
+# The unit is multiple nodes: main (CM/SM/IAM) plus a few secondary nodes (SM/IAM only). Every
+# node runs its own node_exporter and process-exporter (see node_exporter.service and
+# process_exporter.service), but only the main node runs VictoriaMetrics - it scrapes its own
+# exporters over localhost (static, always present) and every secondary node's exporters via
+# file_sd_configs, tagging each target with a "node" label so Grafana can offer a dropdown to
+# switch between nodes (see grafana/dashboards/aos-benchmark.json's $node variable).
+#
+# Secondary nodes are discovered from targets/secondary-{node,process,cgroup}-exporter.json
+# (installed at /etc/victoria-metrics/targets/ - see victoria-metrics.service). VictoriaMetrics
+# re-reads those files on its own (-promscrape.fileSDCheckInterval, no restart or SIGHUP needed),
+# so adding/removing a secondary node is just editing that JSON and waiting for the next check -
+# nothing here or in victoria-metrics.service needs to change.
+#
+# Key metrics:
+#   - node_exporter: node_cpu_seconds_total (counter, per mode - idle/user/system/etc, use rate()
+#     for a CPU% the way the dashboard does), node_memory_MemTotal_bytes / MemAvailable_bytes.
+#   - process-exporter: namedprocess_namegroup_cpu_seconds_total (counter - use rate()), there's no
+#     pre-computed percent gauge like the old sample_resources.sh produced),
+#     namedprocess_namegroup_memory_bytes{memtype="proportionalResident"} (PSS - shared pages counted
+#     fractionally, matching "smem"'s PSS from the manual pidstat/smem approach above; memtype
+#     "resident" is also available if plain RSS is wanted instead). Component processes only - see
+#     process-exporter.yml for why app instances aren't covered here.
+#   - cgroup-exporter (scripts/monitoring/cgroup_exporter.py in aos_core_cpp): per-instance
+#     CPU/memory that process-exporter can't provide - aos_instance_cpu_usage_seconds_total
+#     (counter - use rate()), aos_instance_memory_bytes (gauge), both labeled by instance.
+#
+# User-service benchmark containers (network, disk I/O, etc. - see doc/benchmark.md) can push
+# their own results directly into VictoriaMetrics via its /api/v1/import/prometheus endpoint on
+# localhost:8428 on the main node, independent of this scrape config.
+
+global:
+  scrape_interval: 1s
+
+scrape_configs:
+  - job_name: node-exporter
+    static_configs:
+      - targets: ["localhost:9100"]
+        labels:
+          node: main
+
+    file_sd_configs:
+      - files: ["/etc/victoria-metrics/targets/secondary-node-exporter.json"]
+
+    # Belt-and-suspenders on top of node-exporter.service's --collector.disable-defaults: keep
+    # only the CPU/memory series the dashboard actually uses, so nothing else gets stored even if
+    # a future collector flag change re-widens what node_exporter exposes.
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: "node_cpu_seconds_total|node_memory_MemTotal_bytes|node_memory_MemAvailable_bytes"
+        action: keep
+
+  - job_name: process-exporter
+    static_configs:
+      - targets: ["localhost:9256"]
+        labels:
+          node: main
+
+    file_sd_configs:
+      - files: ["/etc/victoria-metrics/targets/secondary-process-exporter.json"]
+
+    # Belt-and-suspenders on top of process-exporter.service's -threads=false: keep only the
+    # CPU/memory series the dashboard actually uses (see scrape.yml's node-exporter job above for
+    # the same reasoning).
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: "namedprocess_namegroup_cpu_seconds_total|namedprocess_namegroup_memory_bytes"
+        action: keep
+
+  - job_name: cgroup-exporter
+    # cgroup-exporter sets its own "instance" label to the AosCore instance ID; without
+    # honor_labels, Prometheus/VictoriaMetrics scraping would overwrite that with the scrape
+    # target's address (renaming it to "exported_instance" instead) - confirmed on a real target.
+    honor_labels: true
+    static_configs:
+      - targets: ["localhost:9400"]
+        labels:
+          node: main
+
+    file_sd_configs:
+      - files: ["/etc/victoria-metrics/targets/secondary-cgroup-exporter.json"]
