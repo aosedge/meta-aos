@@ -1,0 +1,13 @@
+# Per-node configuration for event-exporter.service, generated at build time by event-exporter.bb's
+# do_install - unlike node-exporter/process-exporter/cgroup-exporter, this can't be one identical
+# config deployed to every node (see event_exporter.py's docstring), so nothing here needs manual
+# editing after deployment, unlike a hand-maintained /etc/default file normally would:
+#   - VICTORIA_URL/NODE come from AOS_MAIN_NODE_HOSTNAME/AOS_NODE_HOSTNAME, the same variables
+#     aos-communicationmanager/aos-servicemanager/aos-iamanager already use to resolve the main
+#     node and this node's own identity.
+#   - UNIT_ARGS comes from event-exporter.bb's UNIT_ARGS variable, which is overridden per the
+#     :aos-main-node/:aos-secondary-node OVERRIDES layer.conf sets from AOS_MAIN_NODE.
+
+VICTORIA_URL=@VICTORIA_URL@
+NODE=@NODE@
+UNIT_ARGS=@UNIT_ARGS@
