@@ -1,0 +1,244 @@
+{
+  "uid": "aos-benchmark",
+  "title": "AosCore Benchmark",
+  "tags": ["aoscore", "benchmark"],
+  "timezone": "browser",
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "schemaVersion": 39,
+  "version": 1,
+  "templating": {
+    "list": [
+      {
+        "name": "node",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+        "query": { "query": "label_values(up, node)", "refId": "node" },
+        "refresh": 2,
+        "includeAll": false,
+        "multi": false,
+        "current": { "text": "main", "value": "main" }
+      }
+    ]
+  },
+  "annotations": {
+    "list": [
+      {
+        "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+        "enable": true,
+        "iconColor": "red",
+        "name": "aos-event",
+        "target": {
+          "expr": "checkpoint_event{node=\"$node\"}",
+          "interval": "1s",
+          "refId": "Anno"
+        },
+        "titleFormat": "{{event}}",
+        "textFormat": "{{source}} @ {{time_us}}",
+        "tagKeys": "source"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 5,
+      "title": "Node CPU % (whole host) - node: $node",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "fieldConfig": { "defaults": { "unit": "percent", "max": 100, "min": 0 }, "overrides": [] },
+      "options": { "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "expr": "100 - (avg(rate(node_cpu_seconds_total{node=\"$node\", mode=\"idle\"}[1m])) * 100)",
+          "legendFormat": "$node",
+          "interval": "1s",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Node memory used % (whole host) - node: $node",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "fieldConfig": { "defaults": { "unit": "percent", "max": 100, "min": 0 }, "overrides": [] },
+      "options": { "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "expr": "(1 - node_memory_MemAvailable_bytes{node=\"$node\"} / node_memory_MemTotal_bytes{node=\"$node\"}) * 100",
+          "legendFormat": "$node",
+          "interval": "1s",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "title": "CPU % - components (CM/SM/IAM) - node: $node",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "fieldConfig": { "defaults": { "unit": "percent" }, "overrides": [] },
+      "options": { "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "expr": "label_replace(sum by (groupname) (rate(namedprocess_namegroup_cpu_seconds_total{node=\"$node\", groupname=~\"component:.*\"}[1m])) * 100, \"component\", \"$1\", \"groupname\", \"component:(.*)\")",
+          "legendFormat": "{{component}}",
+          "interval": "1s",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "CPU % - AosCore instances - node: $node",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "fieldConfig": { "defaults": { "unit": "percent" }, "overrides": [] },
+      "options": { "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "expr": "rate(aos_instance_cpu_usage_seconds_total{node=\"$node\"}[1m]) * 100",
+          "legendFormat": "{{instance}}",
+          "interval": "1s",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Memory (PSS) - components (CM/SM/IAM) - node: $node",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] },
+      "options": { "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "expr": "label_replace(namedprocess_namegroup_memory_bytes{node=\"$node\", groupname=~\"component:.*\", memtype=\"proportionalResident\"}, \"component\", \"$1\", \"groupname\", \"component:(.*)\")",
+          "legendFormat": "{{component}}",
+          "interval": "1s",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Memory - AosCore instances - node: $node",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] },
+      "options": { "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "expr": "aos_instance_memory_bytes{node=\"$node\"}",
+          "legendFormat": "{{instance}}",
+          "interval": "1s",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Events - node: $node",
+      "type": "table",
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 24 },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Timestamp" },
+            "properties": [{ "id": "custom.align", "value": "left" }]
+          }
+        ]
+      },
+      "options": {
+        "sortBy": [{ "displayName": "Timestamp", "desc": false }]
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "expr": "checkpoint_event{node=\"$node\"}",
+          "format": "table",
+          "instant": false,
+          "interval": "1s",
+          "refId": "A"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [{ "field": "time_us", "desc": false }]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true, "Value": true, "__name__": true, "node": true },
+            "indexByName": { "time_us": 0, "source": 1, "event": 2 },
+            "renameByName": { "time_us": "Timestamp", "event": "Event", "source": "Source" }
+          }
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Benchmark Results - node: $node",
+      "type": "table",
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 32 },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Timestamp" },
+            "properties": [{ "id": "custom.align", "value": "left" }]
+          }
+        ]
+      },
+      "options": {
+        "sortBy": [{ "displayName": "Timestamp", "desc": false }]
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "expr": "benchmark_result{node=\"$node\"}",
+          "format": "table",
+          "instant": false,
+          "interval": "1s",
+          "refId": "A"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [{ "field": "time_us", "desc": false }]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true, "__name__": true, "node": true },
+            "indexByName": { "time_us": 0, "source": 1, "name": 2, "Value": 3 },
+            "renameByName": { "time_us": "Timestamp", "source": "Source", "name": "Name" }
+          }
+        }
+      ]
+    }
+  ]
+}

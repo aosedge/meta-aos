@@ -1,0 +1,36 @@
+# Off-target Grafana for the AosCore CPU/MEM + operation-event benchmarking dashboard (see
+# ../../doc/benchmark.md for the architecture this visualizes).
+#
+# VictoriaMetrics runs only on the main node (see recipes-support/victoria-metrics), scraping
+# every node's exporters - not here - so all scraping and pushed results (event-exporter,
+# benchmark deployable items) stay on the unit's own network with no NAT/reachability concerns.
+# Grafana is the only bench-host piece, since it's just the dashboard UI, not a place metrics need
+# to be stored.
+#
+# The data source (provisioning/) and dashboard (dashboards/) are provisioned from files, so
+# `docker compose up` gives anyone the same pre-wired Grafana - no manual "Add data source" /
+# "Import dashboard" steps, and both are checked into the repo so they can be shared and
+# version-controlled.
+#
+# Usage:
+#   docker compose -f docker/grafana/docker-compose.yml up -d
+#
+# Then open Grafana at http://localhost:3000 (default admin/admin) and open the pre-provisioned
+# "AosCore Benchmark" dashboard - the VictoriaMetrics data source and dashboard panels are already
+# wired up, including a "node" dropdown at the top to switch which node's data is shown. If the
+# main node isn't reachable at the address baked into
+# provisioning/datasources/victoriametrics.yml, edit that file directly rather than changing it in
+# the UI (UI edits to a provisioned data source don't persist across container restarts).
+
+services:
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    volumes:
+      - ./provisioning:/etc/grafana/provisioning
+      - ./dashboards:/etc/grafana/provisioning/dashboards/json
