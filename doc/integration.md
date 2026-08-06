@@ -12,8 +12,8 @@ nf_conntrack, nf_nat, nft_ct, nft_nat, nft_chain_nat, nft_masq, sch_tbf, sch_ing
 
 ## Main components integration
 
-The custom build should satisfy the above requirements in order to integrate main Aos components. The requirements can
-be configured or implemented in different ways. The following steps shows one of possible way how to configure the
+The custom build should satisfy the above requirements in order to integrate main AosCore components. The requirements
+can be configured or implemented in different ways. The following steps shows one of possible way how to configure the
 custom build to have Aos main components integrated.
 
 Required meta layers should be added to `bblayers.conf` file. The basic meta layers configuration should look like:
@@ -77,7 +77,7 @@ Aos main components should be added into the target image by appending `IMAGE_IN
 IMAGE_INSTALL:append = " aos-iamanager aos-provfirewall aos-communicationmanager aos-servicemanager"
 ```
 
-`aos-iamanager`, `aos-communicationmanager`, `aos-servicemanager` are core Aos components.
+`aos-iamanager`, `aos-communicationmanager`, `aos-servicemanager` are core AosCore components.
 It also required `umController` section to be removed from `aos-communicationmanager` config as
 well as `um` storage to be removed from `aos-iamanager` config. `aos-provfirewall` is helper service that closes
 provisioning ports after provisioning for security reason.
@@ -88,7 +88,7 @@ Edge.
 
 ## Using secure keys and certificates modules
 
-Keys and certificates are used to create secure connection between Aos components as well as perform secure services and
+Keys and certificates are used to create secure connection between AosCore components as well as perform secure services and
 firmware OTA updates. These keys and certificates are created by `aos-iamanager` during provisioning procedure.
 By default, these items are stored in raw format on the file system. It is done for example only and not recommended for
 production usage.
@@ -185,7 +185,7 @@ Please see  moulin documentation [moulin][moulin] for getting information about 
 In the case of the usage of the moulin, part of the previously described steps should be put into the YAML file as shown
 below. Pay attention, part of the changes should be implemented inside Yocto's recipes.
 
-Example of the YAML file with options required to integrate AOS components into the custom build (`bsp_name`):
+Example of the YAML file with options required to integrate AosCore components into the custom build (`bsp_name`):
 
 ```yaml
 variables:
