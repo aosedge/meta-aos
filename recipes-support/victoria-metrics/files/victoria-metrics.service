@@ -1,0 +1,22 @@
+[Unit]
+Description=VictoriaMetrics time series database
+Documentation=https://docs.victoriametrics.com/
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/victoria-metrics \
+    -promscrape.config=/etc/victoria-metrics/scrape.yml \
+    -storageDataPath=/var/lib/victoria-metrics \
+    -promscrape.configCheckInterval=10s \
+    -promscrape.fileSDCheckInterval=10s \
+    -httpListenAddr=0.0.0.0:8428 \
+    -retentionPeriod=1d \
+    -search.setLookbackToStep
+LimitNOFILE=65536
+LimitNPROC=32000
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
