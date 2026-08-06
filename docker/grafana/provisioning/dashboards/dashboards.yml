@@ -1,0 +1,16 @@
+# Tells Grafana to load dashboard JSON from a mounted folder on startup instead of requiring a
+# manual import - see docker-compose.yml for how this directory and ../../dashboards get mounted
+# into the grafana container.
+
+apiVersion: 1
+
+providers:
+  - name: aos-benchmark
+    orgId: 1
+    folder: ""
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/json

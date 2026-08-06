@@ -1,0 +1,29 @@
+# Auto-registers the on-target VictoriaMetrics instance as a Grafana data source on startup, so
+# nobody has to click through "Add data source" by hand - see docker-compose.yml for how this
+# directory gets mounted into the grafana container.
+#
+# VictoriaMetrics speaks the Prometheus HTTP API, so the built-in "prometheus" type works as-is;
+# switch to the "victoriametrics-metrics-datasource" plugin type instead if you need MetricsQL-only
+# functions later.
+#
+# url is a placeholder - point it at the main node's real address (or host.docker.internal:8428,
+# which resolves via docker-compose.yml's extra_hosts entry, if reaching it needs an SSH tunnel
+# forwarded to this host instead of a direct connection).
+#
+# jsonData.timeInterval tells Grafana the datasource's real scrape interval (matches scrape.yml's
+# global.scrape_interval: 1s) - without it, Grafana's Prometheus-compatible query editor defaults
+# every panel's query step to a 15s floor (its historical default), so graphs only show a point
+# every 15s even though VictoriaMetrics actually has 1s-resolution data.
+
+apiVersion: 1
+
+datasources:
+  - name: VictoriaMetrics
+    uid: victoriametrics
+    type: prometheus
+    access: proxy
+    url: http://<main-node-address>:8428
+    isDefault: true
+    editable: false
+    jsonData:
+      timeInterval: "1s"
