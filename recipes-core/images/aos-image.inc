@@ -106,6 +106,7 @@ IMAGE_INSTALL:append = " \
         process-exporter \
         cgroup-exporter \
         event-exporter \
+        benchmark-target \
         ', '', d)} \
 "
 

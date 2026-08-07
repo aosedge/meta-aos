@@ -1,0 +1,7 @@
+[Unit]
+Description=AosCore benchmarking sidecar services
+Wants=@BENCHMARK_SERVICES@
+After=@BENCHMARK_SERVICES@
+
+[Install]
+WantedBy=multi-user.target
