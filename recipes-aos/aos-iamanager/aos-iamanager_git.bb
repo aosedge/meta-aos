@@ -17,6 +17,7 @@ SRC_URI += " \
     file://aos-iam-prov.service \
     file://aos-target.conf \
     file://aos-dirs-service.conf \
+    file://aos-iam-benchmark.conf \
 "
 
 DEPENDS += "poco systemd grpc grpc-native protobuf-native protobuf openssl curl"
@@ -121,6 +122,12 @@ do_install:append() {
 
     install -d ${D}${sysconfdir}/systemd/system/aos.target.d
     install -m 0644 ${WORKDIR}/aos-target.conf ${D}${sysconfdir}/systemd/system/aos.target.d/${PN}.conf
+
+    if ${@bb.utils.contains('DISTRO_FEATURES', 'benchmark', 'true', 'false', d)}; then
+        install -d ${D}${sysconfdir}/systemd/system/aos-iam.service.d
+        install -m 0644 ${WORKDIR}/aos-iam-benchmark.conf \
+            ${D}${sysconfdir}/systemd/system/aos-iam.service.d/20-benchmark.conf
+    fi
 
     install -d ${D}${MIGRATION_SCRIPTS_PATH}
     source_migration_path="/src/iam/database/migration"
