@@ -10,11 +10,6 @@ AOS_INITRAMFS_SCRIPTS ?= " \
     initramfs-module-vardir \
 "
 
-RRECOMMENDS:${PN} = " \
-    kernel-module-overlay \
-    kernel-module-squashfs \
-"
-
 # Don't allow the initramfs to contain a kernel
 PACKAGE_EXCLUDE = "kernel-image-*"
 

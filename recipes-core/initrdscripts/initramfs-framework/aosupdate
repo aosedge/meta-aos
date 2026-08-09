@@ -2,7 +2,7 @@
 
 # This module requires the following boot parameters:
 #     aosupdate.device         - specifies device where update artifacts are stored;
-#     aosupdate.path           - specifies path whre update artifacts are stored;
+#     aosupdate.path           - specifies path where update artifacts are stored;
 #     aosupdate.selinux_module - specifies SELinux module.
 
 # consts
