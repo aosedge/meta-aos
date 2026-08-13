@@ -62,7 +62,7 @@ addtask create_shared_links after do_image_qa do_image_wic before do_image_compl
 
 # Create RW partitions
 
-AOS_VAR_PART_SIZE ?= "524288"
+AOS_VAR_PART_SIZE ?= "2097152"
 AOS_HOME_PART_SIZE ?= ""
 
 mk_dir_fs() {
