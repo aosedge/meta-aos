@@ -107,6 +107,9 @@ IMAGE_INSTALL:append = " \
         cgroup-exporter \
         event-exporter \
         benchmark-target \
+        iperf3 \
+        fio \
+        sockperf \
         ', '', d)} \
 "
 
