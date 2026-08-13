@@ -49,6 +49,7 @@ FILES:${PN} += " \
 
 RDEPENDS:${PN} += " \
     aos-provfinish \
+    aos-target \
 "
 
 S = "${WORKDIR}/git"
