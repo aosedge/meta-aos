@@ -7,7 +7,8 @@ PartOf=aos.target
 
 [Service]
 Type=notify
-ExecStart=/usr/bin/aos_mp_app -c /etc/aos/mp.cfg -provisioning -v debug -j
+EnvironmentFile=/etc/default/aoscore.env
+ExecStart=/usr/bin/aos_mp_app -c /etc/aos/mp.cfg -provisioning -v ${AOS_LOG_LEVEL} -j
 Restart=always
 RestartSec=10
 

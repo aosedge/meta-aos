@@ -48,6 +48,7 @@ PACKAGECONFIG[openssl] = "-DWITH_OPENSSL=ON,-DWITH_OPENSSL=OFF,openssl,"
 PACKAGECONFIG[mbedtls] = "-DWITH_MBEDTLS=ON,-DWITH_MBEDTLS=OFF,,"
 
 RDEPENDS:${PN} += " \
+    aos-target \
     nfs-exports \
 "
 

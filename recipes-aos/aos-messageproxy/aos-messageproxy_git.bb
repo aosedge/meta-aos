@@ -42,6 +42,10 @@ FILES:${PN} += " \
     ${sysconfdir} \
 "
 
+RDEPENDS:${PN} += " \
+    aos-target \
+"
+
 do_compile[network] = "1"
 do_configure[network] =  "1"
 

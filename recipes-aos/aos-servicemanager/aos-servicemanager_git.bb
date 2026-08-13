@@ -56,6 +56,7 @@ RDEPENDS:${PN} += " \
     nftables \
     dnsmasq \
     crun \
+    aos-target \
 "
 
 RDEPENDS:${PN}:append:aos-secondary-node = " \
