@@ -7,7 +7,8 @@ PartOf=aos.target
 
 [Service]
 Type=notify
-ExecStart=/usr/bin/aos_iam_app -c /etc/aos/iam.cfg -v debug -j
+EnvironmentFile=/etc/default/aoscore.env
+ExecStart=/usr/bin/aos_iam_app -c /etc/aos/iam.cfg -v ${AOS_LOG_LEVEL} -j
 Restart=always
 RestartSec=10
 KillMode=process
