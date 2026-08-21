@@ -98,7 +98,7 @@ Checkpoints used to measure each metric, from the `checkpoint_event` samples pus
 
 | Metric   | Start source   | Start event                  | End source               | End event                   |
 |----------|----------------|------------------------------|--------------------------|-----------------------------|
-| Total    | aos-cm.service | Process desired status       | Last Instance: `${UUID}` | Start                       |
+| Total    | aos-cm.service | Process desired status       | Instance: `${UUID}`      | Start                       |
 | Download | aos-cm.service | Download update items start  | aos-cm.service           | Download update items end   |
 | Install  | aos-sm.service | Install items begin          | aos-sm.service           | Install items end           |
 | Prepare  | aos-sm.service | Prepare instances begin      | aos-sm.service           | Prepare instances end       |
@@ -107,14 +107,18 @@ Checkpoints used to measure each metric, from the `checkpoint_event` samples pus
 
 "Source" is the value of the `source` label on the `checkpoint_event` sample, and "event" is the value of its
 `event` label - usually the AosCore component that pushed it (`aos-cm.service`, `aos-sm.service`), except for
-AosCore's own per-instance start/stop checkpoints, whose `source` is the instance instead (`Last Instance:
-${UUID}`). This applies to every checkpoint table in this document. Each metric is the End timestamp minus the
-Start timestamp of the samples matching its row, e.g.:
+the per-instance checkpoints, which the benchmark deployable item pushes itself: it reads its own
+`AOS_INSTANCE_ID` and sends the sample to VictoriaMetrics with `source` set to the instance instead
+(`Instance: ${UUID}`). This applies to every checkpoint table in this document. Each metric is the End
+timestamp minus the Start timestamp of the samples matching its row, e.g.:
 
 ```text
-Total = timestamp(source="Last Instance: ${UUID}", event="Start")
+Total = max_over_instances(timestamp(source="Instance: ${UUID}", event="Start"))
       - timestamp(source="aos-cm.service", event="Process desired status")
 ```
+
+`Total` ends when the last instance has started, so with more than one instance its End timestamp is the
+maximum `Start` timestamp over all `Instance: ${UUID}` checkpoints of that run.
 
 Prerequisites:
 
