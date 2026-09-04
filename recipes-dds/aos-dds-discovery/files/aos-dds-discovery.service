@@ -1,0 +1,31 @@
+[Unit]
+Description=Fast DDS discovery server
+Documentation=https://fast-dds.docs.eprosima.com/en/latest/fastddscli/cli/cli.html
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+
+# Overridable without rebuilding the image.
+Environment=DS_SERVER_ID=0
+Environment=DS_ADDRESS=0.0.0.0
+Environment=DS_PORT=11811
+EnvironmentFile=-@SYSCONFDIR@/default/aos-dds-discovery
+
+# The first argument is the command index the fastdds CLI passes to this
+# binary; 42 selects the server itself (Command.SERVER in tools/fastdds). The
+# CLI is not used here because it additionally needs python3-psutil and only
+# forwards to this same binary.
+#
+# A fixed server id gives participants a well known GUID prefix to point their
+# discovery configuration at: with id 0 it is 44.53.00.5f.45.50.52.4f.53.49.4d.41.
+# Listening on any address lets services reach the server from their own
+# network segment.
+ExecStart=@BINDIR@/fast-discovery-server 42 -i $DS_SERVER_ID -l $DS_ADDRESS -p $DS_PORT
+
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

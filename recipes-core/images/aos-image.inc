@@ -120,6 +120,11 @@ IMAGE_INSTALL:append:aos-main-node = " \
     ${@bb.utils.contains('DISTRO_FEATURES', 'benchmark', ' \
         victoria-metrics \
         ', '', d)} \
+    ${@bb.utils.contains('DISTRO_FEATURES', 'fastdds', ' \
+        fastdds \
+        fastdds-tools \
+        aos-dds-discovery \
+        ', '', d)} \
 "
 
 TOOLCHAIN_HOST_TASK:append = " \
