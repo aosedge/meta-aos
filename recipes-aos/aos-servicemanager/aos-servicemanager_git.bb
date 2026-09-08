@@ -144,6 +144,9 @@ do_install:append() {
 }
 
 do_install:append:aos-main-node() {
+    sed -i 's/var-aos-workdirs.mount/var-aos-workdirs-sm.mount/g' \
+        ${D}${sysconfdir}/systemd/system/aos-sm.service.d/20-aos-dirs-service.conf
+
     install -d ${D}${sysconfdir}/systemd/system/aos-sm.service.d
     install -m 0644 ${WORKDIR}/aos-cm-service.conf ${D}${sysconfdir}/systemd/system/aos-sm.service.d/10-aos-cm-service.conf
 }

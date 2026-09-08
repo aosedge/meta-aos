@@ -7,13 +7,19 @@ do_install:append() {
 
     # add Aos partitions
     echo "# Aos partitions">> ${D}${sysconfdir}/fstab
-    echo '/dev/aosvg/workdirs /var/aos/workdirs ext4 defaults,auto,nofail,noatime,'\
-'x-systemd.device-timeout=${aos_disks_timeout}'\
-${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ',context=system_u:object_r:aos_var_run_t:s0', '', d)} '0 0' \
-   >> ${D}/${sysconfdir}/fstab
 }
 
 do_install:append:aos-main-node() {
+    echo '/dev/aosvg/cm /var/aos/workdirs/cm ext4 defaults,auto,nofail,noatime,'\
+'x-systemd.device-timeout=${aos_disks_timeout}'\
+${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ',context=system_u:object_r:aos_var_run_t:s0', '', d)} '0 0' \
+   >> ${D}/${sysconfdir}/fstab
+
+    echo '/dev/aosvg/sm /var/aos/workdirs/sm ext4 defaults,auto,nofail,noatime,'\
+'x-systemd.device-timeout=${aos_disks_timeout}'\
+${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ',context=system_u:object_r:aos_var_run_t:s0', '', d)} '0 0' \
+   >> ${D}/${sysconfdir}/fstab
+
     # add Aos partitions
    echo '/dev/aosvg/downloads /var/aos/downloads ext4 defaults,auto,nofail,'\
 'noatime,x-systemd.device-timeout=${aos_disks_timeout}'\
@@ -32,6 +38,11 @@ ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ',context=system_u:object_r:a
 }
 
 do_install:append:aos-secondary-node() {
+    echo '/dev/aosvg/workdirs /var/aos/workdirs ext4 defaults,auto,nofail,noatime,'\
+'x-systemd.device-timeout=${aos_disks_timeout}'\
+${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ',context=system_u:object_r:aos_var_run_t:s0', '', d)} '0 0' \
+   >> ${D}/${sysconfdir}/fstab
+
     # add Aos partitions
    echo '${AOS_MAIN_NODE_HOSTNAME}:/storages /var/aos/storages nfs4 defaults,auto,nofail,noatime,'\
 'retrans=0,timeo=100,x-systemd.device-timeout=90'\
