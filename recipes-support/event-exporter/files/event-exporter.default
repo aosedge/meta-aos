@@ -7,7 +7,10 @@
 #     node and this node's own identity.
 #   - UNIT_ARGS comes from event-exporter.bb's UNIT_ARGS variable, which is overridden per the
 #     :aos-main-node/:aos-secondary-node OVERRIDES layer.conf sets from AOS_MAIN_NODE.
+#   - REPORT_TIMING_ARGS comes from event-exporter.bb's REPORT_TIMING_ARGS variable, "--report-timing"
+#     on the main node only (test-suite timing resolution must run exactly once) and empty elsewhere.
 
 VICTORIA_URL=@VICTORIA_URL@
 NODE=@NODE@
 UNIT_ARGS=@UNIT_ARGS@
+REPORT_TIMING_ARGS=@REPORT_TIMING_ARGS@
