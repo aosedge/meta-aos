@@ -7,14 +7,14 @@ domain, so they have the same access to the system as if \
 SELinux was not enabled. \
 "
 
+require include/aos-core-release.inc
 include recipes-security/refpolicy/refpolicy_common.inc
 
 PV = "2_20220106+git${SRCPV}"
 
-BRANCH = "develop"
-SRCREV = "${AUTOREV}"
+SRCREV = "${AOS_REFPOLICY_SRCREV}"
 
-SRC_URI = "git://github.com/aosedge/refpolicy.git;branch=${BRANCH};protocol=https;name=refpolicy;destsuffix=refpolicy"
+SRC_URI = "git://github.com/aosedge/refpolicy.git;branch=${AOS_REFPOLICY_BRANCH};protocol=https;name=refpolicy;destsuffix=refpolicy"
 
 SRC_URI += " \
     file://customizable_types \
