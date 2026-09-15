@@ -7,14 +7,23 @@ After=network.target victoria-metrics.service
 [Service]
 Type=simple
 EnvironmentFile=/etc/default/event-exporter
-# UNIT_ARGS is deliberately unbraced ($UNIT_ARGS, not ${UNIT_ARGS}): per systemd.service(5),
-# ${FOO} always expands to exactly one argument regardless of embedded whitespace, while $FOO gets
-# word-split - UNIT_ARGS holds multiple "--unit X" pairs and needs that splitting to work at all.
-ExecStart=/usr/bin/python3 /usr/libexec/event-exporter/event_exporter.py \
+# UNIT_ARGS/REPORT_TIMING_ARGS are deliberately unbraced ($UNIT_ARGS, not ${UNIT_ARGS}): per
+# systemd.service(5), ${FOO} always expands to exactly one argument regardless of embedded
+# whitespace, while $FOO gets word-split - UNIT_ARGS holds multiple "--unit X" pairs and
+# REPORT_TIMING_ARGS can be empty, and both need that splitting to work at all.
+#
+# python3 -u: stdout is fully block-buffered (not line-buffered) when it isn't a tty, which is
+# always the case under systemd - without this, report_timing_loop()'s print()s (the whole reason
+# --report-timing exists: seeing suite timing without running a separate script) can sit unflushed
+# in Python's own buffer indefinitely, invisible in `journalctl -u event-exporter` until enough
+# output accumulates to fill it or the process exits. Confirmed empirically: without -u, nothing
+# printed to stdout showed up in the journal at all after several minutes of the service running.
+ExecStart=/usr/bin/python3 -u /usr/libexec/event-exporter/event_exporter.py \
     --victoria-url ${VICTORIA_URL} \
     --config /etc/event-exporter/patterns.yml \
     --node ${NODE} \
-    $UNIT_ARGS
+    $UNIT_ARGS \
+    $REPORT_TIMING_ARGS
 Restart=on-failure
 
 [Install]
