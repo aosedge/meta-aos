@@ -2,23 +2,48 @@
 
 ## Goal
 
-This document records the execution procedure for the AosCore benchmark. The resulting measurements themselves are
-recorded in [Benchmark Results](benchmark_results.md).
+This document records the execution procedure for the AosCore benchmark.
 
-All tests are executed against an instrumented AosCore build. Instrumentation details are specified in
-[meta-aos benchmark instrumentation](benchmark.md).
+* For each benchmark chapter, it specifies the test environment and any deviation from the plan required for that
+  test, so runs are reproducible and comparable across releases.
+* The resulting measurements themselves are recorded in [Benchmark Results](benchmark_results.md).
+* All tests are executed against an instrumented AosCore build. Instrumentation details are specified in
+  [meta-aos benchmark instrumentation](benchmark.md).
+* Test results are collected and analyzed via Grafana dashboards. The dashboard definition is
+  [aos-benchmark.json](../docker/grafana/dashboards/aos-benchmark.json); importing it reproduces every panel
+  referenced below.
+* Every chapter records its full execution steps, regardless of whether they match the benchmark plan. Where
+  execution deviates from the plan (e.g. a different tool, parameter, or execution order), the deviation and its
+  rationale are recorded alongside that chapter's results.
 
-Test results are collected and analyzed via Grafana dashboards.
+## Disclaimer
+
+The following are not covered in this document, as they are generic information and procedures:
+
+* generic explanation of AosEdge features and terminology;
+* how to deploy an image to an AWS EC2 instance;
+* how to deploy benchmark services to the cloud and AosCore.
 
 ## Prerequisites
 
 The following prerequisites apply to every test in this document:
 
-* the unit under test is provisioned and online;
-* the unit is included in the dedicated validation unit set on the cloud;
+* the unit under test is provisioned and online. A single-node VM image is provisioned with
+  `aos-prov provision -u <NODE_IP> --nodes 1`; the default `--nodes 2` makes `aos-prov` wait indefinitely for a
+  second node that does not exist;
+* the unit is included in the dedicated validation unit set on the cloud. The unit set is created manually on the
+  cloud and the unit has to be added to it explicitly: a freshly provisioned unit is placed only in campaign unit
+  sets, and until it is a member of the validation unit set the services attached to the test subject do not reach
+  it - no error is reported, the desired status simply never arrives;
 * the OEM has a dedicated subject used for these tests;
 * the unit's board/SoC and the AosCore version or Git SHA under test are recorded alongside the results in
-  [Benchmark Results](benchmark_results.md), so runs stay comparable across releases.
+  [Benchmark Results](benchmark_results.md), so runs stay comparable across releases;
+* an external host running Ubuntu 24.04 or later, reachable from the unit under test, is available for the
+  "service to external host" scenarios;
+* the SDK toolchain required to build the benchmark deployable items is installed;
+* Grafana is up and running on a Linux host, pointed at the main node under test (see
+  [Running Grafana](benchmark.md#running-grafana)) - the same external host used for the "service to external
+  host" scenarios above can host it.
 
 ## Troubleshooting
 
@@ -70,6 +95,12 @@ that single run's result, not a mean, median, or other statistic across repeated
 discarded; the single run performed is the one reported. Run-to-run variability is therefore not characterized by
 this document.
 
+Service versions must be pre-release (e.g. `1.0.0-beta.1`): the benchmark service configuration sets
+`skipResourceLimits`, which `aos-signer` accepts only for pre-release versions - a plain version such as `1.1.0` is
+rejected. When incrementing, keep the same pre-release label and increase its number (`-beta.1` → `-beta.2`).
+Switching labels can produce a version that sorts lower than the previous one (semver compares pre-release
+identifiers alphanumerically), and the cloud will silently keep offering the older version.
+
 ## Operational Speed
 
 ### Install new deployable items
@@ -79,9 +110,9 @@ Goal: measure the different operational time intervals during deploying new depl
 Deployable item: [timing](https://github.com/aosedge/demo-services/tree/main/benchmark/timing) benchmark service.
 
 Each generated service runs `benchmark-timing`, a C++ binary that pushes a `checkpoint_event` (`event="Start"`)
-sample to VictoriaMetrics on start, surfacing in the same Grafana Events table/annotations as AosCore's own
-instance start/stop checkpoints, and also ships a configurable-size `test.dat` payload so the same batch doubles as
-a deployment-size benchmark. The payload is fixed at 16 MiB per service, so at 1/8/16 services item count and total
+sample to VictoriaMetrics on start - this per-instance checkpoint is emitted by the deployable item, not by
+AosCore, and appears in the same Grafana Events table/annotations as the checkpoints the AosCore components push -
+and also ships a configurable-size `test.dat` payload so the same batch doubles as a deployment-size benchmark. The payload is fixed at 16 MiB per service, so at 1/8/16 services item count and total
 deployment size scale together (16/128/256 MiB); this test does not separate the two, so an observed change cannot
 be attributed to item count or total payload size alone.
 
@@ -98,7 +129,7 @@ Checkpoints used to measure each metric, from the `checkpoint_event` samples pus
 
 | Metric   | Start source   | Start event                  | End source               | End event                   |
 |----------|----------------|------------------------------|--------------------------|-----------------------------|
-| Total    | aos-cm.service | Process desired status       | Last Instance: `${UUID}` | Start                       |
+| Total    | aos-cm.service | Process desired status       | Instance: `${UUID}`      | Start                       |
 | Download | aos-cm.service | Download update items start  | aos-cm.service           | Download update items end   |
 | Install  | aos-sm.service | Install items begin          | aos-sm.service           | Install items end           |
 | Prepare  | aos-sm.service | Prepare instances begin      | aos-sm.service           | Prepare instances end       |
@@ -106,13 +137,13 @@ Checkpoints used to measure each metric, from the `checkpoint_event` samples pus
 | Start    | aos-sm.service | Start instances begin        | aos-sm.service           | Start instances end         |
 
 "Source" is the value of the `source` label on the `checkpoint_event` sample, and "event" is the value of its
-`event` label - usually the AosCore component that pushed it (`aos-cm.service`, `aos-sm.service`), except for
-AosCore's own per-instance start/stop checkpoints, whose `source` is the instance instead (`Last Instance:
-${UUID}`). This applies to every checkpoint table in this document. Each metric is the End timestamp minus the
-Start timestamp of the samples matching its row, e.g.:
+`event` label - usually the AosCore component that pushed it (`aos-cm.service`, `aos-sm.service`), except for the
+per-instance `Start`/`Stop` checkpoints, which are pushed by the benchmark deployable item itself rather than by
+AosCore; their `source` is the instance (`Instance: ${UUID}`). This applies to every checkpoint table in this
+document. Each metric is the End timestamp minus the Start timestamp of the samples matching its row, e.g.:
 
 ```text
-Total = timestamp(source="Last Instance: ${UUID}", event="Start")
+Total = timestamp(source="Instance: ${UUID}", event="Start")
       - timestamp(source="aos-cm.service", event="Process desired status")
 ```
 
@@ -132,7 +163,10 @@ Execution steps:
 1. With no deployable items installed on the unit, capture the idle CPU/RAM used by each AosCore component (CM,
    SM, IAM) from the Grafana dashboard (see "CPU/RAM used by AosCore" below).
 2. Copy each built architecture's output into a numbered service folder carrying a 16 MiB `test.dat` payload, then
-   render `config.yaml` from `config.yaml.in`, using the service's shared `benchmark/scripts` generators:
+   render `config.yaml` from `config.yaml.in`, using the service's shared `benchmark/scripts` generators.
+   `create_services.py` is run from the service's own directory (the one containing `config.yaml.in`) and writes
+   `config.yaml` next to the template; that directory is the one the service is published from. The same applies
+   to every `create_services.py` step below:
 
    ```sh
    ../scripts/copy_images.py --num-services 1 --data-size 16
@@ -401,6 +435,11 @@ Execution steps:
    `create_services.py` each time.
 
 #### Service to unit
+
+With `USE_DHCP=yes` the unit's uplink interface carries two addresses: the static `10.0.0.100/24`, used for the
+unit's own services (VictoriaMetrics, the `main` DNS name, the kuksa resource), and the DHCP-assigned address,
+which holds the default route. `NODE_IP=10.0.0.100` is therefore correct for every "service to unit" scenario on
+both the DHCP and the static deployment; the DHCP address is only needed to reach the unit from outside.
 
 Execution steps:
 
