@@ -1,0 +1,31 @@
+[Unit]
+Description=benchmark-results-publisher (AosCore benchmarking)
+# victoria-metrics.service only exists on the main node (see aos-image.inc) - this recipe is
+# main-node-only too (see benchmark-results-publisher.bb), so this ordering is never a no-op here
+# the way it can be for event-exporter on a secondary node.
+After=network.target victoria-metrics.service
+
+[Service]
+Type=simple
+# Always localhost: this service only ever runs on the main node, colocated with VictoriaMetrics
+# itself (see benchmark-results-publisher.bb).
+#
+# @NODE@ is substituted at build time (see benchmark-results-publisher.bb's do_install) with
+# AOS_NODE_HOSTNAME - the same variable event-exporter.bb uses for its own --node - rather than a
+# literal "main": AOS_NODE_HOSTNAME defaults to "main" on the main node but is overrideable
+# (conf/layer.conf), so a product that overrides it needs this service's own --node (and the
+# checkpoints it queries for a "node: self" metric) to follow, not silently stay "main".
+#
+# python3 -u: stdout is fully block-buffered (not line-buffered) when it isn't a tty, which is
+# always the case under systemd - without this, this script's own status prints can sit unflushed
+# in Python's own buffer indefinitely, invisible in `journalctl -u benchmark-results-publisher`
+# until enough output accumulates to fill it or the process exits (confirmed empirically against
+# event-exporter's own identical issue before this recipe existed).
+ExecStart=/usr/bin/python3 -u /usr/libexec/benchmark-results-publisher/benchmark_results_publisher.py \
+    --victoria-url http://localhost:8428 \
+    --config /etc/benchmark-results-publisher/benchmark-results-publisher.yml \
+    --node @NODE@
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

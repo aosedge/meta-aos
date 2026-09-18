@@ -119,6 +119,7 @@ IMAGE_INSTALL:append:aos-main-node = " \
     kuksa-databroker \
     ${@bb.utils.contains('DISTRO_FEATURES', 'benchmark', ' \
         victoria-metrics \
+        benchmark-results-publisher \
         ', '', d)} \
     ${@bb.utils.contains('DISTRO_FEATURES', 'fastdds', ' \
         fastdds \

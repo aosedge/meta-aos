@@ -1,0 +1,100 @@
+# Config for benchmark_results_publisher.py, consumed via --config. Entirely generic - nothing here
+# is specific to this script; the defaults below describe AosCore's own Operational Speed
+# checkpoints (see doc/benchmark_execution.md), pushed as checkpoint_event samples by event-exporter
+# (from AosCore's own log lines) and by benchmark-timing instances (their own "Instance: <id>" /
+# "Start" sample) directly.
+
+# What marks a new "window" (one AosCore deployment cycle): the *latest* checkpoint_event whose
+# source matches source_pattern (a regex) and event equals "event", across every node - each
+# benchmark-timing instance pushes one such sample when it starts, so the last one across a whole
+# deployment batch marks that batch's own end. settle_seconds (default 2, see
+# benchmark_results_publisher.py's DEFAULT_SETTLE_SECONDS) is how long to keep watching for an
+# even-newer occurrence before locking the current one in, in case more of the same batch is still
+# trickling in - every instance in a batch has landed within milliseconds of each other in every run
+# observed, so this is generous headroom.
+suite_boundary:
+  source_pattern: '^Instance: .*'
+  event: "Start"
+  settle_seconds: 2
+
+# One entry per elapsed-time metric published as a benchmark_result sample - see
+# benchmark_results_publisher.py's Metric for what each key means. Every metric here is scoped to
+# whichever node the window's own boundary (above) came from, except "Total", which sets
+# "node: self" since it's anchored to aos-cm.service - AosCore's Communication Manager, which only
+# ever runs on the main node regardless of which node's own instances/Service Manager activity a
+# given window's other metrics describe.
+metrics:
+  - label: Download
+    start_source: aos-cm.service
+    start_event: "Download update items start"
+    end_source: aos-cm.service
+    end_event: "Download update items end"
+  - label: Install
+    start_source: aos-sm.service
+    start_event: "Install items begin"
+    end_source: aos-sm.service
+    end_event: "Install items end"
+  - label: Prepare
+    start_source: aos-sm.service
+    start_event: "Prepare instances begin"
+    end_source: aos-sm.service
+    end_event: "Prepare instances end"
+  - label: Init SM
+    start_source: init.scope
+    start_event: "Starting AosCore Service Manager..."
+    end_source: aos-sm.service
+    end_event: "Update instances begin"
+    # "Starting AosCore Service Manager..." only fires when SM itself restarts (rare), but "Update
+    # instances begin" fires on every single deployment afterward (frequent) - nearest_end resolves
+    # the end as the *earliest* occurrence at or after the (rare) start, not the plain latest overall
+    # (which could pair a long-ago SM restart with an unrelated, much-later deployment).
+    nearest_end: true
+  - label: Start network
+    start_source: aos-sm.service
+    start_event: "Start networks begin"
+    end_source: aos-sm.service
+    end_event: "Start networks end"
+  - label: Start instances
+    start_source: aos-sm.service
+    start_event: "Start instances begin"
+    end_source: aos-sm.service
+    end_event: "Start instances end"
+    # Also publishes one benchmark_result sample per instance - each instance's own elapsed time
+    # from this same "Start instances begin" to its own "Instance: <id>" / "Start" checkpoint (the
+    # very sample suite_boundary above is defined from).
+    per_instance: true
+  - label: Stop network
+    start_source: aos-sm.service
+    start_event: "Stop all networks begin"
+    end_source: aos-sm.service
+    end_event: "Stop all networks end"
+    # AosCore logs this teardown two ways: "Stop all networks begin/end" when the whole SM process
+    # is shutting down (releasing everything), or just "Stop networks begin/end" (no "all") for a
+    # routine per-update teardown of only the networks actually being replaced - confirmed
+    # empirically, the latter is what happens on every ordinary deployment, the former only on an
+    # actual SM restart/shutdown. The "all" pair is tried first and preferred whenever found; the
+    # fallback (no "all") pair is only used if the "all" pair is never found at all.
+    fallback:
+      start_event: "Stop networks begin"
+      end_event: "Stop networks end"
+  - label: Stop instances
+    start_source: aos-sm.service
+    start_event: "Stop all instances begin"
+    end_source: aos-sm.service
+    end_event: "Stop all instances end"
+    fallback:
+      start_event: "Stop instances begin"
+      end_event: "Stop instances end"
+  - label: Release SM
+    start_source: aos-sm.service
+    start_event: "Stop all networks end"
+    end_source: init.scope
+    end_event: "Stopped AosCore Service Manager."
+  - label: Total
+    start_source: aos-cm.service
+    start_event: "Process desired status"
+    # Ends exactly at the window's own boundary (the last instance's own Start), rather than a
+    # separate checkpoint - "Total" is defined as "how long the whole window took", not the elapsed
+    # time between two checkpoints within it.
+    end_is_suite_boundary: true
+    node: self
