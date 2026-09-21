@@ -103,11 +103,21 @@ systemctl start aos.target
 
 The unit's Podman uses the Netavark backend (aardvark-dns built in). Every compose file in this document attaches
 to one shared network named `benchmark`, which has to be created once on the unit with DNS enabled - the
-built-in `podman` network never has DNS, so containers on it can't resolve each other's service names:
+built-in `podman` network never has DNS, so containers on it can't resolve each other's service names.
+
+Podman keeps a network's configuration under `/etc/containers/networks`, and the unit's rootfs is read-only by default,
+so `podman network create` fails with `read-only file system` until it is remounted read-write. On the unit, remount it
+first (it stays read-write until the unit is rebooted, which the registry setting below relies on too), then create the
+network:
 
 ```bash
-podman network create --disable-dns=false benchmark
+mount -o remount,rw /
+podman network create --disable-dns=false --subnet 10.89.0.0/23 benchmark
 ```
+
+A network created without `--subnet` gets a `/24`, which has room for only 253 containers - too few for the 256
+instances of "Start/stop already installed instances" (`failed to find free IP in range: 10.89.0.1 - 10.89.0.254`).
+The `/23` leaves room for all of them.
 
 Podman's bridges (`podman*`) are allowed through the Aos firewall's default-drop forward chain by the image itself
 when built with the `benchmark` `DISTRO_FEATURES` - without that, containers couldn't reach each other even by IP.
@@ -131,15 +141,9 @@ talk to it, and each needs a different fix:
   `--tls-verify=false` on each one is enough - no host-wide trust needed there.
 * **The unit** deploys every scenario with `podman-compose up`/`start`, which does its own pulling internally and
   has no equivalent flag to pass that pull - every chapter in this document uses compose files, so this isn't a
-  one-off. The unit needs the registry trusted host-wide instead. Its rootfs is read-only by default, so remount
-  it read-write first:
-
-  ```bash
-  mount -o remount,rw /
-  ```
-
-  Then add the registry to the `registries` list under `[registries.insecure]` in
-  `/etc/containers/registries.conf`:
+  one-off. The unit needs the registry trusted host-wide instead. Its rootfs is read-only by default and was
+  remounted read-write for the network above (do it again if the unit was rebooted since), so add the registry to
+  the `registries` list under `[registries.insecure]` in `/etc/containers/registries.conf`:
 
   ```toml
   [registries.insecure]
