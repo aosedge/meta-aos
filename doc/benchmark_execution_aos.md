@@ -1,4 +1,4 @@
-# Benchmark Execution
+# Benchmark Execution (AosCore)
 
 ## Goal
 
@@ -10,7 +10,7 @@ This document records the execution procedure for the AosCore benchmark.
 * All tests are executed against an instrumented AosCore build. Instrumentation details are specified in
   [meta-aos benchmark instrumentation](benchmark.md).
 * Test results are collected and analyzed via Grafana dashboards. The dashboard definition is
-  [aos-benchmark.json](../docker/grafana/dashboards/aos-benchmark.json); importing it reproduces every panel
+  [benchmark.json](../docker/grafana/dashboards/benchmark.json); importing it reproduces every panel
   referenced below.
 * Every chapter records its full execution steps, regardless of whether they match the benchmark plan. Where
   execution deviates from the plan (e.g. a different tool, parameter, or execution order), the deviation and its
@@ -44,6 +44,19 @@ The following prerequisites apply to every test in this document:
 * Grafana is up and running on a Linux host, pointed at the main node under test (see
   [Running Grafana](benchmark.md#running-grafana)) - the same external host used for the "service to external
   host" scenarios above can host it.
+
+The `create_services.py` and `copy_images.py` steps of every chapter take the number of items and the number of
+instances per item as variables: `NUM_SERVICES` is passed as `--num-services` and `NUM_INSTANCES` as
+`--num-instances`. Set them in the console session before the render step, and change them for each tier as the
+chapter's last step says (each chapter uses the ones it needs):
+
+```sh
+export NUM_SERVICES=1
+export NUM_INSTANCES=1
+```
+
+The `-n` of the native `iperf3-servers.sh` and `sockperf-servers.sh` takes the client count, `NUM_INSTANCES`, so set it
+in the session on the unit or the external host that runs them as well.
 
 ## Troubleshooting
 
@@ -112,9 +125,10 @@ Deployable item: [timing](https://github.com/aosedge/demo-services/tree/main/ben
 Each generated service runs `benchmark-timing`, a C++ binary that pushes a `checkpoint_event` (`event="Start"`)
 sample to VictoriaMetrics on start - this per-instance checkpoint is emitted by the deployable item, not by
 AosCore, and appears in the same Grafana Events table/annotations as the checkpoints the AosCore components push -
-and also ships a configurable-size `test.dat` payload so the same batch doubles as a deployment-size benchmark. The payload is fixed at 16 MiB per service, so at 1/8/16 services item count and total
-deployment size scale together (16/128/256 MiB); this test does not separate the two, so an observed change cannot
-be attributed to item count or total payload size alone.
+and also ships a configurable-size `test.dat` payload so the same batch doubles as a deployment-size benchmark. The
+payload is fixed at 16 MiB per service, so at 1/8/16 services item count and total deployment size scale together
+(16/128/256 MiB); this test does not separate the two, so an observed change cannot be attributed to item count or total
+payload size alone.
 
 Metrics:
 
@@ -129,23 +143,25 @@ Checkpoints used to measure each metric, from the `checkpoint_event` samples pus
 
 | Metric   | Start source   | Start event                  | End source               | End event                   |
 |----------|----------------|------------------------------|--------------------------|-----------------------------|
-| Total    | aos-cm.service | Process desired status       | Instance: `${UUID}`      | Start                       |
+| Total    | aos-cm.service | Process desired status       | aos-sm.service           | Start instances end         |
 | Download | aos-cm.service | Download update items start  | aos-cm.service           | Download update items end   |
 | Install  | aos-sm.service | Install items begin          | aos-sm.service           | Install items end           |
 | Prepare  | aos-sm.service | Prepare instances begin      | aos-sm.service           | Prepare instances end       |
 | Network  | aos-sm.service | Start networks begin         | aos-sm.service           | Start networks end          |
-| Start    | aos-sm.service | Start instances begin        | aos-sm.service           | Start instances end         |
+| Start    | aos-sm.service | Start instances begin        | Instance: `${UUID}`      | Start                       |
 
 "Source" is the value of the `source` label on the `checkpoint_event` sample, and "event" is the value of its
-`event` label - usually the AosCore component that pushed it (`aos-cm.service`, `aos-sm.service`), except for the
-per-instance `Start`/`Stop` checkpoints, which are pushed by the benchmark deployable item itself rather than by
-AosCore; their `source` is the instance (`Instance: ${UUID}`). This applies to every checkpoint table in this
-document. Each metric is the End timestamp minus the Start timestamp of the samples matching its row, e.g.:
+`event` label - the AosCore component that pushed it (`aos-cm.service`, `aos-sm.service`), except for "Start"'s
+end: deployable items push their own per-instance `Start`/`Stop` checkpoints (`source="Instance: ${UUID}"`),
+visible in the Grafana Events view, and with more than one instance "Start" ends at the max (latest) `Start`
+timestamp across all of that run's instances, not any single instance's own, e.g.:
 
 ```text
-Total = timestamp(source="Instance: ${UUID}", event="Start")
-      - timestamp(source="aos-cm.service", event="Process desired status")
+Start = max(timestamp(source="Instance: ${UUID}", event="Start"))
+      - timestamp(source="aos-sm.service", event="Start instances begin")
 ```
+
+Each metric is the End timestamp minus the Start timestamp of the samples matching its row.
 
 Prerequisites:
 
@@ -169,8 +185,8 @@ Execution steps:
    to every `create_services.py` step below:
 
    ```sh
-   ../scripts/copy_images.py --num-services 1 --data-size 16
-   ../scripts/create_services.py --num-services 1 --version 1.0.0-beta.1
+   ../scripts/copy_images.py --num-services ${NUM_SERVICES} --data-size 16
+   ../scripts/create_services.py --num-services ${NUM_SERVICES} --version 1.0.0-beta.1
    ```
 
 3. Deploy the generated services to the cloud with `aos-signer`.
@@ -249,10 +265,19 @@ Checkpoints used to measure each metric, from the `checkpoint_event` samples pus
 | --- | --- | --- | --- | --- |
 | Init SM | init.scope | Starting AosCore Service Manager... | aos-sm.service | Update instances begin |
 | Start network | aos-sm.service | Start networks begin | aos-sm.service | Start networks end |
-| Start instances | aos-sm.service | Start instances begin | aos-sm.service | Start instances end |
+| Start instances | aos-sm.service | Start instances begin | Instance: `${UUID}` | Start |
 | Stop network | aos-sm.service | Stop all networks begin | aos-sm.service | Stop all networks end |
 | Stop instances | aos-sm.service | Stop all instances begin | aos-sm.service | Stop all instances end |
 | Release SM | aos-sm.service | Stop all networks end | init.scope | Stopped AosCore Service Manager. |
+
+"Start instances" ends at the deployable items' own per-instance `Start` checkpoint (`source="Instance:
+${UUID}"`), the same signal "Install new deployable items"' "Start" row uses - with more than one instance, that
+is the max (latest) `Start` timestamp across all of that run's instances, not any single instance's own, e.g.:
+
+```text
+Start instances = max(timestamp(source="Instance: ${UUID}", event="Start"))
+                 - timestamp(source="aos-sm.service", event="Start instances begin")
+```
 
 Prerequisites:
 
@@ -266,8 +291,8 @@ Execution steps:
    `config.yaml` from `config.yaml.in` for one instance, using the service's shared `benchmark/scripts` generators:
 
    ```sh
-   ../scripts/copy_images.py --num-services 1
-   ../scripts/create_services.py --num-services 1 --num-instances 1 --version 1.0.0-beta.1
+   ../scripts/copy_images.py --num-services ${NUM_SERVICES}
+   ../scripts/create_services.py --num-services ${NUM_SERVICES} --num-instances ${NUM_INSTANCES} --version 1.0.0-beta.1
    ```
 
    Increment `--version` for each generated configuration.
@@ -291,8 +316,8 @@ Execution steps:
 10. Calculate the required timing metrics from the checkpoints (see "Checkpoints" above).
 11. Capture the CPU/RAM used by each AosCore component (see "CPU/RAM used by AosCore" below).
 12. Detach the test subject from the unit on the cloud.
-13. Repeat from step 2 for 8, 16, 64, 128, 256 instances, using the deployable item count from the table above for
-    each instance count.
+13. Repeat from step 2 for 8, 16, 64, 128, 256 instances, setting `NUM_SERVICES` and `NUM_INSTANCES` to the
+    table's Items and Instances/item columns for each tier.
 
 ## Container disk I/O
 
@@ -331,7 +356,7 @@ Execution steps:
 1. Render `config.yaml` for the encrypted backend for one instance:
 
    ```sh
-   ../scripts/create_services.py --num-instances 1 --version 1.0.0-beta.1 --test-dir /storage
+   ../scripts/create_services.py --num-instances ${NUM_INSTANCES} --version 1.0.0-beta.1 --test-dir /storage
    ```
 
 2. Deploy the generated service to the cloud with `aos-signer`.
@@ -342,7 +367,7 @@ Execution steps:
    Grafana. For more than one instance, average each metric across all instances' samples.
 6. Capture System CPU from the "Node CPU % (whole host)" Grafana panel for the duration of the run.
 7. Detach the test subject from the unit on the cloud.
-8. Repeat from step 1 for 8, 16, 64 instances, updating `--num-instances` and incrementing `--version` passed to
+8. Repeat from step 1 for 8, 16, 64 instances, updating `NUM_INSTANCES` and incrementing `--version` passed to
    `create_services.py` each time.
 
 ### Unencrypted storage
@@ -352,7 +377,7 @@ Execution steps:
 1. Render `config.yaml` for the unencrypted backend:
 
    ```sh
-   ../scripts/create_services.py --num-instances 1 --version 1.0.0-beta.1 --test-dir /common
+   ../scripts/create_services.py --num-instances ${NUM_INSTANCES} --version 1.0.0-beta.1 --test-dir /common
    ```
 
 2. Deploy the generated service to the cloud with `aos-signer`.
@@ -363,7 +388,7 @@ Execution steps:
    Grafana. For more than one instance, average each metric across all instances' samples.
 6. Capture System CPU from the "Node CPU % (whole host)" Grafana panel for the duration of the run.
 7. Detach the test subject from the unit on the cloud.
-8. Repeat from step 1 for 8, 16, 64 instances, updating `--num-instances` and incrementing `--version` passed to
+8. Repeat from step 1 for 8, 16, 64 instances, updating `NUM_INSTANCES` and incrementing `--version` passed to
    `create_services.py` each time.
 
 ## Network
@@ -419,7 +444,7 @@ Execution steps:
 1. Render `config.yaml` for the service-to-service path for one instance:
 
    ```sh
-   ../../scripts/create_services.py --num-instances 1 --version 1.0.0-beta.1 --test-host bandwidth-server
+   ../../scripts/create_services.py --num-instances ${NUM_INSTANCES} --version 1.0.0-beta.1 --test-host bandwidth-server
    ```
 
 2. Deploy the generated server and client services to the cloud with `aos-signer`.
@@ -431,7 +456,7 @@ Execution steps:
    samples from Grafana. For more than one instance, average each metric across all instances' samples.
 6. Capture System CPU from the "Node CPU % (whole host)" Grafana panel for the duration of the run.
 7. Detach the test subject from the unit on the cloud.
-8. Repeat from step 1 for 8, 16, 64 instances, updating `--num-instances` and incrementing `--version` passed to
+8. Repeat from step 1 for 8, 16, 64 instances, updating `NUM_INSTANCES` and incrementing `--version` passed to
    `create_services.py` each time.
 
 #### Service to unit
@@ -448,7 +473,7 @@ Execution steps:
    the unit):
 
    ```sh
-   ../../scripts/create_services.py --num-instances 1 --version 1.0.0-beta.1 --test-host ${NODE_IP}
+   ../../scripts/create_services.py --num-instances ${NUM_INSTANCES} --version 1.0.0-beta.1 --test-host ${NODE_IP}
    ```
 
 2. On the unit, start one native `iperf3` server per instance, bound to that same address, using
@@ -457,7 +482,7 @@ Execution steps:
    `DISTRO_FEATURES`. First confirm the port(s) are free - a leftover `iperf3` process from an earlier run:
 
    ```sh
-   /opt/aos/benchmark/iperf3-servers.sh -b ${NODE_IP} -n 1
+   /opt/aos/benchmark/iperf3-servers.sh -b ${NODE_IP} -n ${NUM_INSTANCES}
    ```
 
 3. Deploy the generated services to the cloud with `aos-signer`.
@@ -470,7 +495,7 @@ Execution steps:
 7. Capture System CPU from the "Node CPU % (whole host)" Grafana panel for the duration of the run.
 8. Detach the test subject from the unit on the cloud.
 9. Stop the native `iperf3` server(s) started on the unit in step 2.
-10. Repeat from step 1 for 8, 16, 64 instances, updating `--num-instances` and incrementing `--version` passed to
+10. Repeat from step 1 for 8, 16, 64 instances, updating `NUM_INSTANCES` and incrementing `--version` passed to
     `create_services.py`, and `-n` passed to `iperf3-servers.sh` in step 2, each time.
 
 #### Service to external host
@@ -482,7 +507,7 @@ Execution steps:
    an AosCore VM it is `10.0.0.1` by default):
 
    ```sh
-   ../../scripts/create_services.py --num-instances 1 --version 1.0.0-beta.1 --test-host ${HOST_IP}
+   ../../scripts/create_services.py --num-instances ${NUM_INSTANCES} --version 1.0.0-beta.1 --test-host ${HOST_IP}
    ```
 
 2. On the external host, start one native `iperf3` server per instance, bound to that same address, using
@@ -494,7 +519,7 @@ Execution steps:
    disable the pre-installed service):
 
    ```sh
-   ./iperf3-servers.sh -b ${HOST_IP} -n 1
+   ./iperf3-servers.sh -b ${HOST_IP} -n ${NUM_INSTANCES}
    ```
 
 3. Deploy the generated services to the cloud with `aos-signer`.
@@ -507,7 +532,7 @@ Execution steps:
 7. Capture System CPU from the "Node CPU % (whole host)" Grafana panel for the duration of the run.
 8. Detach the test subject from the unit on the cloud.
 9. Stop the native `iperf3` server(s) started on the external host in step 2.
-10. Repeat from step 1 for 8, 16, 64 instances, updating `--num-instances` and incrementing `--version` passed to
+10. Repeat from step 1 for 8, 16, 64 instances, updating `NUM_INSTANCES` and incrementing `--version` passed to
     `create_services.py`, and `-n` passed to `iperf3-servers.sh` in step 2, each time.
 
 ### Latency
@@ -554,7 +579,7 @@ Execution steps:
 1. Render `config.yaml` for the service-to-service path for one instance:
 
    ```sh
-   ../../scripts/create_services.py --num-instances 1 --version 1.0.0-beta.1 --test-host latency-server
+   ../../scripts/create_services.py --num-instances ${NUM_INSTANCES} --version 1.0.0-beta.1 --test-host latency-server
    ```
 
 2. Deploy the generated server and client services to the cloud with `aos-signer`.
@@ -566,7 +591,7 @@ Execution steps:
    average each metric across all instances' samples.
 6. Capture System CPU from the "Node CPU % (whole host)" Grafana panel for the duration of the run.
 7. Detach the test subject from the unit on the cloud.
-8. Repeat from step 1 for 8, 16, 64 instances, updating `--num-instances` and incrementing `--version` passed to
+8. Repeat from step 1 for 8, 16, 64 instances, updating `NUM_INSTANCES` and incrementing `--version` passed to
    `create_services.py` each time.
 
 #### Service to unit
@@ -578,7 +603,7 @@ Execution steps:
    the unit):
 
    ```sh
-   ../../scripts/create_services.py --num-instances 1 --version 1.0.0-beta.1 --test-host ${NODE_IP}
+   ../../scripts/create_services.py --num-instances ${NUM_INSTANCES} --version 1.0.0-beta.1 --test-host ${NODE_IP}
    ```
 
 2. On the unit, start one native `sockperf` UDP server and one TCP server per instance, both bound to that same
@@ -589,7 +614,7 @@ Execution steps:
    container network namespace:
 
    ```sh
-   /opt/aos/benchmark/sockperf-servers.sh -b ${NODE_IP} -n 1
+   /opt/aos/benchmark/sockperf-servers.sh -b ${NODE_IP} -n ${NUM_INSTANCES}
    ```
 
 3. Deploy the generated services to the cloud with `aos-signer`.
@@ -602,7 +627,7 @@ Execution steps:
 7. Capture System CPU from the "Node CPU % (whole host)" Grafana panel for the duration of the run.
 8. Detach the test subject from the unit on the cloud.
 9. Stop the native `sockperf` server(s) started on the unit in step 2.
-10. Repeat from step 1 for 8, 16, 64 instances, updating `--num-instances` and incrementing `--version` passed to
+10. Repeat from step 1 for 8, 16, 64 instances, updating `NUM_INSTANCES` and incrementing `--version` passed to
     `create_services.py`, and `-n` passed to `sockperf-servers.sh` in step 2, each time.
 
 #### Service to external host
@@ -614,7 +639,7 @@ Execution steps:
    an AosCore VM it is `10.0.0.1` by default):
 
    ```sh
-   ../../scripts/create_services.py --num-instances 1 --version 1.0.0-beta.1 --test-host ${HOST_IP}
+   ../../scripts/create_services.py --num-instances ${NUM_INSTANCES} --version 1.0.0-beta.1 --test-host ${HOST_IP}
    ```
 
 2. On the external host, install `sockperf` if not already present (Debian/Ubuntu ships it), then start one
@@ -625,7 +650,7 @@ Execution steps:
    free - a leftover `sockperf server` process from an earlier manual run is the only thing that can conflict:
 
    ```sh
-   ./sockperf-servers.sh -b ${HOST_IP} -n 1
+   ./sockperf-servers.sh -b ${HOST_IP} -n ${NUM_INSTANCES}
    ```
 
 3. Deploy the generated services to the cloud with `aos-signer`.
@@ -638,7 +663,7 @@ Execution steps:
 7. Capture System CPU from the "Node CPU % (whole host)" Grafana panel for the duration of the run.
 8. Detach the test subject from the unit on the cloud.
 9. Stop the native `sockperf` server(s) started on the external host in step 2.
-10. Repeat from step 1 for 8, 16, 64 instances, updating `--num-instances` and incrementing `--version` passed to
+10. Repeat from step 1 for 8, 16, 64 instances, updating `NUM_INSTANCES` and incrementing `--version` passed to
     `create_services.py`, and `-n` passed to `sockperf-servers.sh` in step 2, each time.
 
 ### DNS
@@ -689,7 +714,7 @@ Execution steps:
 1. Render `config.yaml` for the service-to-service path for one instance:
 
    ```sh
-   ../../scripts/create_services.py --num-instances 1 --version 1.0.0-beta.1 --test-host dns-peer
+   ../../scripts/create_services.py --num-instances ${NUM_INSTANCES} --version 1.0.0-beta.1 --test-host dns-peer
    ```
 
 2. Deploy the generated peer and client services to the cloud with `aos-signer`.
@@ -700,7 +725,7 @@ Execution steps:
 5. Read the `resolve` p50/p99/p999 `benchmark_result` samples from Grafana. For more than one instance, average
    each metric across all instances' samples.
 6. Detach the test subject from the unit on the cloud.
-7. Repeat from step 1 for 8, 16, 64 instances, updating `--num-instances` and incrementing `--version` passed to
+7. Repeat from step 1 for 8, 16, 64 instances, updating `NUM_INSTANCES` and incrementing `--version` passed to
    `create_services.py` each time.
 
 #### Service to unit
@@ -712,7 +737,7 @@ Execution steps:
    unit with no further setup; see dns's README "Setting up each scenario" to measure a different name):
 
    ```sh
-   ../../scripts/create_services.py --num-instances 1 --version 1.0.0-beta.1 --test-host main
+   ../../scripts/create_services.py --num-instances ${NUM_INSTANCES} --version 1.0.0-beta.1 --test-host main
    ```
 
 2. Deploy the generated services to the cloud with `aos-signer`.
@@ -723,7 +748,7 @@ Execution steps:
 5. Read the `resolve` p50/p99/p999 `benchmark_result` samples from Grafana. For more than one instance, average
    each metric across all instances' samples.
 6. Detach the test subject from the unit on the cloud.
-7. Repeat from step 1 for 8, 16, 64 instances, updating `--num-instances` passed to `create_services.py` each
+7. Repeat from step 1 for 8, 16, 64 instances, updating `NUM_INSTANCES` passed to `create_services.py` each
    time.
 
 #### Service to external host
@@ -747,7 +772,7 @@ forwarding configured between them explicitly.
    `--test-host` and `RANDOM_LABEL` on, so every query bypasses the unit's `dnsmasq` cache:
 
    ```sh
-   ../../scripts/create_services.py --num-instances 1 --version 1.0.0-beta.1 --test-host dns-probe.test \
+   ../../scripts/create_services.py --num-instances ${NUM_INSTANCES} --version 1.0.0-beta.1 --test-host dns-probe.test \
                                   --random-label 1
    ```
 
@@ -759,7 +784,7 @@ forwarding configured between them explicitly.
 6. Read the `resolve` p50/p99/p999 `benchmark_result` samples from Grafana. For more than one instance, average
    each metric across all instances' samples.
 7. Detach the test subject from the unit on the cloud.
-8. Repeat from step 2 for 8, 16, 64 instances, updating `--num-instances` and incrementing `--version` passed to
+8. Repeat from step 2 for 8, 16, 64 instances, updating `NUM_INSTANCES` and incrementing `--version` passed to
    `create_services.py` each time.
 
 ## CPU/RAM used by AosCore
@@ -782,7 +807,7 @@ Execution steps:
 
 CPU/RAM is recorded for the following scenarios:
 
-* idle, no instances installed;
+* Idle, no instances installed;
 * Operational Speed / Install new deployable items;
-* Operational Speed / Install cached deployable items.
+* Operational Speed / Install cached deployable items;
 * Operational Speed / Start/stop already installed instances.
