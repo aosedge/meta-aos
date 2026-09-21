@@ -1,0 +1,23 @@
+Rewrite pyproject.toml's PEP 639 SPDX license string into the older {text = ...} dict form.
+
+setuptools 69.1.1 (this Yocto's pinned python3-setuptools) validates project.license against a
+schema that only accepts the file/text dict forms; it rejects a plain SPDX expression string with
+"invalid pyproject.toml config: `project.license` must be valid exactly by one definition". Bumping
+setuptools itself would affect every Python recipe in the distro, so patch this one file instead.
+
+Upstream-Status: Inappropriate [licensed metadata format requires a newer setuptools than this
+distro pins; not a bug in podman-compose itself]
+
+diff --git a/pyproject.toml b/pyproject.toml
+index b48ce32..5ebe0ad 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -30,7 +30,7 @@ keywords = [
+     "podman",
+     "podman-compose",
+ ]
+-license = "GPL-2.0-only"
++license = {text = "GPL-2.0-only"}
+ dynamic = ["version", "readme"]
+
+ [project.urls]
