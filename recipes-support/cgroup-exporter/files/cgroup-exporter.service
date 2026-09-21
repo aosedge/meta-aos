@@ -1,11 +1,12 @@
 [Unit]
-Description=cgroup-exporter (AosCore benchmarking)
+Description=cgroup-exporter (container CPU/memory benchmarking)
 After=network.target
 
 [Service]
 Type=simple
 ExecStart=/usr/bin/python3 /usr/libexec/cgroup-exporter/cgroup_exporter.py \
-    --listen-address=0.0.0.0:9400
+    --listen-address=0.0.0.0:9400 \
+    --config=/etc/cgroup-exporter/cgroups.yml
 Restart=on-failure
 
 [Install]
