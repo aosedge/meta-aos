@@ -121,6 +121,8 @@ IMAGE_INSTALL:append:aos-main-node = " \
         victoria-metrics \
         podman \
         podman-compose \
+        k3s \
+        k3s-server \
         ', '', d)} \
     ${@bb.utils.contains('DISTRO_FEATURES', 'fastdds', ' \
         fastdds \

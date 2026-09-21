@@ -1,0 +1,19 @@
+# k3s server configuration for the benchmark image (DISTRO_FEATURE "benchmark").
+# Nothing in the benchmark uses these components, and each would add idle CPU/RAM load to the unit.
+# CoreDNS stays enabled: service-name resolution in the network tests goes through it.
+disable:
+  - traefik
+  - servicelb
+  - metrics-server
+  - local-storage
+disable-network-policy: true
+
+# The benchmark runs up to 256 instances, each its own pod (see the Operational Speed chapters), and
+# the defaults don't allow that: the kubelet's limit is 110 pods per node, and the controller manager
+# hands each node a /24 pod subnet (about 254 addresses). A /23 gives about 510 addresses, and the
+# limit is raised well above the largest tier. The subnet size only applies to a node that has not
+# been given one yet, i.e. a fresh cluster.
+kubelet-arg:
+  - max-pods=300
+kube-controller-manager-arg:
+  - node-cidr-mask-size=23
