@@ -1,0 +1,34 @@
+# Off-target local container registry, used to give Podman benchmark images (e.g. a
+# defined-size dummy-payload image for measuring `podman pull` download speed) a real remote
+# source to pull from over the network. `podman load` from a local tarball is a disk copy, not a
+# network transfer, and can't stand in for a real download-speed measurement the way a registry
+# pull can.
+#
+# This is a plain HTTP registry (no TLS) - Podman/Docker refuse to talk to it unless every client
+# that needs to push/pull (the unit included) marks it "insecure" in
+# /etc/containers/registries.conf:
+#
+#   [[registry]]
+#   location = "<this-host-ip>:5000"
+#   insecure = true
+#
+# Usage:
+#   docker compose -f docker/registry/docker-compose.yml up -d
+#
+# Then, from wherever needs to push or pull (e.g. the benchmark unit):
+#   podman tag <image> <this-host-ip>:5000/<image>
+#   podman push <this-host-ip>:5000/<image>
+#   podman pull <this-host-ip>:5000/<image>
+#
+# Pushed image data persists under ./data across restarts (not checked into the repo - see
+# .gitignore in this directory).
+
+services:
+  registry:
+    image: registry:2
+    restart: always
+    ports:
+      - "5000:5000"
+
+    volumes:
+      - ./data:/var/lib/registry
