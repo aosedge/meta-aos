@@ -1,6 +1,6 @@
 # Config for process-exporter (github.com/ncabatoff/process-exporter), consumed via
 # -config.path. Groups matched processes into named metric series - one group per AosCore
-# component.
+# component, and one per Podman and per k3s component.
 #
 # App instances are NOT covered here: they run as crun containers, whose workload process cmdline
 # carries no instance ID (confirmed on a real target - a "load-test" instance's process cmdline is
@@ -15,14 +15,62 @@
 # Grafana can tell them apart.
 
 process_names:
+  # AosCore Communication Manager (aos_cm_app). Runs on the main node only, so on a secondary node
+  # this group has no matching process and produces no series.
   - name: "component:cm"
     exe:
       - aos_cm_app
 
+  # AosCore Service Manager (aos_sm_app), which installs and runs the service instances (the crun
+  # containers cgroup_exporter.py covers) of its node. Runs on every node.
   - name: "component:sm"
     exe:
       - aos_sm_app
 
+  # AosCore Identity and Access Manager (aos_iam_app). Runs on every node.
   - name: "component:iam"
     exe:
       - aos_iam_app
+
+  # Podman itself: it is daemonless, so this is only the CLI and every call podman-compose makes.
+  # There is no long-lived process, so the group only shows up as a spike around the operation that
+  # ran it (a deploy, a start, a stop). The processes it starts are separate groups below or too
+  # small to monitor (conmon, crun).
+  - name: "component:podman"
+    exe:
+      - podman
+
+  # Podman's network setup helper: netavark configures a container's network (bridge, veth pair,
+  # firewall rules) each time a container starts or stops, then exits, so like "podman" above it only
+  # shows up as a spike around those operations.
+  - name: "component:netavark"
+    exe:
+      - netavark
+
+  # Podman's DNS daemon for user networks (started by netavark, one per unit and shared by every
+  # network with DNS enabled) - long-lived, unlike netavark, and the resolver the DNS benchmark
+  # loads on Podman, the counterpart of k3s's CoreDNS. It has no children, so it is safe as a
+  # process group.
+  - name: "component:aardvark-dns"
+    exe:
+      - aardvark-dns
+
+  # k3s: one "k3s server" process runs the whole Kubernetes control plane (API server, scheduler,
+  # controllers, datastore) plus the kubelet, kube-proxy and flannel. Matched by "comm" (the task
+  # name, taken from the path the binary was exec'd by): "exe"/"cmdline" don't match this process,
+  # and "comm" also leaves out the transient "kubectl"/"crictl" calls (the same binary under other
+  # names) and "k3s-killall.sh".
+  - name: "component:k3s"
+    comm:
+      - k3s
+
+  # The containerd daemon k3s launches for itself (the image's standalone containerd.service is
+  # disabled).
+  - name: "component:containerd"
+    exe:
+      - containerd
+
+  # Deliberately no group for the per-pod containerd-shim-runc-v2 processes: process-exporter tracks
+  # a matched process's children along with it, and a shim's children are the pod's pause and
+  # application processes, which would be counted as orchestrator load. The shims all live in the
+  # k3s.service cgroup, together with k3s and containerd.

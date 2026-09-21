@@ -5,7 +5,7 @@ After=network.target
 [Service]
 Type=simple
 # -threads=false: skip per-thread /proc iteration - the dashboard only uses group-level CPU%/PSS
-# memory (see aos-benchmark.json), and per-thread accounting is the most expensive part of each
+# memory (see benchmark.json), and per-thread accounting is the most expensive part of each
 # scrape. -gather-smaps stays enabled (default) since PSS memory needs it. See also scrape.yml's
 # metric_relabel_configs, which further narrows what's actually stored to just the series used.
 ExecStart=/usr/bin/process-exporter \
