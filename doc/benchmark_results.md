@@ -1,9 +1,12 @@
 # Benchmark Results
 
 This document records the measurements collected while executing the steps described in
-[Benchmark Execution](benchmark_execution.md).
+[Benchmark Execution (AosCore)](benchmark_execution_aos.md), [Benchmark Execution (Podman)](benchmark_execution_podman.md)
+and [Benchmark Execution (k3s)](benchmark_execution_k3s.md). Results are recorded per platform and framework: the
+chapter below is repeated for every combination of a platform and a framework (the container runtime under test, such
+as AosCore, Podman or k3s).
 
-# <Platform Name>
+# <Platform Name> <Framework>
 
 ## Environment
 
