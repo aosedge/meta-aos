@@ -123,6 +123,7 @@ IMAGE_INSTALL:append:aos-main-node = " \
         podman-compose \
         k3s \
         k3s-server \
+        time-event \
         ', '', d)} \
     ${@bb.utils.contains('DISTRO_FEATURES', 'fastdds', ' \
         fastdds \
