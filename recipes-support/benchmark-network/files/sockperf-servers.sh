@@ -1,7 +1,7 @@
 #!/bin/bash
 # Starts one or more sockperf server pairs (one UDP, one TCP) bound to a specific address, one
 # pair per port starting at --start-port, for the network latency benchmark's "service to
-# unit"/"service to external host" scenarios (see aos_core_cpp/doc/benchmark_execution.md,
+# unit"/"service to external host" scenarios (see doc/benchmark_execution_aos.md,
 # "Network" / "Latency" chapter).
 #
 # Runs in the foreground until interrupted (Ctrl+C) or terminated, then stops every sockperf
