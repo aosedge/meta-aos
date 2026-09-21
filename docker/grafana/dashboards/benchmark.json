@@ -1,7 +1,7 @@
 {
-  "uid": "aos-benchmark",
-  "title": "AosCore Benchmark",
-  "tags": ["aoscore", "benchmark"],
+  "uid": "benchmark",
+  "title": "Container Runtime Benchmark",
+  "tags": ["benchmark"],
   "timezone": "browser",
   "refresh": "5s",
   "time": { "from": "now-15m", "to": "now" },
@@ -27,7 +27,7 @@
         "datasource": { "type": "prometheus", "uid": "victoriametrics" },
         "enable": true,
         "iconColor": "red",
-        "name": "aos-event",
+        "name": "event",
         "target": {
           "expr": "checkpoint_event{node=\"$node\"}",
           "interval": "1s",
@@ -78,7 +78,7 @@
     },
     {
       "id": 1,
-      "title": "CPU % - components (CM/SM/IAM) - node: $node",
+      "title": "CPU % - orchestrator components - node: $node",
       "type": "timeseries",
       "datasource": { "type": "prometheus", "uid": "victoriametrics" },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
@@ -96,7 +96,7 @@
     },
     {
       "id": 2,
-      "title": "CPU % - AosCore instances - node: $node",
+      "title": "CPU % - container instances - node: $node",
       "type": "timeseries",
       "datasource": { "type": "prometheus", "uid": "victoriametrics" },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
@@ -105,7 +105,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "victoriametrics" },
-          "expr": "rate(aos_instance_cpu_usage_seconds_total{node=\"$node\"}[1m]) * 100",
+          "expr": "rate(container_cpu_usage_seconds_total{node=\"$node\"}[1m]) * 100",
           "legendFormat": "{{instance}}",
           "interval": "1s",
           "refId": "A"
@@ -114,7 +114,7 @@
     },
     {
       "id": 3,
-      "title": "Memory (PSS) - components (CM/SM/IAM) - node: $node",
+      "title": "Memory (PSS) - orchestrator components - node: $node",
       "type": "timeseries",
       "datasource": { "type": "prometheus", "uid": "victoriametrics" },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
@@ -132,7 +132,7 @@
     },
     {
       "id": 4,
-      "title": "Memory - AosCore instances - node: $node",
+      "title": "Memory - container instances - node: $node",
       "type": "timeseries",
       "datasource": { "type": "prometheus", "uid": "victoriametrics" },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
@@ -141,7 +141,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "victoriametrics" },
-          "expr": "aos_instance_memory_bytes{node=\"$node\"}",
+          "expr": "container_memory_bytes{node=\"$node\"}",
           "legendFormat": "{{instance}}",
           "interval": "1s",
           "refId": "A"
