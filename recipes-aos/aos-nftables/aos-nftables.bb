@@ -5,6 +5,7 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/Apache-2.0;md5=89aea4e17d99a7ca
 
 SRC_URI = " \
     file://aos.nft \
+    file://aos-benchmark.nft \
     file://aos-nftables.service \
 "
 
@@ -31,6 +32,10 @@ RRECOMMENDS:${PN} += " \
 do_install() {
     install -d ${D}${sysconfdir}/nftables
     install -m 0644 ${WORKDIR}/aos.nft ${D}${sysconfdir}/nftables/aos.nft
+
+    if ${@bb.utils.contains('DISTRO_FEATURES', 'benchmark', 'true', 'false', d)}; then
+        cat ${WORKDIR}/aos-benchmark.nft >> ${D}${sysconfdir}/nftables/aos.nft
+    fi
 
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/aos-nftables.service ${D}${systemd_system_unitdir}

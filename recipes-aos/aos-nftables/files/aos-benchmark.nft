@@ -1,0 +1,9 @@
+# Benchmark only (DISTRO_FEATURES "benchmark"): let Podman's netavark bridges (podman0, podman1, ...)
+# and k3s's CNI interfaces (cni0 bridge, flannel.1) through the forward chain. It is default-drop and,
+# with net.bridge.bridge-nf-call-iptables=1, also sees container-to-container traffic on the same
+# bridge - so without these a container can't reach another one (or anything routed through the unit)
+# at all, even by raw IP.
+add rule inet aos accepted iifname "podman*" accept
+add rule inet aos accepted oifname "podman*" accept
+add rule inet aos accepted iifname { "cni0", "flannel.1" } accept
+add rule inet aos accepted oifname { "cni0", "flannel.1" } accept
