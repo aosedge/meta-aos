@@ -5,7 +5,7 @@
 * meta-aos was verified and tested on Yocto 4.0 (Kirkstone) and 3.1 (Dunfell);
 * required additional meta layers: meta-virtualization, meta-security;
 * init manager: systemd;
-* required distro features: virtualization, seccomp;
+* required distro features: security, seccomp;
 * kernel options (modules or builtin): bridge, veth, vxlan, 8021q, ifb, overlay, squashfs, nfnetlink, nf_tables,
 nf_conntrack, nf_nat, nft_ct, nft_nat, nft_chain_nat, nft_masq, sch_tbf, sch_ingress, act_mirred, cls_matchall
 * dedicated RW partition to store Aos services, layers and OTA update artifacts.
@@ -40,10 +40,19 @@ Systemd should be set as system init manager:
 INIT_MANAGER = "systemd"
 ```
 
-Virtualization and security distro features should be enabled in `local.conf`:
+The security distro feature should be enabled in `local.conf`:
 
 ```bash
-DISTRO_FEATURES:append = " virtualization security"
+DISTRO_FEATURES:append = " security"
+```
+
+The meta-virtualization layer is required, but its `virtualization` distro feature is not: the `meta-aos-vm` reference
+build runs without it and only enables it for the benchmark build (see [AosCore benchmarking](benchmark.md)). Without
+the feature the layer warns at parse time that some of its bbappend files may not take effect, which is expected in
+this case; the warning can be silenced in `local.conf`:
+
+```bash
+SKIP_META_VIRT_SANITY_CHECK = "1"
 ```
 
 The required kernel options should be enabled in kernel config as modules or builtin. See [Yocto Project Linux Kernel
@@ -208,7 +217,8 @@ components:
         - [INITRAMFS_IMAGE_BUNDLE, "0"]
         - [INITRAMFS_FSTYPES, "cpio.gz"]
         - [INIT_MANAGER, "systemd"]
-        - [DISTRO_FEATURES:append, " virtualization security"]
+        - [DISTRO_FEATURES:append, " security"]
+        - [SKIP_META_VIRT_SANITY_CHECK, "1"]
         # selinux is optional
         - [DISTRO_FEATURES:append, " acl xattr pam selinux"]
         - [IMAGE_INSTALL:append, " aos-iamanager aos-provfirewall aos-communicationmanager aos-servicemanager"]
