@@ -1,7 +1,7 @@
 #!/bin/bash
 # Starts one or more iperf3 servers bound to a specific address, one per port starting at
 # --start-port, for the network bandwidth benchmark's "service to unit"/"service to external
-# host" scenarios (see aos_core_cpp/doc/benchmark_execution.md, "Network" / "Bandwidth" chapter).
+# host" scenarios (see doc/benchmark_execution_aos.md, "Network" / "Bandwidth" chapter).
 #
 # Runs in the foreground until interrupted (Ctrl+C) or terminated, then stops every iperf3
 # server it started.
