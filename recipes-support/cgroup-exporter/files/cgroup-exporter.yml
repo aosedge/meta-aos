@@ -1,0 +1,48 @@
+# Cgroup paths for cgroup_exporter.py, consumed via --config. Each entry names one family of
+# cgroups to expose CPU/memory metrics for; the live filesystem is (re-)globbed on every scrape,
+# so instances/containers coming and going are picked up automatically without a restart.
+#
+#   path_glob   glob.glob() pattern matched against the cgroup v2 hierarchy.
+#   id_pattern  optional regex searched against each matched path's basename; its first capture
+#               group becomes the exported "instance" label. Omit it for a flat
+#               one-directory-per-instance layout (the basename is the ID as-is, e.g. AosCore's
+#               below); a directory that doesn't match a given id_pattern is skipped.
+#
+# Add more entries here for any other container runtime's cgroup layout - nothing about
+# cgroup_exporter.py itself is tied to AosCore, Podman or k3s.
+
+cgroups:
+  # AosCore app instances: one flat directory per instance ID.
+  - path_glob: /sys/fs/cgroup/system.slice/system-aos.slice/system-aos-service.slice/*
+
+  # Rootful Podman containers (systemd cgroup manager): one "libpod-<container-id>.scope"
+  # directory per container: the container ID is its first 12 hex characters. podman-compose
+  # >=1.6.0 defaults to wrapping every project's containers in an auto-created "pod_<project>"
+  # pod (PODMAN_COMPOSE_IN_POD defaults to true), which nests this one level deeper under a
+  # "machine-libpod_pod_<pod-id>.slice" directory - both layouts are matched here since which one
+  # applies depends on that setting, not anything this file controls.
+  - path_glob: /sys/fs/cgroup/machine.slice/libpod-*.scope
+    id_pattern: 'libpod-([0-9a-f]{12})[0-9a-f]*\.scope$'
+
+  - path_glob: /sys/fs/cgroup/machine.slice/machine-libpod_pod_*.slice/libpod-*.scope
+    id_pattern: 'libpod-([0-9a-f]{12})[0-9a-f]*\.scope$'
+
+  # k3s pods (kubelet's systemd cgroup driver): one "cri-containerd-<container-id>.scope" per
+  # container, inside a per-pod "kubepods-<qos>-pod<uid>.slice" (Burstable/BestEffort pods, under
+  # a QoS slice) or, for Guaranteed pods, directly under "kubepods.slice". Every pod also has its
+  # pause sandbox container, which gets a scope like any other, and k3s's own pods (CoreDNS) are
+  # matched the same way as the benchmark's.
+  - path_glob: /sys/fs/cgroup/kubepods.slice/kubepods-*.slice/kubepods-*-pod*.slice/cri-containerd-*.scope
+    id_pattern: 'cri-containerd-([0-9a-f]{12})[0-9a-f]*\.scope$'
+
+  - path_glob: /sys/fs/cgroup/kubepods.slice/kubepods-pod*.slice/cri-containerd-*.scope
+    id_pattern: 'cri-containerd-([0-9a-f]{12})[0-9a-f]*\.scope$'
+
+  # The k3s service itself, as one instance named "k3s.service": its cgroup holds exactly the
+  # k3s server, the containerd it launches and the one containerd-shim per pod (the pods' own
+  # containers live under kubepods.slice, above). process-exporter has no group for the shims,
+  # because it would also count their children (the pods' workloads), so this is where their share
+  # of the orchestrator's CPU/memory shows up - as part of this total, i.e. alongside
+  # component:k3s and component:containerd. Unlike process-exporter's PSS, memory here is the
+  # cgroup's memory.current, which includes page cache.
+  - path_glob: /sys/fs/cgroup/system.slice/k3s.service
