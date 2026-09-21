@@ -7,7 +7,7 @@
 # process_exporter.service), but only the main node runs VictoriaMetrics - it scrapes its own
 # exporters over localhost (static, always present) and every secondary node's exporters via
 # file_sd_configs, tagging each target with a "node" label so Grafana can offer a dropdown to
-# switch between nodes (see grafana/dashboards/aos-benchmark.json's $node variable).
+# switch between nodes (see grafana/dashboards/benchmark.json's $node variable).
 #
 # Secondary nodes are discovered from targets/secondary-{node,process,cgroup}-exporter.json
 # (installed at /etc/victoria-metrics/targets/ - see victoria-metrics.service). VictoriaMetrics
@@ -24,9 +24,11 @@
 #     fractionally, matching "smem"'s PSS from the manual pidstat/smem approach above; memtype
 #     "resident" is also available if plain RSS is wanted instead). Component processes only - see
 #     process-exporter.yml for why app instances aren't covered here.
-#   - cgroup-exporter (scripts/monitoring/cgroup_exporter.py in aos_core_cpp): per-instance
-#     CPU/memory that process-exporter can't provide - aos_instance_cpu_usage_seconds_total
-#     (counter - use rate()), aos_instance_memory_bytes (gauge), both labeled by instance.
+#   - cgroup-exporter (recipes-support/cgroup-exporter): per-instance/per-container CPU/memory
+#     that process-exporter can't provide - container_cpu_usage_seconds_total (counter - use
+#     rate()), container_memory_bytes (gauge), both labeled by instance. Which cgroups it covers
+#     (AosCore app instances, Podman containers, k3s pods, ...) is config-driven - see
+#     /etc/cgroup-exporter/cgroups.yml.
 #
 # User-service benchmark containers (network, disk I/O, etc. - see doc/benchmark.md) can push
 # their own results directly into VictoriaMetrics via its /api/v1/import/prometheus endpoint on
@@ -71,7 +73,7 @@ scrape_configs:
         action: keep
 
   - job_name: cgroup-exporter
-    # cgroup-exporter sets its own "instance" label to the AosCore instance ID; without
+    # cgroup-exporter sets its own "instance" label to the instance/container ID; without
     # honor_labels, Prometheus/VictoriaMetrics scraping would overwrite that with the scrape
     # target's address (renaming it to "exported_instance" instead) - confirmed on a real target.
     honor_labels: true
