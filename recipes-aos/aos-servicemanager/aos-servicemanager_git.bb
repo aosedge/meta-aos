@@ -107,6 +107,9 @@ python do_update_config() {
 
     data["cmServerUrl"] = main_node_hostname + ":8093"
 
+    if bb.utils.to_boolean(d.getVar("AOS_MAIN_NODE")):
+        data.setdefault("imageManager", {})["imagesPartLimit"] = 40
+
     # Update component prefixes and set container runner
 
     comp_prefix = d.getVar("AOS_COMPONENT_RUNTIME_PREFIX")
