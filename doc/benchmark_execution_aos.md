@@ -302,14 +302,14 @@ Execution steps:
 6. Stop AosCore using the dedicated `aos.target`:
 
    ```sh
-   sudo systemctl stop aos.target
+   systemctl stop aos.target
    ```
 
 7. Wait for AosCore components and installed instances to be successfully stopped.
 8. Start AosCore using the dedicated `aos.target`:
 
    ```sh
-   sudo systemctl start aos.target
+   systemctl start aos.target
    ```
 
 9. Wait for the corresponding checkpoint events to appear in the Grafana Events view.
