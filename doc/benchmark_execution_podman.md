@@ -249,6 +249,56 @@ registry-qualified ones this doc's build commands actually produce):
 podman rmi -f $(podman images -q --filter reference="${REGISTRY_HOST}/benchmark-*")
 ```
 
+### Building for arm64 (Raspberry Pi)
+
+The `podman build` commands above default to the build/push host's own architecture. If the unit under test is
+arm64 (e.g. a Raspberry Pi) and the build/push host is amd64, add `--platform linux/arm64` to every `podman build`
+command in "Container images" above - Podman cross-builds via QEMU user-mode emulation, so a native arm64 host
+isn't needed:
+
+```bash
+cd benchmark/timing
+for i in $(seq 1 16); do
+  podman build --platform linux/arm64 -f podman/Containerfile --build-arg SIZE_MB=16 --build-arg SERVICE_ID=${i} \
+      -t ${REGISTRY_HOST}/benchmark-timing-${i}:latest .
+  podman push --tls-verify=false ${REGISTRY_HOST}/benchmark-timing-${i}:latest
+done
+```
+
+This needs `qemu-user-static` and its `aarch64` `binfmt_misc` entry registered on the build/push host
+(Ubuntu/Debian: `apt install qemu-user-static`, which registers it automatically). Check it's active:
+
+```bash
+cat /proc/sys/fs/binfmt_misc/qemu-aarch64
+```
+
+The first line should read `enabled`; if the file doesn't exist at all, reinstall `qemu-user-static` or run
+`update-binfmts --enable qemu-aarch64`. Verify the emulation actually works before building anything:
+
+```bash
+podman run --rm --platform linux/arm64 debian:trixie-slim uname -m
+```
+
+which should print `aarch64`.
+
+`benchmark-timing`'s `Containerfile` compiles a real binary via `cmake` (see its own comments), so the emulation
+cost is paid once per architecture, not once per push: the `cmake`/build-essential layers and the compiled binary
+are unaffected by `SERVICE_ID`, so they stay cached across all 16 builds - only the `dd` payload step (which does
+depend on it) re-runs uncached each time, same as the native-arch case. The `diskio` and other network images
+cross-build the same way, just slower than a native build.
+
+The two latency images additionally compile `sockperf` from source (a fresh `git clone` per build, see the Latency
+chapter's own build step), so they have no equivalent per-build-invariant stage to cache and noticeably feel the
+emulation cost on every image, on top of already being the slowest native builds in "Container images" above:
+
+```bash
+cd benchmark/network/latency
+podman build --platform linux/arm64 -f podman/Containerfile.server -t ${REGISTRY_HOST}/benchmark-network-latency-server:latest .
+podman build --platform linux/arm64 -f podman/Containerfile.client -t ${REGISTRY_HOST}/benchmark-network-latency-client:latest .
+podman push --tls-verify=false ${REGISTRY_HOST}/benchmark-network-latency-server:latest
+podman push --tls-verify=false ${REGISTRY_HOST}/benchmark-network-latency-client:latest
+```
+
 ## Troubleshooting
 
 See [Benchmark Execution (AosCore)](benchmark_execution_aos.md#troubleshooting) - nothing here is Podman-specific,
