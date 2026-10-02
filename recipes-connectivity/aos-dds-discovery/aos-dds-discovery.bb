@@ -26,6 +26,7 @@ do_install() {
     sed -i \
         -e "s|@SYSCONFDIR@|${sysconfdir}|g" \
         -e "s|@BINDIR@|${bindir}|g" \
+        -e "s|@DS_ADDRESS@|${AOS_NODE_IP}|g" \
         ${D}${systemd_system_unitdir}/aos-dds-discovery.service
 }
 
