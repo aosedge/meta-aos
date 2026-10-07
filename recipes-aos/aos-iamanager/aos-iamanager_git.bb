@@ -94,6 +94,8 @@ python do_update_config() {
 
     data["nodeInfo"] = node_info
 
+    data.setdefault("enablePermissionsHandler", True)
+
     main_node_host_name = d.getVar("AOS_MAIN_NODE_HOSTNAME")
 
     # Set main IAM server URLs for secondary IAM nodes
