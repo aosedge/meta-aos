@@ -1,0 +1,102 @@
+# Config for benchmark_results_publisher.py, consumed via --config. Entirely generic - nothing here
+# is specific to this script; the defaults below describe AosCore's own Operational Speed
+# checkpoints (see doc/benchmark_execution_aos.md), pushed as checkpoint_event samples by event-exporter
+# (from AosCore's own log lines) and by benchmark-timing instances (their own "Instance: <id>" /
+# "Start" sample) directly.
+
+# What marks a new "window" (one AosCore deployment cycle): a batch of checkpoint_event samples whose
+# source matches source_pattern (a regex) and event equals "event", across every node - each
+# benchmark-timing instance pushes one such sample when it starts, so the last one across a whole
+# deployment batch marks that batch's own end. settle_seconds (default 2, see
+# benchmark_results_publisher.py's DEFAULT_SETTLE_SECONDS) is how long to keep watching for an
+# even-newer occurrence before locking the current one in, in case more of the same batch is still
+# trickling in - every instance in a batch has landed within milliseconds of each other in every run
+# observed, so this is generous headroom.
+suite_boundary:
+  source_pattern: '^Instance: .*'
+  event: "Start"
+  settle_seconds: 2
+
+# One entry per elapsed-time metric published as a benchmark_result sample - see
+# benchmark_results_publisher.py's Metric for what each key means. Every metric here is scoped to
+# whichever node the window's own boundary (above) came from, except "Total", which sets
+# "node: self" since it's anchored to aos-cm.service - AosCore's Communication Manager, which only
+# ever runs on the main node regardless of which node's own instances/Service Manager activity a
+# given window's other metrics describe. An end_source_pattern end (a batch of instances) is always
+# looked up on the window's own node.
+metrics:
+  - label: Download
+    start_source: aos-cm.service
+    start_event: "Download update items start"
+    end_source: aos-cm.service
+    end_event: "Download update items end"
+  - label: Install
+    start_source: aos-sm.service
+    start_event: "Install items begin"
+    end_source: aos-sm.service
+    end_event: "Install items end"
+  - label: Prepare
+    start_source: aos-sm.service
+    start_event: "Prepare instances begin"
+    end_source: aos-sm.service
+    end_event: "Prepare instances end"
+  - label: Init SM
+    start_source: init.scope
+    start_event: "Starting AosCore Service Manager..."
+    end_source: aos-sm.service
+    end_event: "Update instances begin"
+  - label: Start network
+    start_source: aos-sm.service
+    start_event: "Start networks begin"
+    end_source: aos-sm.service
+    end_event: "Start networks end"
+  - label: Start instances
+    start_source: aos-sm.service
+    start_event: "Start instances begin"
+    # Ends at the latest "Instance: <id>" / "Start" checkpoint across the whole batch, i.e. the last
+    # instance actually started (see doc/benchmark_execution_aos.md) - rather than SM's own "Start
+    # instances end".
+    end_source_pattern: '^Instance: .*'
+    end_event: "Start"
+    # Also publishes one benchmark_result sample per instance - each instance's own elapsed time
+    # from this same "Start instances begin" to its own "Instance: <id>" / "Start" checkpoint.
+    per_instance: true
+  # AosCore logs teardown two ways: "Stop all networks/instances begin/end" when the whole SM process
+  # is shutting down (releasing everything - an aos.target stop/restart), or just "Stop
+  # networks/instances begin/end" (no "all") for a routine per-update teardown of only what's
+  # actually being replaced (every deployment, and with count=0 right after SM starts). Each is its
+  # own metric: "Stop network"/"Stop instances" for the former (see doc/benchmark_execution_aos.md),
+  # "Update stop network"/"Update stop instances" for the latter.
+  - label: Stop network
+    start_source: aos-sm.service
+    start_event: "Stop all networks begin"
+    end_source: aos-sm.service
+    end_event: "Stop all networks end"
+  - label: Stop instances
+    start_source: aos-sm.service
+    start_event: "Stop all instances begin"
+    end_source: aos-sm.service
+    end_event: "Stop all instances end"
+  - label: Update stop network
+    start_source: aos-sm.service
+    start_event: "Stop networks begin"
+    end_source: aos-sm.service
+    end_event: "Stop networks end"
+  - label: Update stop instances
+    start_source: aos-sm.service
+    start_event: "Stop instances begin"
+    end_source: aos-sm.service
+    end_event: "Stop instances end"
+  - label: Release SM
+    start_source: aos-sm.service
+    start_event: "Stop all networks end"
+    end_source: init.scope
+    end_event: "Stopped AosCore Service Manager."
+  - label: Total
+    start_source: aos-cm.service
+    start_event: "Process desired status"
+    # Ends at the last instance's own Start, same as "Start instances" above - "Total" is "from
+    # receiving a new desired status until every instance has started".
+    end_source_pattern: '^Instance: .*'
+    end_event: "Start"
+    node: self
