@@ -143,7 +143,7 @@ Checkpoints used to measure each metric, from the `checkpoint_event` samples pus
 
 | Metric   | Start source   | Start event                  | End source               | End event                   |
 |----------|----------------|------------------------------|--------------------------|-----------------------------|
-| Total    | aos-cm.service | Process desired status       | aos-sm.service           | Start instances end         |
+| Total    | aos-cm.service | Process desired status       | Instance: `${UUID}`      | Start                       |
 | Download | aos-cm.service | Download update items start  | aos-cm.service           | Download update items end   |
 | Install  | aos-sm.service | Install items begin          | aos-sm.service           | Install items end           |
 | Prepare  | aos-sm.service | Prepare instances begin      | aos-sm.service           | Prepare instances end       |
@@ -153,8 +153,8 @@ Checkpoints used to measure each metric, from the `checkpoint_event` samples pus
 "Source" is the value of the `source` label on the `checkpoint_event` sample, and "event" is the value of its
 `event` label - the AosCore component that pushed it (`aos-cm.service`, `aos-sm.service`), except for "Start"'s
 end: deployable items push their own per-instance `Start`/`Stop` checkpoints (`source="Instance: ${UUID}"`),
-visible in the Grafana Events view, and with more than one instance "Start" ends at the max (latest) `Start`
-timestamp across all of that run's instances, not any single instance's own, e.g.:
+visible in the Grafana Events view, and with more than one instance "Total" and "Start" end at the max (latest)
+`Start` timestamp across all of that run's instances, not any single instance's own, e.g.:
 
 ```text
 Start = max(timestamp(source="Instance: ${UUID}", event="Start"))

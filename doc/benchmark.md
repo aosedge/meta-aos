@@ -32,6 +32,7 @@ variant (see below) is what lets it reach VictoriaMetrics through the unit's nor
 | `cgroup-exporter` | every node | Per-app-instance CPU/memory. A custom script (`cgroup_exporter.py`), not the third-party `treydock/cgroup_exporter`: that tool's cgroup-path handling truncates to a fixed depth that collapses every AosCore instance to the same label (confirmed against a real target). Reads the same cgroup v2 accounting files (`cpu.stat`, `memory.current`) AosCore's own `launcher::Monitoring` class already reads. Which cgroups it covers is config-driven (`cgroup-exporter.yml`): AosCore's instances, Podman's containers (`libpod-*.scope`), k3s's pod containers (`kubepods.slice`) and the `k3s.service` cgroup, which holds k3s, its containerd and the per-pod shims. |
 | `event-exporter` | every node | Tails journald for the given systemd units and pushes lines matching a config-driven regex list (`event-exporter.yml`, by default AosCore's own `[profiling] <text>` checkpoints) to VictoriaMetrics as `checkpoint_event` samples, so Grafana can overlay operation events (instance/component start/stop) on the same graphs as the CPU/RAM series above. |
 | `victoria-metrics` | main node only | The time series database: scrapes every node's exporters and accepts pushed samples (`event-exporter`'s checkpoints, and benchmark deployable items' own start/stop events and results) via its `/api/v1/import/prometheus` endpoint. |
+| [`benchmark-results-publisher`](benchmark-results-publisher.md) | main node only | Watches VictoriaMetrics (not journald - it queries the checkpoints `event-exporter`/benchmark-timing already pushed) for repeating windows of checkpoint samples and publishes each window's aggregated elapsed-time metrics (Download/Install/Prepare/Total/...) as `benchmark_result` samples, entirely config-driven - see [benchmark-results-publisher.md](benchmark-results-publisher.md). |
 
 Benchmark deployable items themselves (disk I/O, network, or any other custom benchmark container - see
 `aos_core_cpp/scripts/monitoring/benchmark_template.py` for a copy-and-adapt starting point) aren't a meta-aos
@@ -64,10 +65,11 @@ The Aos firewall's default-drop forward chain also has benchmark-only accept rul
 | 9100 | `0.0.0.0` | `node-exporter` | VictoriaMetrics (localhost on the main node, over the network from secondary nodes) |
 | 9256 | `0.0.0.0` | `process-exporter` | VictoriaMetrics (same as above) |
 | 9400 | `0.0.0.0` | `cgroup-exporter` | VictoriaMetrics (same as above) |
-| 8428 | `0.0.0.0` | `victoria-metrics` (main node only) | Every node's exporters (scrape), every node's `event-exporter`/benchmark items (push), and Grafana on the bench host (query - opened through the gateway by the `aos-provfirewall` benchmark variant) |
+| 8428 | `0.0.0.0` | `victoria-metrics` (main node only) | Every node's exporters (scrape), every node's `event-exporter`/benchmark items (push), `benchmark-results-publisher` (query and push, both localhost-only), and Grafana on the bench host (query - opened through the gateway by the `aos-provfirewall` benchmark variant) |
 | 3000 | bench host only, not part of the image | Grafana | Whoever's viewing the dashboard |
 
-`event-exporter` has no listening port: it only ever initiates outbound pushes to VictoriaMetrics.
+`event-exporter`/`benchmark-results-publisher` have no listening port: they only ever initiate outbound
+requests to VictoriaMetrics.
 
 ## Enabling
 
@@ -76,8 +78,8 @@ DISTRO_FEATURES:append = " benchmark"
 ```
 
 This pulls `node-exporter`/`process-exporter`/`cgroup-exporter`/`event-exporter` and the benchmark tools into every
-node's image and `victoria-metrics`, Podman and k3s into the main node's, and switches `aos-provfirewall` to its
-benchmark-variant firewall script (see `recipes-core/images/aos-image.inc`).
+node's image and `victoria-metrics`, `benchmark-results-publisher`, Podman and k3s into the main node's,
+and switches `aos-provfirewall` to its benchmark-variant firewall script (see `recipes-core/images/aos-image.inc`).
 
 The k3s benchmark also needs kernel options the base kernel doesn't have. The `k3s` distro feature makes
 meta-virtualization add its kernel configuration fragment for k3s (`kubernetes.scc`), which requires the
