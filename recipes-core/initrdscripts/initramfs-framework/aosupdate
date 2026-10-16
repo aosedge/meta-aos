@@ -1,16 +1,20 @@
 #!/bin/sh
 
-# This module requires the following boot parameters:
-#     aosupdate.device         - specifies device where update artifacts are stored;
-#     aosupdate.path           - specifies path whre update artifacts are stored;
-#     aosupdate.selinux_module - specifies SELinux module.
+# This module is enabled if aosupdate.disk or aosupdate.path boot parameter is set. Boot parameters:
+#     aosupdate.disk           - optional, specifies device where update artifacts are stored;
+#     aosupdate.path           - optional, specifies path where update artifacts are stored, default: update_rootfs;
+#     aosupdate.selinux_module - optional, specifies SELinux module.
 
 # consts
 
-UPDATED_FLAG="updated"
-FAIL_FLAG="failed"
-DO_UPDATE_FLAG="do_update"
-DO_APPLY_FLAG="do_apply"
+# Update state file is shared with Aos SM. It contains "<key>=<value>" lines. Both SM and initramfs replace the file
+# atomically (write a temporary file and rename it), so the update disk filesystem must support atomic rename. Keys:
+#     state  - SM writes: prepared, confirmed, rejected; initramfs writes: trial, applying, applied, reverted, failed;
+#     type   - update type: full or incremental, written by SM together with prepared state;
+#     reason - failure reason, written by SM on reject or by initramfs on failure.
+# Initramfs changes only the state and the reason and keeps other values.
+STATE_FILE_NAME="update_state"
+MAX_REASON_LEN=512
 
 UPDATE_MOUNT="/mnt/device"
 IMAGE_MOUNT="/mnt/image"
@@ -18,21 +22,54 @@ IMAGE_MOUNT="/mnt/image"
 UPDATE_IMAGE=""
 UPDATE_DIR="${bootparam_aosupdate_disk:+${UPDATE_MOUNT}/}${bootparam_aosupdate_path:-update_rootfs}"
 UPDATE_EXT="*.squashfs"
+STATE_FILE="$UPDATE_DIR/$STATE_FILE_NAME"
 
 fail() {
     err="${1:-"unknown error"}"
 
-    # NOTE <3> is KERN_ERR loglevel, which cause alerts to be sent
-    echo "<3>Aos update failed: $err" >/dev/kmsg
+    error "Aos update failed: $err"
 
-    # Put to fail flag file if update mounted
-    if [ -z "${bootparam_aosupdate_disk}" ] || grep -qs "$UPDATE_MOUNT" /proc/mounts; then
-        mkdir -p "$UPDATE_DIR"
-        echo "$err" >"$UPDATE_DIR/$FAIL_FLAG"
+    # Store the reason if update disk is mounted. Failed apply in applying state keeps the state, so apply is retried on
+    # next boot: the rootfs may be partially updated. Any other failure leaves the rootfs untouched and is final.
+    if [ -f "$STATE_FILE" ] && { [ -z "${bootparam_aosupdate_disk}" ] || is_mounted "$UPDATE_MOUNT"; }; then
+        if [ "$(get_value state)" = "applying" ]; then
+            set_state applying "$err"
+        else
+            set_state failed "$err"
+        fi
     fi
 }
 
-error() {
+is_mounted() {
+    grep -qs " $1 " /proc/mounts
+}
+
+get_value() {
+    sed -n "s/^$1=//p" "$STATE_FILE" 2>/dev/null | head -n1
+}
+
+# Atomically replaces the state and the reason. The reason is removed if not specified. Other values are kept. Only the
+# tail of a long reason is stored as it contains the actual error. The state file is not replaced if the temporary file
+# is not completely written, e.g. on full disk.
+set_state() {
+    tmp_file="$STATE_FILE.tmp"
+
+    # NOTE set -e is ignored in if condition, so each write is checked explicitly
+    if ! {
+        sed -e '/^state=/d' -e '/^reason=/d' "$STATE_FILE" &&
+            echo "state=$1" &&
+            { [ -z "$2" ] || echo "reason=$(printf '%s' "$2" | tr '\n\r' '  ' | tail -c "$MAX_REASON_LEN")"; }
+    } >"$tmp_file"; then
+        rm -f "$tmp_file"
+        return 1
+    fi
+
+    sync
+    mv "$tmp_file" "$STATE_FILE"
+    sync
+}
+
+raise() {
     (
         echo "$@" 1>&2
         exit 1
@@ -60,7 +97,7 @@ mount_update_disk() {
 }
 
 umount_update_disk() {
-    if grep -qs "$UPDATE_MOUNT" /proc/mounts && [ ! -f "$UPDATE_DIR/$UPDATED_FLAG" ]; then
+    if is_mounted "$UPDATE_MOUNT" && [ "$(get_value state)" != "trial" ]; then
         msg "Umount update disk: $bootparam_aosupdate_disk"
 
         umount "$UPDATE_MOUNT"
@@ -96,54 +133,65 @@ mount_update_image() {
 }
 
 umount_update_image() {
-    if grep -qs "$IMAGE_MOUNT" /proc/mounts; then
-        msg "Umount update image: $UPDATE_IMAGE"
+    if is_mounted "$IMAGE_MOUNT"; then
+        msg "Umount update image: $IMAGE_MOUNT"
 
         umount "$IMAGE_MOUNT"
     fi
 }
 
-# Possible actions are: update, apply, revert
+# Possible actions are: update, apply, revert. Trial state on boot means that SM didn't confirm the update.
 get_action() {
-    if [ -f "$UPDATE_DIR/$DO_APPLY_FLAG" ]; then
-        echo "apply"
-        return
-    fi
-
-    if [ -f "$UPDATE_DIR/$UPDATED_FLAG" ]; then
-        echo "revert"
-        return
-    fi
-
-    if [ -f "$UPDATE_DIR/$DO_UPDATE_FLAG" ]; then
+    case "$(get_value state)" in
+    prepared)
         echo "update"
-        return
-    fi
+        ;;
+
+    confirmed | applying)
+        echo "apply"
+        ;;
+
+    trial | rejected)
+        echo "revert"
+        ;;
+    esac
 }
 
+# Missing or unknown type is an error: applying incremental image as full one removes the rootfs files missing in the
+# image.
 get_update_type() {
-    update=$(cat "$UPDATE_DIR/$DO_UPDATE_FLAG")
+    update_type="$(get_value type)"
 
-    if [ -z "$update" ]; then
-        echo "full"
-    else
-        echo "$update"
-    fi
+    case "$update_type" in
+    full | incremental)
+        echo "$update_type"
+        ;;
+
+    *)
+        raise "unknown update type: $update_type"
+        ;;
+    esac
 }
 
-do_update() {
+find_update_image() {
     UPDATE_IMAGE="$(find "$UPDATE_DIR" -name "${UPDATE_EXT}" | head -n1)"
 
+    if [ -z "$UPDATE_IMAGE" ]; then
+        raise "update image not found"
+    fi
+}
+
+# Trial state is stored before the rootfs is switched to the update image: if the switch fails, failed state is stored
+# and the installed rootfs is booted. If boot is interrupted after trial state is stored, the next boot reverts it.
+do_update() {
+    find_update_image
     update_type="$(get_update_type)"
 
     msg "Start $update_type update..."
 
-    if [ -z "$UPDATE_IMAGE" ]; then
-        error "update image not found"
-    fi
-
     load_selinux_module
     mount_update_image
+    set_state trial
 
     case "$update_type" in
     full)
@@ -153,23 +201,24 @@ do_update() {
     incremental)
         mount -t overlay overlay -o lowerdir="$IMAGE_MOUNT":"$ROOTFS_DIR" "$ROOTFS_DIR"
         ;;
-
-    *)
-        error "unknown update type: $update_type"
-        ;;
     esac
-
-    touch "$UPDATE_DIR"/"$UPDATED_FLAG"
 
     msg "Successfully updated!"
 }
 
+# The rootfs is not modified on trial: revert only changes the state. Trial state on boot means the update image
+# failed to boot or SM didn't confirm it, so it is alerted. Rejected state keeps the reason stored by SM.
 do_revert() {
     msg "Revert update"
 
-    clear_all_flags
+    if [ "$(get_value state)" = "trial" ]; then
+        error "Aos update failed: update not confirmed"
+        set_state reverted "update not confirmed"
+    else
+        set_state reverted "$(get_value reason)"
+    fi
 
-    error "update not confirmed"
+    msg "Successfully reverted!"
 }
 
 cleanup() {
@@ -177,19 +226,18 @@ cleanup() {
     umount_update_image
 }
 
-clear_all_flags() {
-    rm -f "$UPDATE_DIR/$DO_UPDATE_FLAG" "$UPDATE_DIR/$UPDATED_FLAG" "$UPDATE_DIR/$DO_APPLY_FLAG" "$UPDATE_DIR/$FAIL_FLAG"
-}
-
+# Applying state is stored right before the rootfs is modified: on first attempt failures before it are final, failures
+# or interrupts after it keep applying state and apply is repeated on next boot. Applied state is stored after the rootfs
+# is remounted read-only, so the applied rootfs is durable.
 do_apply() {
-    UPDATE_IMAGE="$(find "$UPDATE_DIR" -name "${UPDATE_EXT}" | head -n1)"
-
+    find_update_image
     update_type="$(get_update_type)"
 
     msg "Start $update_type apply..."
 
     load_selinux_module
     mount_update_image
+    set_state applying "$(get_value reason)"
     mount -o remount,rw "$ROOTFS_DIR"
 
     case "$update_type" in
@@ -202,13 +250,10 @@ do_apply() {
 
         find "$ROOTFS_DIR/" -type c -exec rm -f {} \;
         ;;
-    *)
-        error "unknown update type: $update_type"
-        ;;
     esac
 
     cleanup
-    clear_all_flags
+    set_state applied
 
     msg "Successfully applied!"
 }
