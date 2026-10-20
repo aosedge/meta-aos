@@ -95,6 +95,7 @@ IMAGE_INSTALL:append = " \
     aos-deprov \
     aos-provfirewall \
     aos-nftables \
+    conmon \
     ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ' \
         packagegroup-selinux-minimal \
         packagegroup-selinux-policycoreutils \
