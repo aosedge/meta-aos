@@ -10,7 +10,7 @@ LIC_FILES_CHKSUM = "file://src/${GO_IMPORT}/LICENSE;md5=3b83ef96387f14655fc854dd
 BRANCH = "main"
 SRCREV = "6a81bb6bcc2a42499f5c9c3785cf75d1dfeb2962"
 
-SRC_URI = "git://${GO_IMPORT}.git;branch=${BRANCH};protocol=https"
+SRC_URI = "git://${GO_IMPORT}.git;branch=${BRANCH};protocol=https;destsuffix=${GO_SRCURI_DESTSUFFIX}"
 
 SRC_URI += " \
     file://aos_vis.cfg \
@@ -91,13 +91,13 @@ python do_configure_adapters() {
 
 do_install:append() {
     install -d ${D}${sysconfdir}/aos
-    install -m 0644 ${WORKDIR}/aos_vis.cfg ${D}${sysconfdir}/aos
+    install -m 0644 ${UNPACKDIR}/aos_vis.cfg ${D}${sysconfdir}/aos
 
     install -d ${D}${systemd_system_unitdir}
-    install -m 0644 ${WORKDIR}/aos-vis.service ${D}${systemd_system_unitdir}/aos-vis.service
+    install -m 0644 ${UNPACKDIR}/aos-vis.service ${D}${systemd_system_unitdir}/aos-vis.service
 
     install -d ${D}${sysconfdir}/systemd/system/aos.target.d
-    install -m 0644 ${WORKDIR}/aos-target.conf ${D}${sysconfdir}/systemd/system/aos.target.d/${PN}.conf
+    install -m 0644 ${UNPACKDIR}/aos-target.conf ${D}${sysconfdir}/systemd/system/aos.target.d/${PN}.conf
 
     if "${@bb.utils.contains('AOS_VIS_DATA_PROVIDER', 'telemetryemulatoradapter', 'true', 'false', d)}"; then
         sed -i -e 's/network-online.target/network-online.target telemetry-emulator.service/g' ${D}${systemd_system_unitdir}/aos-vis.service

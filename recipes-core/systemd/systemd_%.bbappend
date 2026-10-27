@@ -7,5 +7,5 @@ SRC_URI += " \
 
 do_install:append() {
     install -d ${D}${sysconfdir}/systemd/system/systemd-journal-flush.service.d
-    install -m 0644 ${WORKDIR}/systemd-journal-flush-override.conf ${D}${sysconfdir}/systemd/system/systemd-journal-flush.service.d
+    install -m 0644 ${UNPACKDIR}/systemd-journal-flush-override.conf ${D}${sysconfdir}/systemd/system/systemd-journal-flush.service.d
 }

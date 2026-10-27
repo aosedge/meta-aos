@@ -21,8 +21,6 @@ SRC_URI += " \
     file://jwt.key.pub \
 "
 
-S = "${WORKDIR}/git"
-
 inherit cargo cargo-update-recipe-crates systemd 
 
 DEPENDS = "protobuf-native grpc-native"
@@ -43,20 +41,20 @@ require kuksa-databroker-crates.inc
 
 do_install:append() {
     install -d ${D}${sysconfdir}/default
-    install -m 0644 ${WORKDIR}/kuksa-databroker.env ${D}${sysconfdir}/default/kuksa-databroker
+    install -m 0644 ${UNPACKDIR}/kuksa-databroker.env ${D}${sysconfdir}/default/kuksa-databroker
 
     install -d ${D}${systemd_system_unitdir}
-    install -m 0644 ${WORKDIR}/kuksa-databroker.service ${D}${systemd_system_unitdir}
+    install -m 0644 ${UNPACKDIR}/kuksa-databroker.service ${D}${systemd_system_unitdir}
 
 
     install -d ${D}${sysconfdir}/kuksa-val
-    install -m 0644 ${WORKDIR}/CA.pem ${D}${sysconfdir}/kuksa-val
+    install -m 0644 ${UNPACKDIR}/CA.pem ${D}${sysconfdir}/kuksa-val
 
-    install -m 0644 ${WORKDIR}/Server.key ${D}${sysconfdir}/kuksa-val
-    install -m 0644 ${WORKDIR}/Server.pem ${D}${sysconfdir}/kuksa-val
-    install -m 0644 ${WORKDIR}/jwt.key.pub ${D}${sysconfdir}/kuksa-val
-    install -m 0644 ${WORKDIR}/Client.key ${D}${sysconfdir}/kuksa-val
-    install -m 0644 ${WORKDIR}/Client.pem ${D}${sysconfdir}/kuksa-val
+    install -m 0644 ${UNPACKDIR}/Server.key ${D}${sysconfdir}/kuksa-val
+    install -m 0644 ${UNPACKDIR}/Server.pem ${D}${sysconfdir}/kuksa-val
+    install -m 0644 ${UNPACKDIR}/jwt.key.pub ${D}${sysconfdir}/kuksa-val
+    install -m 0644 ${UNPACKDIR}/Client.key ${D}${sysconfdir}/kuksa-val
+    install -m 0644 ${UNPACKDIR}/Client.pem ${D}${sysconfdir}/kuksa-val
 }
 
 # The upstream Cargo.toml builds optimized and stripped binaries, for

@@ -10,7 +10,7 @@ do_install:append:class-target() {
     sed -e 's,@PKCS11_PROVIDER_PATH@,${PKCS11_PROVIDER_PATH},g' \
         -e 's,@LEGACY_PROVIDER_PATH@,${LEGACY_PROVIDER_PATH},g' \
         -e 's,@HSM_MODULE_PATH@,${HSM_MODULE_PATH},g' \
-        ${WORKDIR}/openssl-aos.cnf > ${D}${sysconfdir}/ssl/openssl-aos.cnf
+        ${UNPACKDIR}/openssl-aos.cnf > ${D}${sysconfdir}/ssl/openssl-aos.cnf
 
     echo ".include ${sysconfdir}/ssl/openssl-aos.cnf" >> ${D}${sysconfdir}/ssl/openssl.cnf
 }

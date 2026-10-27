@@ -7,8 +7,6 @@ SRCREV = "9ba7f40c0995358a293aab729d57739c3e9b2829"
 
 SRC_URI = "git://github.com/COVESA/vss-tools.git;protocol=https;branch=${BRANCH} "
 
-S = "${WORKDIR}/git"
-
 inherit python_poetry_core
 
 RDEPENDS:${PN} += " \

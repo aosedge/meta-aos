@@ -16,7 +16,7 @@ SRC_URI = " \
     file://event-exporter.yml \
 "
 
-S = "${WORKDIR}"
+S = "${UNPACKDIR}"
 
 inherit systemd
 
@@ -47,18 +47,18 @@ UNIT_ARGS:aos-main-node = "--unit aos-cm --unit aos-sm --unit aos-iam"
 
 do_install() {
     install -d ${D}${libexecdir}/${BPN}
-    install -m 0755 ${WORKDIR}/event_exporter.py ${D}${libexecdir}/${BPN}/event_exporter.py
+    install -m 0755 ${UNPACKDIR}/event_exporter.py ${D}${libexecdir}/${BPN}/event_exporter.py
 
     install -d ${D}${systemd_system_unitdir}
-    install -m 0644 ${WORKDIR}/event-exporter.service ${D}${systemd_system_unitdir}
+    install -m 0644 ${UNPACKDIR}/event-exporter.service ${D}${systemd_system_unitdir}
 
     install -d ${D}${sysconfdir}/default
     sed \
         -e 's|@VICTORIA_URL@|http://${AOS_MAIN_NODE_HOSTNAME}:8428|' \
         -e 's|@NODE@|${AOS_NODE_HOSTNAME}|' \
         -e 's|@UNIT_ARGS@|${UNIT_ARGS}|' \
-        ${WORKDIR}/event-exporter.default > ${D}${sysconfdir}/default/event-exporter
+        ${UNPACKDIR}/event-exporter.default > ${D}${sysconfdir}/default/event-exporter
 
     install -d ${D}${sysconfdir}/event-exporter
-    install -m 0644 ${WORKDIR}/event-exporter.yml ${D}${sysconfdir}/event-exporter/patterns.yml
+    install -m 0644 ${UNPACKDIR}/event-exporter.yml ${D}${sysconfdir}/event-exporter/patterns.yml
 }

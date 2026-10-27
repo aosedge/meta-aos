@@ -7,7 +7,7 @@ SRC_URI = " \
     file://diskencryption.sh \
 "
 
-S = "${WORKDIR}"
+S = "${UNPACKDIR}"
 
 RDEPENDS:${PN} = " \
     bash \

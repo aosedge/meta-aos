@@ -9,7 +9,7 @@ SRC_URI = " \
     file://aoscore-benchmark.env \
 "
 
-S = "${WORKDIR}"
+S = "${UNPACKDIR}"
 
 inherit systemd
 
