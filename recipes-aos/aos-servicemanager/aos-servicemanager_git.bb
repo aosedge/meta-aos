@@ -5,9 +5,9 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=86d3f3a95c324c9479bd8986968f4327"
 
 require include/aos-core-release.inc
 
-SRCREV = "${AOS_CORE_SRCREV}"
+SRCREV = "${AUTOREV}"
 
-SRC_URI = "git://github.com/aosedge/aos_core_cpp.git;protocol=https;branch=${AOS_CORE_BRANCH}"
+SRC_URI = "git://github.com/mlohvynenko/aos_core_cpp.git;protocol=https;branch=improve_rootfs"
 
 SRC_URI += " \
     file://sm.cfg \
