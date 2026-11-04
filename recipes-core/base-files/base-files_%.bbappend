@@ -1,13 +1,21 @@
 hostname = "${AOS_NODE_HOSTNAME}"
 aos_disks_timeout = "30"
 
+def aos_disk_device(d, disk):
+    if disk in d.getVar('AOS_INTEGRITY_DISKS').split():
+        return '/dev/mapper/aosint-' + disk
+
+    return '/dev/aosvg/' + disk
+
+do_install[vardeps] += "AOS_INTEGRITY_DISKS"
+
 do_install:append() {
     # remove /run from fstab, run is mounted in initramfs
     sed -i "\:[[:blank:]]*/run:d" ${D}${sysconfdir}/fstab
 
     # add Aos partitions
     echo "# Aos partitions">> ${D}${sysconfdir}/fstab
-    echo '/dev/aosvg/workdirs /var/aos/workdirs ext4 defaults,auto,nofail,noatime,'\
+    echo '${@aos_disk_device(d, 'workdirs')} /var/aos/workdirs ext4 defaults,auto,nofail,noatime,'\
 'x-systemd.device-timeout=${aos_disks_timeout}'\
 ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ',context=system_u:object_r:aos_var_run_t:s0', '', d)} '0 0' \
    >> ${D}/${sysconfdir}/fstab
@@ -15,17 +23,17 @@ ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ',context=system_u:object_r:a
 
 do_install:append:aos-main-node() {
     # add Aos partitions
-   echo '/dev/aosvg/downloads /var/aos/downloads ext4 defaults,auto,nofail,'\
+   echo '${@aos_disk_device(d, 'downloads')} /var/aos/downloads ext4 defaults,auto,nofail,'\
 'noatime,x-systemd.device-timeout=${aos_disks_timeout}'\
 ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ',context=system_u:object_r:aos_var_run_t:s0', '', d)} '0 0' \
    >> ${D}/${sysconfdir}/fstab
 
-   echo '/dev/aosvg/storages /var/aos/storages ext4 defaults,auto,nofail,noatime,usrquota,grpquota,'\
+   echo '${@aos_disk_device(d, 'storages')} /var/aos/storages ext4 defaults,auto,nofail,noatime,usrquota,grpquota,'\
 'noatime,x-systemd.device-timeout=${aos_disks_timeout}'\
 ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ',context=system_u:object_r:aos_var_run_t:s0', '', d)} '0 0' \
    >> ${D}/${sysconfdir}/fstab
 
-    echo '/dev/aosvg/states /var/aos/states ext4 defaults,auto,nofail,noatime,usrquota,grpquota,'\
+    echo '${@aos_disk_device(d, 'states')} /var/aos/states ext4 defaults,auto,nofail,noatime,usrquota,grpquota,'\
 'x-systemd.device-timeout=${aos_disks_timeout}'\
 ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ',context=system_u:object_r:aos_var_run_t:s0', '', d)} '0 0' \
    >> ${D}/${sysconfdir}/fstab
