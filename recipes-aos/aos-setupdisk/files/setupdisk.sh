@@ -8,6 +8,8 @@ TOKEN_LABEL="aoscore"
 OBJECT_LABEL="diskencryption"
 CONFIG_FILE="/opt/aos/aosdisk.cfg"
 MAPPED_DEVICE="aos"
+INTEGRITY_ALG="crc32c"
+INTEGRITY_PREFIX="aosint"
 
 usage() {
     echo "Usage: ./$(basename -- "$0") [OPTIONS...] COMMAND [DEVICE]"
@@ -52,6 +54,46 @@ get_mount_point() {
     fatal "mount point for $1 not found"
 }
 
+is_integrity_enabled() {
+    [ "${1:-0}" -eq 1 ]
+}
+
+get_disk_device() {
+    if is_integrity_enabled "$2"; then
+        echo "/dev/mapper/$INTEGRITY_PREFIX-$1"
+    else
+        echo "/dev/$AOS_GROUP/$1"
+    fi
+}
+
+create_integrity_disk() {
+    echo "Enabling integrity on disk: /dev/$AOS_GROUP/$1, algorithm: $INTEGRITY_ALG ..."
+
+    # Don't wipe the disk to speed up provisioning: kernel recalculates integrity tags in background instead. Until
+    # recalculation is done, sectors above recalculation position are not verified. Recalculation is resumed on next
+    # open from the position stored in the superblock, so it is not required to pass --integrity-recalculate later.
+    integritysetup format -q --no-wipe --integrity "$INTEGRITY_ALG" --sector-size 4096 "/dev/$AOS_GROUP/$1"
+    integritysetup open --integrity "$INTEGRITY_ALG" --integrity-recalculate "/dev/$AOS_GROUP/$1" \
+        "$INTEGRITY_PREFIX-$1"
+
+    # The recalculation flag is set in memory on open and stored in the superblock only after first 256 MiB are
+    # recalculated. If power is lost before, recalculation is not resumed and never written sectors fail on read.
+    # Suspend stops recalculation, which stores the flag and position in the superblock and flushes it to disk. Resume
+    # continues recalculation.
+    dmsetup suspend "$INTEGRITY_PREFIX-$1"
+    dmsetup resume "$INTEGRITY_PREFIX-$1"
+
+    echo "Integrity disk created: /dev/mapper/$INTEGRITY_PREFIX-$1"
+}
+
+close_integrity_disk() {
+    if integritysetup status "$INTEGRITY_PREFIX-$1" >/dev/null 2>&1; then
+        echo "Closing integrity disk: /dev/mapper/$INTEGRITY_PREFIX-$1"
+
+        integritysetup close "$INTEGRITY_PREFIX-$1"
+    fi
+}
+
 create_aos_disks() {
     device=$1
 
@@ -80,25 +122,30 @@ create_aos_disks() {
     pvcreate /dev/mapper/$MAPPED_DEVICE
     vgcreate "$AOS_GROUP" /dev/mapper/$MAPPED_DEVICE
 
-    while read -r name size enable_quota; do
+    while read -r name size enable_quota integrity; do
         # skip comments
         if [[ $name = \#* ]]; then
             continue
         fi
 
         lvcreate -l "$size" "$AOS_GROUP" -n "$name"
-        mkfs.ext4 "/dev/$AOS_GROUP/$name"
-        mkdir -p "$(get_mount_point "/dev/$AOS_GROUP/$name")"
+
+        if is_integrity_enabled "$integrity"; then
+            create_integrity_disk "$name"
+        fi
+
+        mkfs.ext4 "$(get_disk_device "$name" "$integrity")"
+        mkdir -p "$(get_mount_point "$(get_disk_device "$name" "$integrity")")"
     done <"$CONFIG_FILE"
 
-    while read -r name size enable_quota; do
+    while read -r name size enable_quota integrity; do
         # skip comments
         if [[ $name = \#* ]]; then
             continue
         fi
 
         if [ "$enable_quota" -eq 1 ]; then
-            tune2fs -O quota "/dev/$AOS_GROUP/$name"
+            tune2fs -O quota "$(get_disk_device "$name" "$integrity")"
         fi
     done <"$CONFIG_FILE"
 
@@ -107,17 +154,21 @@ create_aos_disks() {
 }
 
 delete_aos_disks() {
-    while read -r name size enable_quota; do
+    while read -r name size enable_quota integrity; do
         # skip comments
         if [[ $name = \#* ]]; then
             continue
         fi
 
-        mountdir=$(get_mount_point "/dev/$AOS_GROUP/$name")
+        mountdir=$(get_mount_point "$(get_disk_device "$name" "$integrity")")
 
         if mountpoint -q "$mountdir"; then
             umount "$mountdir"
             rm -rf "$mountdir"
+        fi
+
+        if is_integrity_enabled "$integrity"; then
+            close_integrity_disk "$name"
         fi
 
     done <"$CONFIG_FILE"

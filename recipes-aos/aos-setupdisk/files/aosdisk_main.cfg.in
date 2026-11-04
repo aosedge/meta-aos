@@ -1,0 +1,5 @@
+# name      size    enable quota  integrity
+downloads   40%VG   0             @INTEGRITY@
+workdirs    30%VG   0             @INTEGRITY@
+storages    20%VG   1             @INTEGRITY@
+states      10%VG   1             @INTEGRITY@
