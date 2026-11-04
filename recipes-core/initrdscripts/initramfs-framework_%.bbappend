@@ -5,6 +5,7 @@ SRC_URI += " \
     file://kmsglog \
     file://machineid \
     file://opendisk \
+    file://openintegrity \
     file://rundir \
     file://vardir \
 "
@@ -14,6 +15,7 @@ PACKAGES += " \
     initramfs-module-kmsglog \
     initramfs-module-machineid \
     initramfs-module-opendisk \
+    initramfs-module-openintegrity \
     initramfs-module-rundir \
     initramfs-module-vardir \
 "
@@ -44,6 +46,11 @@ SUMMARY:initramfs-module-opendisk = "initramfs support for opening encrypted dis
 RDEPENDS:initramfs-module-opendisk = "${PN}-base diskencryption"
 FILES:initramfs-module-opendisk = "/init.d/05-opendisk"
 
+SUMMARY:initramfs-module-openintegrity = "initramfs support for opening Aos dm-integrity disks"
+RDEPENDS:initramfs-module-openintegrity = "${PN}-base cryptsetup"
+FILES:initramfs-module-openintegrity = "/init.d/10-openintegrity"
+RRECOMMENDS:initramfs-module-openintegrity = "kernel-module-dm-integrity"
+
 SUMMARY:initramfs-module-rundir = "initramfs support for sharing /run dir to local"
 RDEPENDS:initramfs-module-rundir = "${PN}-base"
 FILES:initramfs-module-rundir = "/init.d/00-rundir"
@@ -64,6 +71,9 @@ do_install:append() {
 
     # opendisk
     install -m 0755 ${WORKDIR}/opendisk ${D}/init.d/05-opendisk
+
+    # openintegrity
+    install -m 0755 ${WORKDIR}/openintegrity ${D}/init.d/10-openintegrity
 
     # rundir
     install -m 0755 ${WORKDIR}/rundir ${D}/init.d/00-rundir
