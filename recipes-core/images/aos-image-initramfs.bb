@@ -10,6 +10,9 @@ AOS_INITRAMFS_SCRIPTS ?= " \
     initramfs-module-vardir \
 "
 
+# Open dm-integrity disks only if integrity is enabled
+AOS_INITRAMFS_SCRIPTS += "${@'initramfs-module-openintegrity' if d.getVar('AOS_INTEGRITY_DISKS').strip() else ''}"
+
 RRECOMMENDS:${PN} = " \
     kernel-module-overlay \
     kernel-module-squashfs \
