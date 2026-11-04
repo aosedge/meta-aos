@@ -7,7 +7,7 @@ require include/aos-core-release.inc
 
 SRCREV = "${AOS_CORE_SRCREV}"
 
-SRC_URI = "git://github.com/aosedge/aos_core_cpp.git;protocol=https;branch=${AOS_CORE_BRANCH}"
+SRC_URI = "git://github.com/mykola-kobets-epam/aos_core_cpp.git;protocol=https;branch=${AOS_CORE_BRANCH}"
 
 SRC_URI += " \
     file://sm.cfg \

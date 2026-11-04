@@ -1,4 +1,4 @@
-AOS_CORE_BRANCH = "develop"
+AOS_CORE_BRANCH = "pkcs11-root-cert-impl"
 AOS_CORE_SRCREV = "${AUTOREV}"
 
 AOS_REFPOLICY_BRANCH = "develop"
