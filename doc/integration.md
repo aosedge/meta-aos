@@ -132,6 +132,44 @@ partition is being opened in Aos initramfs on startup using dedicated (`opendisk
 be included in the Aos initramfs and properly configure with dedicated initramfs command line options. See `opendisk`
 script implementation in `initramfs-framework` recipe.
 
+## Aos disk integrity (optional)
+
+Aos logical disks can be protected by [dm-integrity](https://docs.kernel.org/admin-guide/device-mapper/dm-integrity.html)
+to detect silent data corruption: reading a corrupted sector returns an I/O error instead of wrong data. The `crc32c`
+checksum is used. The disks are located under dm-crypt, so without the disk key a modification of the data can only
+produce random corruption, which is detected in the same way as disk corruption, and a keyed checksum is not required.
+Restoring an older disk content and modification through the opened device are not detected. Integrity journal and tags
+take about 1-2 % of the disk and writes are performed twice.
+
+The protected disks are selected by `AOS_INTEGRITY_DISKS` variable in `local.conf`. It is empty by default, which means
+integrity is disabled:
+
+```bash
+AOS_INTEGRITY_DISKS = "workdirs storages states"
+```
+
+The following disks can be selected: `downloads`, `workdirs`, `storages` and `states` on the main node and `workdirs` on
+the secondary nodes.
+It is not recommended to select `downloads`: it holds only transient files, which are verified by digest before use, and
+it is the most write-heavy disk.
+
+During provisioning, `aos-setupdisk` formats the selected disks and opens them as `/dev/mapper/aosint-<disk>`. These
+devices are used in `/etc/fstab` instead of `/dev/aosvg/<disk>`. To speed up provisioning, the disks are not wiped: the
+kernel calculates integrity tags in background and sectors which are not processed yet are not verified.
+
+On startup, the disks are opened by `openintegrity` initramfs script. It is added to `aos-image-initramfs` automatically
+if `AOS_INTEGRITY_DISKS` is set. It runs after the logical volumes are activated, so `initramfs-module-lvm`, `lvm2` and
+`initramfs-module-opendisk` should be included in the Aos initramfs as well.
+
+Integrating this feature requires the following:
+
+* the kernel should support dm-integrity (`CONFIG_DM_INTEGRITY`) and `crc32c` (`CONFIG_CRYPTO_CRC32C`). If they are
+  built as modules, they should be available in the Aos initramfs;
+* if `workdirs` is selected and it stores the update artifacts, `aosupdate.disk` initramfs command line option should
+  be set to `/dev/mapper/aosint-workdirs`;
+* changing `AOS_INTEGRITY_DISKS` requires the device to be provisioned again: a rootfs update changes `/etc/fstab` but
+  doesn't change the format of the existing disks, and a disk with the wrong device in `/etc/fstab` is not mounted.
+
 ## Aos initramfs
 
 Aos initramfs implements different Aos system functionalities such as opening encrypted Aos partition, update rootfs
