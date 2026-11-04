@@ -1,0 +1,34 @@
+#!/bin/sh
+
+# This module opens dm-integrity disks of Aos volume group. It should run after LVM activation. Every logical volume
+# that has dm-integrity superblock is opened as /dev/mapper/aosint-<volume>.
+
+AOS_GROUP="aosvg"
+INTEGRITY_ALG="crc32c"
+INTEGRITY_PREFIX="aosint"
+
+openintegrity_enabled() {
+    udevadm settle
+
+    if [ ! -d "/dev/$AOS_GROUP" ]; then
+        return 1
+    fi
+
+    return 0
+}
+
+openintegrity_run() {
+    for disk in /dev/$AOS_GROUP/*; do
+        if ! integritysetup dump "$disk" >/dev/null 2>&1; then
+            continue
+        fi
+
+        name="$INTEGRITY_PREFIX-$(basename "$disk")"
+
+        msg "Open Aos integrity disk: $disk"
+
+        if ! integritysetup open --integrity "$INTEGRITY_ALG" "$disk" "$name"; then
+            error "Aos integrity disk $disk open failed"
+        fi
+    done
+}
