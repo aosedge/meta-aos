@@ -17,7 +17,6 @@ RDEPENDS:${PN} += " \
     python3-json \
     python3-logging \
     python3-netclient \
-    python3-pkg-resources \
     python3-anytree \
     python3-deprecation \
     python3-graphql-core \
