@@ -20,7 +20,6 @@ RDEPENDS:${PN} = " \
     cryptsetup \
     diskencryption \
     lvm2 \
-    lvm2-udevrules \
     e2fsprogs \
     e2fsprogs-tune2fs \
     libdevmapper \
