@@ -21,6 +21,9 @@ inherit cmake pkgconfig systemd
 
 SYSTEMD_SERVICE:${PN} = "aos-cm.service"
 
+INSANE_SKIP:${PN} += "buildpaths"
+INSANE_SKIP:${PN}-staticdev += "buildpaths"
+
 MIGRATION_SCRIPTS_PATH = "${base_prefix}/usr/share/aos/cm/migration"
 
 FILES:${PN} += " \
@@ -39,6 +42,7 @@ EXTRA_OECMAKE += " \
     -DWITH_IAM=OFF \
     -DWITH_MP=OFF \
     -DWITH_SM=OFF \
+    -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -Wno-error" \
 "
 OECMAKE_GENERATOR = "Unix Makefiles"
 
