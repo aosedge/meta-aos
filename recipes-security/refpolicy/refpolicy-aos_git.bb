@@ -14,7 +14,7 @@ PV = "2_20220106+git${SRCPV}"
 
 SRCREV = "${AOS_REFPOLICY_SRCREV}"
 
-SRC_URI = "git://github.com/aosedge/refpolicy.git;branch=${AOS_REFPOLICY_BRANCH};protocol=https;name=refpolicy;destsuffix=refpolicy"
+SRC_URI = "git://github.com/mlohvynenko/refpolicy.git;branch=conmon;protocol=https;name=refpolicy;destsuffix=refpolicy"
 
 SRC_URI += " \
     file://customizable_types \
