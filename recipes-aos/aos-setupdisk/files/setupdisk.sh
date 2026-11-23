@@ -107,6 +107,12 @@ create_aos_disks() {
         usage
     fi
 
+    # Disk may already exist from an interrupted or repeated provisioning (IAM has just created a new
+    # diskencryption key, so the old LUKS token can no longer be opened). Remove it before re-creating.
+    if [ -e "/dev/mapper/$MAPPED_DEVICE" ]; then
+        delete_aos_disks
+    fi
+
     # encrypt disk
     diskencryption.sh encrypt "$device" -m "$MODULE" -t "$TOKEN_LABEL" -l "$OBJECT_LABEL"
     # open disk
