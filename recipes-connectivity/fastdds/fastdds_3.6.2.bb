@@ -8,8 +8,6 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=3b83ef96387f14655fc854ddc3c6bd57"
 SRC_URI = "git://github.com/eProsima/Fast-DDS.git;protocol=https;nobranch=1"
 SRCREV = "39303846fb8534ef69fa65f9fa4bcc9e6a7c995a"
 
-S = "${WORKDIR}/git"
-
 DEPENDS = "fastcdr foonathan-memory asio libtinyxml2 openssl"
 
 inherit cmake

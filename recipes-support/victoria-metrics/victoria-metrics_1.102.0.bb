@@ -9,7 +9,7 @@ GO_IMPORT = "github.com/VictoriaMetrics/VictoriaMetrics"
 GO_INSTALL = "${GO_IMPORT}/app/victoria-metrics"
 
 SRC_URI = " \
-    git://${GO_IMPORT}.git;protocol=https;nobranch=1 \
+    git://${GO_IMPORT}.git;protocol=https;nobranch=1;destsuffix=${GO_SRCURI_DESTSUFFIX} \
     file://victoria-metrics.service \
     file://scrape.yml \
     file://secondary-node-exporter.json \
@@ -46,17 +46,17 @@ do_compile[network] = "1"
 
 do_install:append() {
     install -d ${D}${sysconfdir}/victoria-metrics
-    install -m 0644 ${WORKDIR}/scrape.yml ${D}${sysconfdir}/victoria-metrics
+    install -m 0644 ${UNPACKDIR}/scrape.yml ${D}${sysconfdir}/victoria-metrics
 
     install -d ${D}${sysconfdir}/victoria-metrics/targets
-    install -m 0644 ${WORKDIR}/secondary-node-exporter.json ${D}${sysconfdir}/victoria-metrics/targets
-    install -m 0644 ${WORKDIR}/secondary-process-exporter.json ${D}${sysconfdir}/victoria-metrics/targets
-    install -m 0644 ${WORKDIR}/secondary-cgroup-exporter.json ${D}${sysconfdir}/victoria-metrics/targets
+    install -m 0644 ${UNPACKDIR}/secondary-node-exporter.json ${D}${sysconfdir}/victoria-metrics/targets
+    install -m 0644 ${UNPACKDIR}/secondary-process-exporter.json ${D}${sysconfdir}/victoria-metrics/targets
+    install -m 0644 ${UNPACKDIR}/secondary-cgroup-exporter.json ${D}${sysconfdir}/victoria-metrics/targets
 
     install -d ${D}${localstatedir}/lib/victoria-metrics
 
     install -d ${D}${systemd_system_unitdir}
-    install -m 0644 ${WORKDIR}/victoria-metrics.service ${D}${systemd_system_unitdir}/
+    install -m 0644 ${UNPACKDIR}/victoria-metrics.service ${D}${systemd_system_unitdir}/
 
     # go.bbclass packs sources into ${PN}-dev; prebuilt non-ELF archives from
     # gozstd (Windows/macOS/etc.) break dwarfsrcfiles during do_package.

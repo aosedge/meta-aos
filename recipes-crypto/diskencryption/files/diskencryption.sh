@@ -203,7 +203,7 @@ get_key_id() {
     pkcs11-tool -O --module "$MODULE" ${USER_PIN:+-p "$USER_PIN"} \
         ${TOKEN_LABEL:+--token-label "$TOKEN_LABEL"} ${OBJECT_LABEL:+-a "$OBJECT_LABEL"} \
         --type privkey | while read -r line; do
-        local name=${line%:*}
+        local name=${line%%:*}
         local value=${line##*:*[[:space:]]}
 
         case $name in

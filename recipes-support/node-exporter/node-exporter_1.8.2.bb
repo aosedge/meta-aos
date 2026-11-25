@@ -9,7 +9,7 @@ GO_IMPORT = "github.com/prometheus/node_exporter"
 GO_INSTALL = "${GO_IMPORT}"
 
 SRC_URI = " \
-    git://${GO_IMPORT}.git;protocol=https;nobranch=1 \
+    git://${GO_IMPORT}.git;protocol=https;nobranch=1;destsuffix=${GO_SRCURI_DESTSUFFIX} \
     file://node-exporter.service \
 "
 
@@ -36,7 +36,7 @@ do_compile[network] = "1"
 
 do_install:append() {
     install -d ${D}${systemd_system_unitdir}
-    install -m 0644 ${WORKDIR}/node-exporter.service ${D}${systemd_system_unitdir}/
+    install -m 0644 ${UNPACKDIR}/node-exporter.service ${D}${systemd_system_unitdir}/
 
     rm -f ${D}${libdir}/go/src/${GO_IMPORT}/test_image.sh
     rm -rf ${D}${libdir}/go/src/${GO_IMPORT}/examples/openbsd-rc.d

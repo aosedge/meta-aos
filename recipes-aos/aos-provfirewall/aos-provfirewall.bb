@@ -10,7 +10,7 @@ SRC_URI = " \
     file://aos-target.conf \
 "
 
-S = "${WORKDIR}"
+S = "${UNPACKDIR}"
 
 inherit systemd
 
@@ -39,5 +39,5 @@ do_install() {
     install -m 0644 ${S}/aos-provfirewall.service ${D}${systemd_system_unitdir}
 
     install -d ${D}${sysconfdir}/systemd/system/aos.target.d
-    install -m 0644 ${WORKDIR}/aos-target.conf ${D}${sysconfdir}/systemd/system/aos.target.d/${PN}.conf
+    install -m 0644 ${UNPACKDIR}/aos-target.conf ${D}${sysconfdir}/systemd/system/aos.target.d/${PN}.conf
 }

@@ -12,8 +12,6 @@ LIC_FILES_CHKSUM = "file://copying;md5=b4563b57c98bc23c8cecbc0b6d9546e9"
 SRC_URI = "git://github.com/Mellanox/sockperf.git;protocol=https;branch=sockperf_v2"
 SRCREV = "3c65ad99cd385e18f8a2a655c19826e81a4d17e8"
 
-S = "${WORKDIR}/git"
-
 inherit autotools
 
 do_configure:prepend() {

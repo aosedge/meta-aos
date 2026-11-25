@@ -10,7 +10,7 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/COPYING.MIT;md5=3da9cfbcb788c80a0384
 
 SRC_URI = "file://aos-dds-discovery.service"
 
-S = "${WORKDIR}"
+S = "${UNPACKDIR}"
 
 inherit systemd
 
@@ -21,7 +21,7 @@ RDEPENDS:${PN} = "fastdds-tools"
 
 do_install() {
     install -d ${D}${systemd_system_unitdir}
-    install -m 0644 ${WORKDIR}/aos-dds-discovery.service ${D}${systemd_system_unitdir}/
+    install -m 0644 ${UNPACKDIR}/aos-dds-discovery.service ${D}${systemd_system_unitdir}/
 
     sed -i \
         -e "s|@SYSCONFDIR@|${sysconfdir}|g" \

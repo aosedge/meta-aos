@@ -18,8 +18,6 @@ SRC_URI += " \
     file://aos-reboot.service \
 "
 
-S = "${WORKDIR}/git"
-
 inherit cmake pkgconfig systemd
 
 SYSTEMD_SERVICE:${PN} = "aos-sm.service"
@@ -127,16 +125,16 @@ python do_update_config() {
 
 do_install:append() {
     install -d ${D}${sysconfdir}/aos
-    install -m 0644 ${WORKDIR}/sm.cfg ${D}${sysconfdir}/aos
+    install -m 0644 ${UNPACKDIR}/sm.cfg ${D}${sysconfdir}/aos
 
     install -d ${D}${systemd_system_unitdir}
-    install -m 0644 ${WORKDIR}/aos-sm.service ${D}${systemd_system_unitdir}
+    install -m 0644 ${UNPACKDIR}/aos-sm.service ${D}${systemd_system_unitdir}
 
     install -d ${D}${sysconfdir}/systemd/system/aos-sm.service.d
-    install -m 0644 ${WORKDIR}/aos-dirs-service.conf ${D}${sysconfdir}/systemd/system/aos-sm.service.d/20-aos-dirs-service.conf
+    install -m 0644 ${UNPACKDIR}/aos-dirs-service.conf ${D}${sysconfdir}/systemd/system/aos-sm.service.d/20-aos-dirs-service.conf
 
     install -d ${D}${sysconfdir}/systemd/system/aos.target.d
-    install -m 0644 ${WORKDIR}/aos-target.conf ${D}${sysconfdir}/systemd/system/aos.target.d/${PN}.conf
+    install -m 0644 ${UNPACKDIR}/aos-target.conf ${D}${sysconfdir}/systemd/system/aos.target.d/${PN}.conf
 
     install -d ${D}${MIGRATION_SCRIPTS_PATH}
     source_migration_path="/src/sm/database/migration"
@@ -144,12 +142,12 @@ do_install:append() {
         install -m 0644 ${S}${source_migration_path}/* ${D}${MIGRATION_SCRIPTS_PATH}
     fi
 
-    install -m 0644 ${WORKDIR}/aos-reboot.service ${D}${systemd_system_unitdir}
+    install -m 0644 ${UNPACKDIR}/aos-reboot.service ${D}${systemd_system_unitdir}
 }
 
 do_install:append:aos-main-node() {
     install -d ${D}${sysconfdir}/systemd/system/aos-sm.service.d
-    install -m 0644 ${WORKDIR}/aos-cm-service.conf ${D}${sysconfdir}/systemd/system/aos-sm.service.d/10-aos-cm-service.conf
+    install -m 0644 ${UNPACKDIR}/aos-cm-service.conf ${D}${sysconfdir}/systemd/system/aos-sm.service.d/10-aos-cm-service.conf
 }
 
 do_install:append() {

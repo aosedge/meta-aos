@@ -53,8 +53,6 @@ RDEPENDS:${PN} += " \
     aos-target \
 "
 
-S = "${WORKDIR}/git"
-
 do_compile[network] = "1"
 do_configure[network] =  "1"
 
@@ -113,21 +111,21 @@ python do_update_config() {
 
 do_install:append() {
     install -d ${D}${sysconfdir}/aos
-    install -m 0644 ${WORKDIR}/iam.cfg ${D}${sysconfdir}/aos
+    install -m 0644 ${UNPACKDIR}/iam.cfg ${D}${sysconfdir}/aos
 
     install -d ${D}${systemd_system_unitdir}
-    install -m 0644 ${WORKDIR}/aos-iam.service ${D}${systemd_system_unitdir}
-    install -m 0644 ${WORKDIR}/aos-iam-prov.service ${D}${systemd_system_unitdir}
+    install -m 0644 ${UNPACKDIR}/aos-iam.service ${D}${systemd_system_unitdir}
+    install -m 0644 ${UNPACKDIR}/aos-iam-prov.service ${D}${systemd_system_unitdir}
 
     install -d ${D}${sysconfdir}/systemd/system/aos-iam-prov.service.d
-    install -m 0644 ${WORKDIR}/aos-dirs-service.conf ${D}${sysconfdir}/systemd/system/aos-iam-prov.service.d/20-aos-dirs-service.conf
+    install -m 0644 ${UNPACKDIR}/aos-dirs-service.conf ${D}${sysconfdir}/systemd/system/aos-iam-prov.service.d/20-aos-dirs-service.conf
 
     install -d ${D}${sysconfdir}/systemd/system/aos.target.d
-    install -m 0644 ${WORKDIR}/aos-target.conf ${D}${sysconfdir}/systemd/system/aos.target.d/${PN}.conf
+    install -m 0644 ${UNPACKDIR}/aos-target.conf ${D}${sysconfdir}/systemd/system/aos.target.d/${PN}.conf
 
     if ${@bb.utils.contains('DISTRO_FEATURES', 'benchmark', 'true', 'false', d)}; then
         install -d ${D}${sysconfdir}/systemd/system/aos-iam.service.d
-        install -m 0644 ${WORKDIR}/aos-iam-benchmark.conf \
+        install -m 0644 ${UNPACKDIR}/aos-iam-benchmark.conf \
             ${D}${sysconfdir}/systemd/system/aos-iam.service.d/20-benchmark.conf
     fi
 

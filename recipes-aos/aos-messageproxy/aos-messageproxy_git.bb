@@ -16,8 +16,6 @@ SRC_URI += " \
     file://aos-cm-service.conf \
 "
 
-S = "${WORKDIR}/git"
-
 inherit autotools pkgconfig cmake systemd
 
 DEPENDS += "poco systemd grpc grpc-native protobuf-native protobuf curl libnl nftables"
@@ -77,19 +75,19 @@ python do_update_config() {
 
 do_install:append() {
     install -d ${D}${sysconfdir}/aos
-    install -m 0644 ${WORKDIR}/mp.cfg ${D}${sysconfdir}/aos
+    install -m 0644 ${UNPACKDIR}/mp.cfg ${D}${sysconfdir}/aos
 
     install -d ${D}${systemd_system_unitdir}
-    install -m 0644 ${WORKDIR}/aos-mp.service ${D}${systemd_system_unitdir}
-    install -m 0644 ${WORKDIR}/aos-mp-provisioning.service ${D}${systemd_system_unitdir}
+    install -m 0644 ${UNPACKDIR}/aos-mp.service ${D}${systemd_system_unitdir}
+    install -m 0644 ${UNPACKDIR}/aos-mp-provisioning.service ${D}${systemd_system_unitdir}
 
     install -d ${D}${sysconfdir}/systemd/system/aos.target.d
-    install -m 0644 ${WORKDIR}/aos-target.conf ${D}${sysconfdir}/systemd/system/aos.target.d/${PN}.conf
+    install -m 0644 ${UNPACKDIR}/aos-target.conf ${D}${sysconfdir}/systemd/system/aos.target.d/${PN}.conf
 }
 
 do_install:append:aos-main-node() {
     install -d ${D}${sysconfdir}/systemd/system/aos-mp.service.d
-    install -m 0644 ${WORKDIR}/aos-cm-service.conf ${D}${sysconfdir}/systemd/system/aos-mp.service.d/10-aos-cm-service.conf
+    install -m 0644 ${UNPACKDIR}/aos-cm-service.conf ${D}${sysconfdir}/systemd/system/aos-mp.service.d/10-aos-cm-service.conf
 }
 
 do_install:append() {

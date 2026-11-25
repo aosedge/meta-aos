@@ -1,5 +1,7 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/initramfs-framework:"
 
+S = "${UNPACKDIR}"
+
 SRC_URI += " \
     file://aosupdate \
     file://kmsglog \
@@ -61,23 +63,23 @@ FILES:initramfs-module-vardir = "/init.d/02-vardir"
 
 do_install:append() {
     # aosupdate
-    install -m 0755 ${WORKDIR}/aosupdate ${D}/init.d/95-aosupdate
+    install -m 0755 ${UNPACKDIR}/aosupdate ${D}/init.d/95-aosupdate
 
     # kmsglog
-    install -m 0755 ${WORKDIR}/kmsglog ${D}/init.d/00-kmsglog
+    install -m 0755 ${UNPACKDIR}/kmsglog ${D}/init.d/00-kmsglog
 
     # machineid
-    install -m 0755 ${WORKDIR}/machineid ${D}/init.d/96-machineid
+    install -m 0755 ${UNPACKDIR}/machineid ${D}/init.d/96-machineid
 
     # opendisk
-    install -m 0755 ${WORKDIR}/opendisk ${D}/init.d/05-opendisk
+    install -m 0755 ${UNPACKDIR}/opendisk ${D}/init.d/05-opendisk
 
     # openintegrity
     install -m 0755 ${WORKDIR}/openintegrity ${D}/init.d/10-openintegrity
 
     # rundir
-    install -m 0755 ${WORKDIR}/rundir ${D}/init.d/00-rundir
+    install -m 0755 ${UNPACKDIR}/rundir ${D}/init.d/00-rundir
 
     # vardir
-    install -m 0755 ${WORKDIR}/vardir ${D}/init.d/02-vardir
+    install -m 0755 ${UNPACKDIR}/vardir ${D}/init.d/02-vardir
 }

@@ -8,6 +8,4 @@ SRCREV = "fb98d008e95b441b3d0185386f715b0b27849e06"
 
 SRC_URI = "git://github.com/aosedge/libvis.git;branch=${BRANCH};protocol=https"
 
-S = "${WORKDIR}/git"
-
 inherit setuptools3

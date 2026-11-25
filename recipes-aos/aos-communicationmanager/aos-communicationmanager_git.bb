@@ -1,5 +1,6 @@
 DESCRIPTION = "AosCore Communication Manager"
 
+
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=86d3f3a95c324c9479bd8986968f4327"
 
@@ -16,11 +17,12 @@ SRC_URI += " \
     file://aos-dirs-service.conf \
 "
 
-S = "${WORKDIR}/git"
-
 inherit cmake pkgconfig systemd
 
 SYSTEMD_SERVICE:${PN} = "aos-cm.service"
+
+INSANE_SKIP:${PN} += "buildpaths"
+INSANE_SKIP:${PN}-staticdev += "buildpaths"
 
 MIGRATION_SCRIPTS_PATH = "${base_prefix}/usr/share/aos/cm/migration"
 
@@ -40,6 +42,7 @@ EXTRA_OECMAKE += " \
     -DWITH_IAM=OFF \
     -DWITH_MP=OFF \
     -DWITH_SM=OFF \
+    -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -Wno-error" \
 "
 OECMAKE_GENERATOR = "Unix Makefiles"
 
@@ -68,7 +71,7 @@ python do_update_config() {
         data = json.load(f)
 
     node_hostname = d.getVar("AOS_NODE_HOSTNAME")
- 
+
     # Update IAM servers
 
     data["iamProtectedServerUrl"]= node_hostname + ":8089"
@@ -92,16 +95,16 @@ python do_update_config() {
 
 do_install:append() {
     install -d ${D}${sysconfdir}/aos
-    install -m 0644 ${WORKDIR}/cm.cfg ${D}${sysconfdir}/aos
+    install -m 0644 ${UNPACKDIR}/cm.cfg ${D}${sysconfdir}/aos
 
     install -d ${D}${systemd_system_unitdir}
-    install -m 0644 ${WORKDIR}/aos-cm.service ${D}${systemd_system_unitdir}
+    install -m 0644 ${UNPACKDIR}/aos-cm.service ${D}${systemd_system_unitdir}
 
     install -d ${D}${sysconfdir}/systemd/system/aos.target.d
-    install -m 0644 ${WORKDIR}/aos-target.conf ${D}${sysconfdir}/systemd/system/aos.target.d/${PN}.conf
+    install -m 0644 ${UNPACKDIR}/aos-target.conf ${D}${sysconfdir}/systemd/system/aos.target.d/${PN}.conf
 
     install -d ${D}${sysconfdir}/systemd/system/aos-cm.service.d
-    install -m 0644 ${WORKDIR}/aos-dirs-service.conf ${D}${sysconfdir}/systemd/system/aos-cm.service.d/10-aos-dirs-service.conf
+    install -m 0644 ${UNPACKDIR}/aos-dirs-service.conf ${D}${sysconfdir}/systemd/system/aos-cm.service.d/10-aos-dirs-service.conf
 
     install -d ${D}${MIGRATION_SCRIPTS_PATH}
     source_migration_path="/src/cm/database/migration"

@@ -9,7 +9,7 @@ SRC_URI = " \
     file://aos-nftables.service \
 "
 
-S = "${WORKDIR}"
+S = "${UNPACKDIR}"
 
 inherit systemd
 
@@ -31,12 +31,12 @@ RRECOMMENDS:${PN} += " \
 
 do_install() {
     install -d ${D}${sysconfdir}/nftables
-    install -m 0644 ${WORKDIR}/aos.nft ${D}${sysconfdir}/nftables/aos.nft
+    install -m 0644 ${UNPACKDIR}/aos.nft ${D}${sysconfdir}/nftables/aos.nft
 
     if ${@bb.utils.contains('DISTRO_FEATURES', 'benchmark', 'true', 'false', d)}; then
         cat ${WORKDIR}/aos-benchmark.nft >> ${D}${sysconfdir}/nftables/aos.nft
     fi
 
     install -d ${D}${systemd_system_unitdir}
-    install -m 0644 ${WORKDIR}/aos-nftables.service ${D}${systemd_system_unitdir}
+    install -m 0644 ${UNPACKDIR}/aos-nftables.service ${D}${systemd_system_unitdir}
 }

@@ -13,8 +13,6 @@ SRC_URI = " \
     file://telemetry-emulator.service \
 "
 
-S = "${WORKDIR}/git"
-
 RDEPENDS:${PN} = " \
     python3 \
     python3-core \
@@ -46,5 +44,5 @@ FILES:${PN} += "${systemd_system_unitdir}/telemetry-emulator.service"
 
 do_install:append() {
     install -d ${D}${systemd_system_unitdir}
-    install -m 0644 ${WORKDIR}/*.service ${D}${systemd_system_unitdir}
+    install -m 0644 ${UNPACKDIR}/*.service ${D}${systemd_system_unitdir}
 }

@@ -9,7 +9,7 @@ GO_IMPORT = "github.com/ncabatoff/process-exporter"
 GO_INSTALL = "${GO_IMPORT}/cmd/process-exporter"
 
 SRC_URI = " \
-    git://${GO_IMPORT}.git;protocol=https;nobranch=1 \
+    git://${GO_IMPORT}.git;protocol=https;nobranch=1;destsuffix=${GO_SRCURI_DESTSUFFIX} \
     file://process-exporter.service \
     file://process-exporter.yml \
 "
@@ -35,8 +35,8 @@ FILES:${PN} += " \
 
 do_install:append() {
     install -d ${D}${sysconfdir}/process-exporter
-    install -m 0644 ${WORKDIR}/process-exporter.yml ${D}${sysconfdir}/process-exporter/process-exporter.yml
+    install -m 0644 ${UNPACKDIR}/process-exporter.yml ${D}${sysconfdir}/process-exporter/process-exporter.yml
 
     install -d ${D}${systemd_system_unitdir}
-    install -m 0644 ${WORKDIR}/process-exporter.service ${D}${systemd_system_unitdir}/
+    install -m 0644 ${UNPACKDIR}/process-exporter.service ${D}${systemd_system_unitdir}/
 }

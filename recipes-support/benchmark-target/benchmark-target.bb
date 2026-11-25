@@ -11,7 +11,7 @@ SRC_URI = " \
     file://benchmark.target.in \
 "
 
-S = "${WORKDIR}"
+S = "${UNPACKDIR}"
 
 inherit systemd
 
@@ -31,5 +31,5 @@ do_install() {
     install -d ${D}${systemd_system_unitdir}
     sed \
         -e 's|@BENCHMARK_SERVICES@|${BENCHMARK_SERVICES}|' \
-        ${WORKDIR}/benchmark.target.in > ${D}${systemd_system_unitdir}/benchmark.target
+        ${UNPACKDIR}/benchmark.target.in > ${D}${systemd_system_unitdir}/benchmark.target
 }

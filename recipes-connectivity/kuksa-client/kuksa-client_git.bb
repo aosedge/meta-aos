@@ -13,7 +13,7 @@ SRC_URI += " \
     file://0003-kuksa-client-Fix-AIO-version-of-gRPC-subscribe_target_values.patch;patchdir=.. \
 "
 
-S = "${WORKDIR}/git/kuksa-client"
+S = "${UNPACKDIR}/${BP}/kuksa-client"
 
 inherit python_setuptools_build_meta
 

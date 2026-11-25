@@ -7,8 +7,6 @@ SRCREV = "f23ba53be78a8bf2b8df2496bbfccb2860913892"
 
 SRC_URI = "git://github.com/COVESA/vehicle_signal_specification.git;branch=${BRANCH};protocol=https"
 
-S = "${WORKDIR}/git"
-
 UPSTREAM_CHECK_GITTAGREGEX = "v(?P<pver>\d+(\.\d+)+)"
 
 inherit allarch update-alternatives

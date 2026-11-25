@@ -8,8 +8,6 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=858ac481b3e933be38e4d36cb0dfcee8"
 SRC_URI = "git://github.com/foonathan/memory.git;protocol=https;nobranch=1"
 SRCREV = "79d054caaa491d9b6ed7cc65a3a84b495578e6c1"
 
-S = "${WORKDIR}/git"
-
 inherit cmake
 
 EXTRA_OECMAKE = " \

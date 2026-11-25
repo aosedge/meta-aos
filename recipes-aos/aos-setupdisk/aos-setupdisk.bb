@@ -9,7 +9,7 @@ SRC_URI = " \
     file://aosdisk_secondary.cfg.in \
 "
 
-S = "${WORKDIR}"
+S = "${UNPACKDIR}"
 
 FILES:${PN} = " \
     ${aos_opt_dir} \
@@ -20,7 +20,6 @@ RDEPENDS:${PN} = " \
     cryptsetup \
     diskencryption \
     lvm2 \
-    lvm2-udevrules \
     e2fsprogs \
     e2fsprogs-tune2fs \
     libdevmapper \
